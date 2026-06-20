@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- 保留缩放限制 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <title>0619作业 UI</title>
+
+  <style>
+    :root {
+      --bg: #f4f4f4;
+      --card: #ffffff;
+      --text: #1f2024;
+      --muted: #8b8f97;
+      --icon: #1d1f23;
+      --line: rgba(31, 32, 36, 0.055);
+      --shadow: 0 1px 0 rgba(0,0,0,0.018);
+      --panel-shadow: 0 22px 70px rgba(0,0,0,0.16);
+      --motion: cubic-bezier(.2, .8, .2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: #dedede;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100vw, 430px);
+      height: min(100dvh, 932px);
+      background: var(--bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scroll-container {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scroll-container::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+    }
+
+    .app-bar {
+      position: relative;
+      height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .nav-button,
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--icon);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      cursor: pointer;
+      transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .nav-button:active,
+    .icon-button:active {
+      background-color: rgba(31, 32, 36, 0.06);
+      opacity: 0.8;
+    }
+
+    .nav-button svg,
+    .icon-button svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-button {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .title-wrap {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      white-space: nowrap;
+      max-width: calc(100% - 150px);
+      overflow: hidden;
+    }
+
+    .title-line {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      line-height: 20px;
+      max-width: 100%;
+    }
+
+    .title-line span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chevron {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #9ba0a8;
+      display: inline-block;
+      vertical-align: middle;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .right-actions {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 38px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px 8px;
+      padding: 8px 8px;
+    }
+
+    .student-card {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.15s ease, opacity 0.15s ease;
+
+      border: 0;
+      width: 100%;
+      font: inherit;
+      color: inherit;
+      text-align: center;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .student-card:active {
+      transform: scale(0.95);
+    }
+
+    .student-card:focus-visible {
+      outline: 1px solid rgba(31, 32, 36, 0.22);
+      outline-offset: -1px;
+    }
+
+    .serial {
+      position: absolute;
+      bottom: 1px;
+      left: 5px;
+      font-family: inherit;
+      font-size: 24px;
+      font-weight: 700;
+      font-style: italic;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+      transition: color 0.15s ease;
+      color: rgba(31, 32, 36, 0.06);
+    }
+
+    .badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      font-size: 12.5px;
+      line-height: 1;
+      font-weight: 600;
+      color: #5a5e66;
+      max-width: 60%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      text-align: right;
+      z-index: 2;
+    }
+
+    .name {
+      max-width: 100%;
+      font-size: 15.5px;
+      line-height: 1.1;
+      font-weight: 600;
+      color: #1f2024;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: clip;
+      overflow: hidden;
+      padding: 0;
+      letter-spacing: -0.2px;
+      z-index: 2;
+      transition: color 0.15s ease;
+    }
+
+    .student-card.is-registered {
+      background-color: #f0fbf5;
+      box-shadow: 0 1px 0 rgba(22, 101, 52, 0.03);
+    }
+
+    .student-card.is-registered .name {
+      color: #166534;
+    }
+
+    .student-card.is-registered .serial {
+      color: rgba(22, 101, 52, 0.07);
+    }
+
+    .student-card.is-registered .badge {
+      color: #15803d;
+    }
+
+    .student-card.no-registration {
+      background-color: #ededf0;
+      box-shadow: none;
+      opacity: 0.75;
+    }
+
+    .student-card.no-registration .name {
+      color: #71757c;
+    }
+
+    .student-card.no-registration .serial {
+      color: rgba(113, 117, 124, 0.08);
+    }
+
+    .student-card.no-registration .badge {
+      display: none !important;
+    }
+
+    .drawer-scrim,
+    .modal-scrim {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        opacity 260ms var(--motion),
+        backdrop-filter 260ms var(--motion),
+        -webkit-backdrop-filter 260ms var(--motion);
+    }
+
+    .drawer-scrim {
+      z-index: 30;
+      background: rgba(31, 32, 36, 0.16);
+    }
+
+    .drawer-scrim.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-scrim {
+      z-index: 50;
+      background: rgba(244, 244, 244, 0.34);
+      -webkit-backdrop-filter: blur(14px) saturate(1.04);
+      backdrop-filter: blur(14px) saturate(1.04);
+    }
+
+    .modal-scrim::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(31, 32, 36, 0.08);
+      pointer-events: none;
+    }
+
+    .modal-scrim.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: min(78%, 310px);
+      background: var(--bg);
+      border-right: 1px solid var(--line);
+      box-shadow: 24px 0 70px rgba(0,0,0,0.14);
+      z-index: 40;
+      transform: translateX(-102%);
+      transition: transform 320ms var(--motion);
+      will-change: transform;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.is-open {
+      transform: translateX(0);
+    }
+
+    .drawer-head {
+      height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .drawer-list {
+      padding: 8px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .drawer-list::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .assignment-item {
+      width: 100%;
+      min-height: 54px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 9px 10px;
+      margin-bottom: 8px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .assignment-item:active {
+      transform: scale(0.985);
+    }
+
+    .assignment-item.is-active {
+      background: #f0fbf5;
+    }
+
+    .assignment-name {
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .assignment-meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.1;
+    }
+
+    .assignment-item.is-active .assignment-name {
+      color: #166534;
+    }
+
+    .assignment-item.is-active .assignment-meta {
+      color: #15803d;
+    }
+
+    .center-panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 48px), 350px);
+      max-height: min(76dvh, 620px);
+      overflow: hidden;
+      border-radius: 24px;
+      background: rgba(244, 244, 244, 0.96);
+      box-shadow: var(--panel-shadow);
+      border: 1px solid rgba(31, 32, 36, 0.045);
+      z-index: 60;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -47%) scale(0.975);
+      transition:
+        opacity 260ms var(--motion),
+        transform 320ms var(--motion);
+      will-change: opacity, transform;
+    }
+
+    .center-panel.is-open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .panel-head {
+      height: 52px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .panel-body {
+      padding: 10px;
+    }
+
+    .panel-close {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      color: var(--icon);
+      cursor: pointer;
+    }
+
+    .panel-close:active {
+      background: rgba(31, 32, 36, 0.06);
+    }
+
+    .setting-row,
+    .setting-action {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 13px 14px;
+      margin-bottom: 8px;
+      font: inherit;
+      color: inherit;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .setting-text {
+      min-width: 0;
+    }
+
+    .setting-title {
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.15;
+      margin: 0 0 5px;
+    }
+
+    .setting-desc {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .setting-action {
+      min-height: 54px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
+    }
+
+    .setting-action:active {
+      transform: scale(0.985);
+    }
+
+    .setting-action strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.15;
+      margin-bottom: 5px;
+    }
+
+    .setting-action span {
+      display: block;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .setting-action.danger strong {
+      color: #9f1239;
+    }
+
+    .switch {
+      width: 46px;
+      height: 28px;
+      border: 0;
+      border-radius: 999px;
+      padding: 3px;
+      background: #e6e7ea;
+      flex-shrink: 0;
+      cursor: pointer;
+      display: block;
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(31, 32, 36, 0.035),
+        var(--shadow);
+      transition:
+        background-color 220ms var(--motion),
+        box-shadow 220ms var(--motion);
+    }
+
+    .switch-knob {
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.12),
+        0 1px 8px rgba(0,0,0,0.06);
+      transform: translateX(0);
+      transition: transform 240ms var(--motion);
+    }
+
+    .switch.is-on {
+      background: #f0fbf5;
+      box-shadow:
+        inset 0 0 0 1px rgba(22, 101, 52, 0.08),
+        var(--shadow);
+    }
+
+    .switch.is-on .switch-knob {
+      transform: translateX(18px);
+      background: #166534;
+    }
+
+    .field {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 14px 14px;
+      font: inherit;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .field::placeholder {
+      color: #a5a8ae;
+    }
+
+    .dialog-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .dialog-button {
+      height: 44px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 650;
+      cursor: pointer;
+      color: var(--text);
+      transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
+    }
+
+    .dialog-button:active {
+      transform: scale(0.985);
+    }
+
+    .dialog-button.primary {
+      background: #f0fbf5;
+      color: #166534;
+    }
+
+    .dialog-button.danger {
+      color: #9f1239;
+    }
+
+    .confirm-panel {
+      z-index: 80;
+      width: min(calc(100% - 64px), 320px);
+      box-shadow: 0 26px 80px rgba(0,0,0,0.20);
+    }
+
+    .confirm-message {
+      margin: 0 0 12px;
+      padding: 4px 4px 2px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #3f4248;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (min-width: 431px) {
+      .phone {
+        border-radius: 28px;
+        box-shadow: 0 22px 70px rgba(0,0,0,0.18);
+      }
+    }
+
+    @media (max-width: 360px) {
+      .app-bar {
+        height: 42px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .nav-button {
+        left: 10px;
+      }
+
+      .nav-button,
+      .icon-button {
+        width: 34px;
+        height: 34px;
+      }
+
+      .nav-button svg,
+      .icon-button svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .right-actions {
+        right: 10px;
+      }
+
+      .title-line {
+        font-size: 17px;
+        line-height: 18px;
+      }
+
+      .grid {
+        gap: 6px 6px;
+      }
+
+      .student-card {
+        border-radius: 12px;
+        padding: 5px;
+      }
+
+      .serial {
+        font-size: 20px;
+        bottom: 1px;
+        left: 4px;
+      }
+
+      .badge {
+        font-size: 11.5px;
+        top: 4px;
+        right: 5px;
+      }
+
+      .name {
+        font-size: 13.5px;
+      }
+
+      .center-panel {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="phone" aria-label="作业管理界面">
+    <header class="app-bar">
+      <button class="nav-button" id="menuButton" type="button" aria-label="打开作业列表">
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M5 10.5h26M5 18h26M5 25.5h26" stroke="currentColor" stroke-width="3.2" stroke-linecap="square" />
+        </svg>
+      </button>
+
+      <section class="title-wrap" aria-label="当前视图标题">
+        <div class="title-line">
+          <span id="assignmentTitle">0619作业</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <div class="right-actions" aria-label="操作按钮区">
+        <button class="icon-button" id="settingsButton" type="button" aria-label="打开快捷设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
+          </svg>
+        </button>
+
+        <button class="icon-button" id="addButton" type="button" aria-label="新建作业">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <path d="M18 7v22M7 18h22" stroke="currentColor" stroke-width="3.2" stroke-linecap="square" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="scroll-container">
+      <section class="grid" id="studentGrid" aria-label="学生列表"></section>
+    </div>
+
+    <div class="drawer-scrim" id="drawerScrim" aria-hidden="true"></div>
+
+    <aside class="drawer" id="assignmentDrawer" aria-label="作业项目列表" aria-hidden="true">
+      <div class="drawer-head">
+        <div class="drawer-title">作业项目</div>
+        <button class="panel-close" id="drawerCloseButton" type="button" aria-label="关闭作业列表">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="drawer-list" id="assignmentList"></div>
+    </aside>
+
+    <div class="modal-scrim" id="modalScrim" aria-hidden="true"></div>
+
+    <section class="center-panel" id="settingsPanel" aria-label="快捷设置" aria-hidden="true">
+      <div class="panel-head">
+        <div class="panel-title">快捷设置</div>
+        <button class="panel-close" id="settingsCloseButton" type="button" aria-label="关闭快捷设置">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="panel-body">
+        <div class="setting-row">
+          <div class="setting-text">
+            <p class="setting-title">显示真实姓名</p>
+            <p class="setting-desc">关闭后使用甲子、乙丑等天干地支代号显示。</p>
+          </div>
+
+          <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+            <span class="switch-knob"></span>
+          </button>
+        </div>
+
+        <button class="setting-action" id="invertButton" type="button">
+          <strong>反选提交状态</strong>
+          <span>当前作业中，已交与未交状态互相切换。</span>
+        </button>
+
+        <button class="setting-action danger" id="deleteAssignmentButton" type="button">
+          <strong>删除当前作业</strong>
+          <span>删除后会切换到相邻作业；若只剩一项，会自动新建空白作业。</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="center-panel" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
+      <div class="panel-head">
+        <div class="panel-title">新建作业</div>
+        <button class="panel-close" id="newAssignmentCloseButton" type="button" aria-label="关闭新建作业">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="panel-body">
+        <input class="field" id="newAssignmentInput" type="text" placeholder="例如：0620作业" maxlength="24" />
+
+        <div class="dialog-actions">
+          <button class="dialog-button" id="newAssignmentCancelButton" type="button">取消</button>
+          <button class="dialog-button primary" id="newAssignmentCreateButton" type="button">创建</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="center-panel confirm-panel" id="confirmPanel" aria-label="确认操作" aria-hidden="true">
+      <div class="panel-head">
+        <div class="panel-title" id="confirmTitle">确认操作</div>
+      </div>
+
+      <div class="panel-body">
+        <p class="confirm-message" id="confirmMessage"></p>
+
+        <div class="dialog-actions">
+          <button class="dialog-button" id="confirmCancelButton" type="button">取消</button>
+          <button class="dialog-button danger" id="confirmOkButton" type="button">确认</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="sr-only" id="liveStatus" aria-live="polite"></div>
+  </main>
+
+  <script>
+    /*
+      原型功能说明：
+      1. 左侧作业栏：汉堡按钮打开，作业列表滑出滑入。
+      2. 快捷设置：顶栏设置按钮打开居中面板，背景轻模糊。
+      3. 显示姓名：开关开启时显示真实姓名，关闭时使用天干地支代号。
+      4. 反选提交状态：已交与未交互换，无登记学生不参与。
+      5. 删除当前作业：二次确认。
+      6. 新建作业：加号按钮打开新建对话框。
+      7. 本地保存：localStorage 保留作业、状态和显示设置。
+    */
+
+    const STORAGE_KEY = "homework_ui_assignments_v4";
+
+    const STATUS = {
+      NORMAL: "normal",
+      REGISTERED: "registered",
+      NONE: "none"
+    };
+
+    const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+    const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+
+    const defaultStudents = [
+      { id: 1, serial: "01", name: "林子安", status: STATUS.NORMAL, badge: "98", badgeType: "score" },
+      { id: 2, serial: "02", name: "陈雨", status: STATUS.REGISTERED, badge: "已交", badgeType: "submit" },
+      { id: 3, serial: "03", name: "何思远", status: STATUS.REGISTERED, badge: "100", badgeType: "score" },
+      { id: 4, serial: "04", name: "李昕", status: STATUS.NONE, badge: "", badgeType: "" },
+      { id: 5, serial: "05", name: "周嘉宁", status: STATUS.NONE, badge: "", badgeType: "" },
+
+      { id: 6, serial: "06", name: "黄一诺", status: STATUS.NORMAL, badge: "需重写", badgeType: "note" },
+      { id: 7, serial: "07", name: "吴泽", status: STATUS.REGISTERED, badge: "已阅", badgeType: "review" },
+      { id: 8, serial: "08", name: "郑语涵", status: STATUS.NORMAL, badge: "85", badgeType: "score" },
+      { id: 9, serial: "09", name: "许辰", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 10, serial: "10", name: "赵明轩", status: STATUS.NORMAL, badge: "", badgeType: "" },
+
+      { id: 11, serial: "11", name: "梁若曦", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 12, serial: "12", name: "郭晨", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 13, serial: "13", name: "孙亦航", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 14, serial: "14", name: "马可", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 15, serial: "15", name: "谢梓涵", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 16, serial: "16", name: "胡悦", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 17, serial: "17", name: "罗子墨", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 18, serial: "18", name: "唐诗雅", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 19, serial: "19", name: "邓宇", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 20, serial: "20", name: "曹清越", status: STATUS.NORMAL, badge: "", badgeType: "" },
+
+      { id: 21, serial: "21", name: "叶安琪", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 22, serial: "22", name: "曾质彬", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 23, serial: "23", name: "傅晓", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 24, serial: "24", name: "彭乐", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 25, serial: "25", name: "魏子衿", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 26, serial: "26", name: "沈星", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 27, serial: "27", name: "苏以宁", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 28, serial: "28", name: "丁睿", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 29, serial: "29", name: "袁欣怡", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 30, serial: "30", name: "蒋沐阳", status: STATUS.NORMAL, badge: "", badgeType: "" },
+
+      { id: 31, serial: "31", name: "韩知夏", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 32, serial: "32", name: "邱然", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 33, serial: "33", name: "孟梓萱", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 34, serial: "34", name: "邹远", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 35, serial: "35", name: "方予安", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 36, serial: "36", name: "卢佳", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 37, serial: "37", name: "贺子昂", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 38, serial: "38", name: "江晚晴", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 39, serial: "39", name: "高铭", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 40, serial: "40", name: "范若琳", status: STATUS.NORMAL, badge: "", badgeType: "" },
+
+      { id: 41, serial: "41", name: "程奕", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 42, serial: "42", name: "陆思齐", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 43, serial: "43", name: "钟灵", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 44, serial: "44", name: "黎嘉树", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 45, serial: "45", name: "姜月", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 46, serial: "46", name: "白景行", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 47, serial: "47", name: "龚婉", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 48, serial: "48", name: "秦书瑶", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 49, serial: "49", name: "莫辰", status: STATUS.NORMAL, badge: "", badgeType: "" },
+      { id: 50, serial: "50", name: "严知许", status: STATUS.NORMAL, badge: "", badgeType: "" }
+    ];
+
+    const defaultAssignment = {
+      id: "assignment-0619",
+      title: "0619作业",
+      createdAt: new Date().toISOString(),
+      students: clone(defaultStudents)
+    };
+
+    const appState = loadAppState();
+
+    const grid = document.querySelector("#studentGrid");
+    const titleNode = document.querySelector("#assignmentTitle");
+    const liveStatus = document.querySelector("#liveStatus");
+
+    const menuButton = document.querySelector("#menuButton");
+    const settingsButton = document.querySelector("#settingsButton");
+    const addButton = document.querySelector("#addButton");
+
+    const drawer = document.querySelector("#assignmentDrawer");
+    const drawerScrim = document.querySelector("#drawerScrim");
+    const drawerCloseButton = document.querySelector("#drawerCloseButton");
+    const assignmentList = document.querySelector("#assignmentList");
+
+    const modalScrim = document.querySelector("#modalScrim");
+    const settingsPanel = document.querySelector("#settingsPanel");
+    const settingsCloseButton = document.querySelector("#settingsCloseButton");
+    const hideNameSwitch = document.querySelector("#hideNameSwitch");
+    const invertButton = document.querySelector("#invertButton");
+    const deleteAssignmentButton = document.querySelector("#deleteAssignmentButton");
+
+    const newAssignmentPanel = document.querySelector("#newAssignmentPanel");
+    const newAssignmentInput = document.querySelector("#newAssignmentInput");
+    const newAssignmentCloseButton = document.querySelector("#newAssignmentCloseButton");
+    const newAssignmentCancelButton = document.querySelector("#newAssignmentCancelButton");
+    const newAssignmentCreateButton = document.querySelector("#newAssignmentCreateButton");
+
+    const confirmPanel = document.querySelector("#confirmPanel");
+    const confirmTitle = document.querySelector("#confirmTitle");
+    const confirmMessage = document.querySelector("#confirmMessage");
+    const confirmCancelButton = document.querySelector("#confirmCancelButton");
+    const confirmOkButton = document.querySelector("#confirmOkButton");
+
+    let pendingConfirmAction = null;
+
+    render();
+
+    menuButton.addEventListener("click", openDrawer);
+    drawerCloseButton.addEventListener("click", closeDrawer);
+    drawerScrim.addEventListener("click", closeDrawer);
+
+    settingsButton.addEventListener("click", openSettingsPanel);
+    settingsCloseButton.addEventListener("click", closeAllCenterPanels);
+
+    addButton.addEventListener("click", openNewAssignmentPanel);
+    newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
+    newAssignmentCancelButton.addEventListener("click", closeAllCenterPanels);
+    newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
+
+    modalScrim.addEventListener("click", () => {
+      if (confirmPanel.classList.contains("is-open")) return;
+      closeAllCenterPanels();
+    });
+
+    assignmentList.addEventListener("click", (event) => {
+      const item = event.target.closest(".assignment-item");
+      if (!item) return;
+
+      appState.currentAssignmentId = item.dataset.assignmentId;
+      saveAppState();
+      render();
+      closeDrawer();
+    });
+
+    grid.addEventListener("click", (event) => {
+      const card = event.target.closest(".student-card");
+      if (!card) return;
+
+      const assignment = getCurrentAssignment();
+      const student = assignment.students.find(item => String(item.id) === card.dataset.id);
+      if (!student) return;
+
+      editStudent(student);
+    });
+
+    hideNameSwitch.addEventListener("click", () => {
+      appState.hideNames = !appState.hideNames;
+      saveAppState();
+      render();
+      announce(appState.hideNames ? "已隐藏真实姓名" : "已显示真实姓名");
+    });
+
+    invertButton.addEventListener("click", () => {
+      const assignment = getCurrentAssignment();
+
+      openConfirm({
+        title: "反选提交状态",
+        message: `确认反选“${assignment.title}”中所有学生的提交状态？无登记学生不会被改动。`,
+        okText: "确认反选",
+        danger: false,
+        onConfirm: () => {
+          invertCurrentAssignmentSubmission();
+          closeConfirm();
+          announce("已反选提交状态");
+        }
+      });
+    });
+
+    deleteAssignmentButton.addEventListener("click", () => {
+      const assignment = getCurrentAssignment();
+
+      openConfirm({
+        title: "删除当前作业",
+        message: `确认删除“${assignment.title}”？该作业中的提交状态、分数和备注会一并删除。`,
+        okText: "确认删除",
+        danger: true,
+        onConfirm: () => {
+          deleteCurrentAssignment();
+          closeConfirm();
+          closeAllCenterPanels();
+          announce("已删除当前作业");
+        }
+      });
+    });
+
+    confirmCancelButton.addEventListener("click", closeConfirm);
+
+    confirmOkButton.addEventListener("click", () => {
+      if (typeof pendingConfirmAction === "function") {
+        pendingConfirmAction();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+
+      if (confirmPanel.classList.contains("is-open")) {
+        closeConfirm();
+        return;
+      }
+
+      if (settingsPanel.classList.contains("is-open") || newAssignmentPanel.classList.contains("is-open")) {
+        closeAllCenterPanels();
+        return;
+      }
+
+      if (drawer.classList.contains("is-open")) {
+        closeDrawer();
+      }
+    });
+
+    newAssignmentInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        createAssignmentFromDialog();
+      }
+    });
+
+    function render() {
+      const assignment = getCurrentAssignment();
+
+      titleNode.textContent = assignment.title;
+      document.title = `${assignment.title} UI`;
+
+      renderStudents();
+      renderAssignmentList();
+      renderSettingsState();
+    }
+
+    function renderStudents() {
+      const assignment = getCurrentAssignment();
+
+      grid.innerHTML = assignment.students.map((student, index) => {
+        const stateClass = getStateClass(student);
+        const displayName = getDisplayName(student, index);
+
+        const badgeHTML = student.badge
+          ? `<div class="badge">${escapeHTML(student.badge)}</div>`
+          : "";
+
+        return `
+          <button
+            class="student-card ${stateClass}"
+            type="button"
+            data-id="${student.id}"
+            aria-label="${escapeHTML(getCardAriaLabel(student, index))}"
+          >
+            <div class="serial">${escapeHTML(student.serial)}</div>
+            ${badgeHTML}
+            <div class="name">${escapeHTML(displayName)}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderAssignmentList() {
+      assignmentList.innerHTML = appState.assignments.map(assignment => {
+        const stats = getAssignmentStats(assignment);
+        const activeClass = assignment.id === appState.currentAssignmentId ? "is-active" : "";
+
+        return `
+          <button
+            class="assignment-item ${activeClass}"
+            type="button"
+            data-assignment-id="${assignment.id}"
+            aria-label="${escapeHTML(assignment.title)}，${stats.submitted}/${stats.total} 已交"
+          >
+            <span class="assignment-name">${escapeHTML(assignment.title)}</span>
+            <span class="assignment-meta">${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderSettingsState() {
+      const showRealNames = !appState.hideNames;
+
+      hideNameSwitch.classList.toggle("is-on", showRealNames);
+      hideNameSwitch.setAttribute("aria-pressed", String(showRealNames));
+      hideNameSwitch.setAttribute(
+        "aria-label",
+        showRealNames ? "当前显示真实姓名，点击后隐藏" : "当前隐藏真实姓名，点击后显示"
+      );
+    }
+
+    function openDrawer() {
+      drawer.classList.add("is-open");
+      drawerScrim.classList.add("is-open");
+      drawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("is-open");
+      drawerScrim.classList.remove("is-open");
+      drawer.setAttribute("aria-hidden", "true");
+    }
+
+    function openSettingsPanel() {
+      closeDrawer();
+      closeAllCenterPanels();
+
+      modalScrim.classList.add("is-open");
+      settingsPanel.classList.add("is-open");
+      settingsPanel.setAttribute("aria-hidden", "false");
+    }
+
+    function openNewAssignmentPanel() {
+      closeDrawer();
+      closeAllCenterPanels();
+
+      newAssignmentInput.value = "";
+      modalScrim.classList.add("is-open");
+      newAssignmentPanel.classList.add("is-open");
+      newAssignmentPanel.setAttribute("aria-hidden", "false");
+
+      requestAnimationFrame(() => {
+        newAssignmentInput.focus();
+      });
+    }
+
+    function closeAllCenterPanels() {
+      modalScrim.classList.remove("is-open");
+
+      settingsPanel.classList.remove("is-open");
+      settingsPanel.setAttribute("aria-hidden", "true");
+
+      newAssignmentPanel.classList.remove("is-open");
+      newAssignmentPanel.setAttribute("aria-hidden", "true");
+
+      closeConfirm();
+    }
+
+    function openConfirm(options) {
+      pendingConfirmAction = options.onConfirm;
+
+      confirmTitle.textContent = options.title || "确认操作";
+      confirmMessage.textContent = options.message || "";
+      confirmOkButton.textContent = options.okText || "确认";
+      confirmOkButton.classList.toggle("danger", Boolean(options.danger));
+      confirmOkButton.classList.toggle("primary", !options.danger);
+
+      modalScrim.classList.add("is-open");
+      confirmPanel.classList.add("is-open");
+      confirmPanel.setAttribute("aria-hidden", "false");
+    }
+
+    function closeConfirm() {
+      pendingConfirmAction = null;
+      confirmPanel.classList.remove("is-open");
+      confirmPanel.setAttribute("aria-hidden", "true");
+
+      if (!settingsPanel.classList.contains("is-open") && !newAssignmentPanel.classList.contains("is-open")) {
+        modalScrim.classList.remove("is-open");
+      }
+    }
+
+    function createAssignmentFromDialog() {
+      const inputValue = newAssignmentInput.value.trim();
+      const title = inputValue || makeDefaultAssignmentTitle();
+
+      const current = getCurrentAssignment();
+
+      const nextAssignment = {
+        id: makeId("assignment"),
+        title,
+        createdAt: new Date().toISOString(),
+        students: createFreshStudentsFrom(current.students)
+      };
+
+      appState.assignments.unshift(nextAssignment);
+      appState.currentAssignmentId = nextAssignment.id;
+
+      saveAppState();
+      render();
+      closeAllCenterPanels();
+      announce(`已新建作业：${title}`);
+    }
+
+    function createFreshStudentsFrom(students) {
+      return students.map((student, index) => {
+        const isNoRegistration = student.status === STATUS.NONE;
+
+        return {
+          id: Number(student.id) || index + 1,
+          serial: String(student.serial || index + 1).padStart(2, "0"),
+          name: String(student.name || "未命名"),
+          status: isNoRegistration ? STATUS.NONE : STATUS.NORMAL,
+          badge: "",
+          badgeType: "",
+          updatedAt: ""
+        };
+      });
+    }
+
+    function invertCurrentAssignmentSubmission() {
+      const assignment = getCurrentAssignment();
+
+      assignment.students.forEach(student => {
+        if (student.status === STATUS.NONE) return;
+
+        if (student.status === STATUS.REGISTERED) {
+          student.status = STATUS.NORMAL;
+
+          if (student.badgeType === "submit" || student.badge === "已交") {
+            student.badge = "";
+            student.badgeType = "";
+          }
+
+          return;
+        }
+
+        student.status = STATUS.REGISTERED;
+
+        if (!student.badge) {
+          student.badge = "已交";
+          student.badgeType = "submit";
+        }
+      });
+
+      saveAppState();
+      render();
+    }
+
+    function deleteCurrentAssignment() {
+      const currentId = appState.currentAssignmentId;
+      const currentIndex = appState.assignments.findIndex(item => item.id === currentId);
+
+      if (currentIndex >= 0) {
+        appState.assignments.splice(currentIndex, 1);
+      }
+
+      if (appState.assignments.length === 0) {
+        const fallback = {
+          id: makeId("assignment"),
+          title: "新作业",
+          createdAt: new Date().toISOString(),
+          students: createFreshStudentsFrom(defaultStudents)
+        };
+
+        appState.assignments.push(fallback);
+        appState.currentAssignmentId = fallback.id;
+      } else {
+        const nextIndex = Math.max(0, currentIndex - 1);
+        appState.currentAssignmentId = appState.assignments[nextIndex].id;
+      }
+
+      saveAppState();
+      render();
+    }
+
+    function editStudent(student) {
+      const assignment = getCurrentAssignment();
+      const index = assignment.students.findIndex(item => item.id === student.id);
+      const displayName = getDisplayName(student, index);
+
+      const action = prompt(
+        `${student.serial} ${displayName}\n` +
+        `当前状态：${getStatusText(student.status)}\n` +
+        `当前标记：${student.badge || "无"}\n\n` +
+        "1 设为已交\n" +
+        "2 设为普通状态\n" +
+        "3 设为无登记\n" +
+        "4 设置分数\n" +
+        "5 设置备注\n" +
+        "6 清空右上角标记\n" +
+        "7 修改姓名\n\n" +
+        "输入 1-7"
+      );
+
+      if (action === null) return;
+
+      const normalized = action.trim();
+
+      if (normalized === "1") {
+        student.status = STATUS.REGISTERED;
+        student.badge = "已交";
+        student.badgeType = "submit";
+      }
+
+      if (normalized === "2") {
+        student.status = STATUS.NORMAL;
+      }
+
+      if (normalized === "3") {
+        student.status = STATUS.NONE;
+        student.badge = "";
+        student.badgeType = "";
+      }
+
+      if (normalized === "4") {
+        const score = prompt("输入分数，例如 98");
+        if (score === null) return;
+
+        const trimmedScore = score.trim();
+        if (!trimmedScore) return;
+
+        student.badge = trimmedScore;
+        student.badgeType = "score";
+      }
+
+      if (normalized === "5") {
+        const note = prompt("输入备注，例如 需重写");
+        if (note === null) return;
+
+        const trimmedNote = note.trim();
+        if (!trimmedNote) return;
+
+        student.badge = trimmedNote;
+        student.badgeType = "note";
+      }
+
+      if (normalized === "6") {
+        student.badge = "";
+        student.badgeType = "";
+      }
+
+      if (normalized === "7") {
+        if (appState.hideNames) {
+          alert("当前已隐藏真实姓名。关闭隐藏后再修改姓名。");
+          return;
+        }
+
+        const newName = prompt("输入新姓名", student.name);
+        if (newName === null) return;
+
+        const trimmedName = newName.trim();
+        if (!trimmedName) return;
+
+        student.name = trimmedName;
+      }
+
+      student.updatedAt = new Date().toISOString();
+
+      saveAppState();
+      render();
+      announce(`已更新：${displayName}`);
+    }
+
+    function loadAppState() {
+      const fallback = {
+        hideNames: false,
+        currentAssignmentId: defaultAssignment.id,
+        assignments: [clone(defaultAssignment)]
+      };
+
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) return fallback;
+
+        const parsed = JSON.parse(stored);
+
+        if (!parsed || !Array.isArray(parsed.assignments)) {
+          return fallback;
+        }
+
+        const assignments = parsed.assignments
+          .filter(item => item && Array.isArray(item.students))
+          .map(normalizeAssignment);
+
+        if (assignments.length === 0) {
+          return fallback;
+        }
+
+        const currentAssignmentId = assignments.some(item => item.id === parsed.currentAssignmentId)
+          ? parsed.currentAssignmentId
+          : assignments[0].id;
+
+        return {
+          hideNames: Boolean(parsed.hideNames),
+          currentAssignmentId,
+          assignments
+        };
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveAppState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    }
+
+    function normalizeAssignment(assignment, assignmentIndex) {
+      return {
+        id: String(assignment.id || makeId(`assignment-${assignmentIndex}`)),
+        title: String(assignment.title || "未命名作业"),
+        createdAt: assignment.createdAt || new Date().toISOString(),
+        students: assignment.students.map(normalizeStudent)
+      };
+    }
+
+    function normalizeStudent(student, index) {
+      const fallbackSerial = String(index + 1).padStart(2, "0");
+
+      return {
+        id: Number(student.id) || index + 1,
+        serial: String(student.serial || fallbackSerial).padStart(2, "0"),
+        name: String(student.name || "未命名"),
+        status: [STATUS.NORMAL, STATUS.REGISTERED, STATUS.NONE].includes(student.status)
+          ? student.status
+          : STATUS.NORMAL,
+        badge: String(student.badge || ""),
+        badgeType: String(student.badgeType || ""),
+        updatedAt: student.updatedAt || ""
+      };
+    }
+
+    function getCurrentAssignment() {
+      let assignment = appState.assignments.find(item => item.id === appState.currentAssignmentId);
+
+      if (!assignment) {
+        assignment = appState.assignments[0] || clone(defaultAssignment);
+        appState.currentAssignmentId = assignment.id;
+      }
+
+      return assignment;
+    }
+
+    function getAssignmentStats(assignment) {
+      const activeStudents = assignment.students.filter(student => student.status !== STATUS.NONE);
+      const submitted = activeStudents.filter(student => student.status === STATUS.REGISTERED).length;
+      const total = activeStudents.length;
+
+      return {
+        submitted,
+        total,
+        pending: Math.max(0, total - submitted)
+      };
+    }
+
+    function getStateClass(student) {
+      if (student.status === STATUS.REGISTERED) return "is-registered";
+      if (student.status === STATUS.NONE) return "no-registration";
+      return "";
+    }
+
+    function getDisplayName(student, index) {
+      if (!appState.hideNames) return student.name;
+      return getStemBranchName(index);
+    }
+
+    function getStemBranchName(index) {
+      const stem = STEMS[index % STEMS.length];
+      const branch = BRANCHES[index % BRANCHES.length];
+      return `${stem}${branch}`;
+    }
+
+    function getCardAriaLabel(student, index) {
+      const displayName = getDisplayName(student, index);
+      const statusText = getStatusText(student.status);
+      const badgeText = student.badge ? `，标记 ${student.badge}` : "";
+      return `${student.serial}号，${displayName}，${statusText}${badgeText}`;
+    }
+
+    function getStatusText(status) {
+      if (status === STATUS.REGISTERED) return "已登记";
+      if (status === STATUS.NONE) return "无登记";
+      return "普通状态";
+    }
+
+    function makeDefaultAssignmentTitle() {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const date = String(now.getDate()).padStart(2, "0");
+      return `${month}${date}作业`;
+    }
+
+    function makeId(prefix) {
+      return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function announce(message) {
+      liveStatus.textContent = message;
+    }
+  </script>
+</body>
+</html>
