@@ -121,6 +121,12 @@
       opacity: 0.8;
     }
 
+    .icon-button.is-on {
+      background: #f0fbf5;
+      color: #166534;
+      box-shadow: inset 0 0 0 1px rgba(22, 101, 52, 0.22);
+    }
+
     .nav-button svg,
     .icon-button svg {
       width: 22px;
@@ -143,6 +149,12 @@
       white-space: nowrap;
       max-width: calc(100% - 150px);
       overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .title-wrap:active {
+      opacity: 0.65;
     }
 
     .title-line {
@@ -388,6 +400,7 @@
     }
 
     .drawer-list {
+      flex: 1;
       padding: 8px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -397,6 +410,8 @@
       width: 0;
       height: 0;
     }
+
+
 
     .assignment-item {
       width: 100%;
@@ -582,6 +597,51 @@
       color: #9f1239;
     }
 
+    .quick-assignment-selector {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .quick-assignment-selector::-webkit-scrollbar {
+      height: 0;
+    }
+
+    .quick-chip {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      border: 0;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    }
+
+    .quick-chip:active {
+      transform: scale(0.96);
+    }
+
+    .quick-chip.is-active {
+      background: #f0fbf5;
+      color: #166534;
+      box-shadow: inset 0 0 0 1px rgba(22, 101, 52, 0.22);
+    }
+
+    .panel-body-divider {
+      height: 1px;
+      background: var(--line);
+      margin: 0 0 10px;
+    }
+
     .switch {
       width: 46px;
       height: 28px;
@@ -707,6 +767,159 @@
       border: 0;
     }
 
+    .score-sheet-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(31, 32, 36, 0.08);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms var(--motion);
+    }
+
+    .score-sheet-scrim.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .score-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      background: var(--bg);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+      transform: translateY(100%);
+      transition: transform 320ms var(--motion);
+      will-change: transform;
+    }
+
+    .score-sheet.is-open {
+      transform: translateY(0);
+    }
+
+    .score-sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: #d0d1d5;
+      margin: 10px auto 0;
+    }
+
+    .score-sheet-body {
+      padding: 16px 16px 20px;
+    }
+
+    .score-display-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .score-display {
+      flex: 1;
+      min-height: 80px;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -1px;
+    }
+
+    .score-multiplier {
+      width: 64px;
+      height: 56px;
+      border: 0;
+      border-radius: 16px;
+      background: #f0fbf5;
+      color: #166534;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .score-multiplier:active {
+      transform: scale(0.95);
+    }
+
+    .score-numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .numpad-btn {
+      height: 58px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .numpad-btn:active {
+      transform: scale(0.95);
+      background-color: #f0f1f3;
+    }
+
+    .numpad-btn-secondary {
+      background: #f0f1f3;
+      color: #5a5e66;
+      box-shadow: none;
+    }
+
+    .score-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .score-action-btn {
+      height: 48px;
+      border: 0;
+      border-radius: 16px;
+      background: #f0f1f3;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 650;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .score-action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .score-action-primary {
+      background: #166534;
+      color: #ffffff;
+    }
+
     @media (min-width: 431px) {
       .phone {
         border-radius: 28px;
@@ -774,6 +987,22 @@
       .center-panel {
         border-radius: 22px;
       }
+
+      .score-display {
+        min-height: 68px;
+        font-size: 42px;
+      }
+
+      .score-multiplier {
+        width: 56px;
+        height: 50px;
+        font-size: 16px;
+      }
+
+      .numpad-btn {
+        height: 52px;
+        font-size: 24px;
+      }
     }
   </style>
 </head>
@@ -787,7 +1016,7 @@
         </svg>
       </button>
 
-      <section class="title-wrap" aria-label="当前视图标题">
+      <section class="title-wrap" id="titleButton" role="button" tabindex="0" aria-label="打开快捷面板">
         <div class="title-line">
           <span id="assignmentTitle">0619作业</span>
           <span class="chevron" aria-hidden="true"></span>
@@ -795,9 +1024,9 @@
       </section>
 
       <div class="right-actions" aria-label="操作按钮区">
-        <button class="icon-button" id="settingsButton" type="button" aria-label="打开快捷设置">
+        <button class="icon-button" id="settingsButton" type="button" aria-label="切换打分模式">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
           </svg>
         </button>
 
@@ -834,40 +1063,6 @@
 
     <div class="modal-scrim" id="modalScrim" aria-hidden="true"></div>
 
-    <section class="center-panel" id="settingsPanel" aria-label="快捷设置" aria-hidden="true">
-      <div class="panel-head">
-        <div class="panel-title">快捷设置</div>
-        <button class="panel-close" id="settingsCloseButton" type="button" aria-label="关闭快捷设置">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="panel-body">
-        <div class="setting-row">
-          <div class="setting-text">
-            <p class="setting-title">显示真实姓名</p>
-            <p class="setting-desc">关闭后使用甲子、乙丑等天干地支代号显示。</p>
-          </div>
-
-          <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
-            <span class="switch-knob"></span>
-          </button>
-        </div>
-
-        <button class="setting-action" id="invertButton" type="button">
-          <strong>反选提交状态</strong>
-          <span>当前作业中，已交与未交状态互相切换。</span>
-        </button>
-
-        <button class="setting-action danger" id="deleteAssignmentButton" type="button">
-          <strong>删除当前作业</strong>
-          <span>删除后会切换到相邻作业；若只剩一项，会自动新建空白作业。</span>
-        </button>
-      </div>
-    </section>
-
     <section class="center-panel" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-title">新建作业</div>
@@ -888,6 +1083,43 @@
       </div>
     </section>
 
+    <section class="center-panel" id="quickPanel" aria-label="快捷面板" aria-hidden="true">
+      <div class="panel-head">
+        <div class="panel-title">快捷面板</div>
+        <button class="panel-close" id="quickPanelCloseButton" type="button" aria-label="关闭快捷面板">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="panel-body">
+        <div class="quick-assignment-selector" id="quickAssignmentList"></div>
+
+        <div class="panel-body-divider" aria-hidden="true"></div>
+
+        <div class="setting-row">
+          <div class="setting-text">
+            <p class="setting-title">显示真实姓名</p>
+            <p class="setting-desc">关闭后使用甲子、乙丑等天干地支代号显示。</p>
+          </div>
+          <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+            <span class="switch-knob"></span>
+          </button>
+        </div>
+
+        <button class="setting-action" id="invertButton" type="button">
+          <strong>反选提交状态</strong>
+          <span>当前作业中，已交与未交状态互相切换。</span>
+        </button>
+
+        <button class="setting-action danger" id="deleteAssignmentButton" type="button">
+          <strong>删除当前作业</strong>
+          <span>删除后会切换到相邻作业；若只剩一项，会自动新建空白作业。</span>
+        </button>
+      </div>
+    </section>
+
     <section class="center-panel confirm-panel" id="confirmPanel" aria-label="确认操作" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-title" id="confirmTitle">确认操作</div>
@@ -899,6 +1131,43 @@
         <div class="dialog-actions">
           <button class="dialog-button" id="confirmCancelButton" type="button">取消</button>
           <button class="dialog-button danger" id="confirmOkButton" type="button">确认</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="score-sheet-scrim" id="scoreSheetScrim" aria-hidden="true"></div>
+
+    <section class="score-sheet" id="scoreSheet" aria-label="打分面板" aria-hidden="true">
+      <div class="score-sheet-handle" aria-hidden="true"></div>
+      <div class="score-sheet-body">
+        <div class="score-display-row">
+          <div class="score-display" id="scoreDisplay">0</div>
+          <button class="score-multiplier" id="scoreMultiplier" type="button">×10</button>
+        </div>
+
+        <div class="score-numpad">
+          <button class="numpad-btn" data-value="1" type="button">1</button>
+          <button class="numpad-btn" data-value="2" type="button">2</button>
+          <button class="numpad-btn" data-value="3" type="button">3</button>
+          <button class="numpad-btn" data-value="4" type="button">4</button>
+          <button class="numpad-btn" data-value="5" type="button">5</button>
+          <button class="numpad-btn" data-value="6" type="button">6</button>
+          <button class="numpad-btn" data-value="7" type="button">7</button>
+          <button class="numpad-btn" data-value="8" type="button">8</button>
+          <button class="numpad-btn" data-value="9" type="button">9</button>
+          <button class="numpad-btn numpad-btn-secondary" data-action="clear" type="button">C</button>
+          <button class="numpad-btn" data-value="0" type="button">0</button>
+          <button class="numpad-btn numpad-btn-secondary" data-action="backspace" type="button">
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path d="M22 3H7l-5 9 5 9h15V3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M10 9l4 6M14 9l-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="score-actions">
+          <button class="score-action-btn" id="scoreCancel" type="button">取消</button>
+          <button class="score-action-btn score-action-primary" id="scoreConfirm" type="button">确认</button>
         </div>
       </div>
     </section>
@@ -1013,11 +1282,13 @@
     const assignmentList = document.querySelector("#assignmentList");
 
     const modalScrim = document.querySelector("#modalScrim");
-    const settingsPanel = document.querySelector("#settingsPanel");
-    const settingsCloseButton = document.querySelector("#settingsCloseButton");
     const hideNameSwitch = document.querySelector("#hideNameSwitch");
     const invertButton = document.querySelector("#invertButton");
     const deleteAssignmentButton = document.querySelector("#deleteAssignmentButton");
+    const titleButton = document.querySelector("#titleButton");
+    const quickPanel = document.querySelector("#quickPanel");
+    const quickPanelCloseButton = document.querySelector("#quickPanelCloseButton");
+    const quickAssignmentList = document.querySelector("#quickAssignmentList");
 
     const newAssignmentPanel = document.querySelector("#newAssignmentPanel");
     const newAssignmentInput = document.querySelector("#newAssignmentInput");
@@ -1031,7 +1302,20 @@
     const confirmCancelButton = document.querySelector("#confirmCancelButton");
     const confirmOkButton = document.querySelector("#confirmOkButton");
 
+    const scoreSheet = document.querySelector("#scoreSheet");
+    const scoreSheetScrim = document.querySelector("#scoreSheetScrim");
+    const scoreDisplay = document.querySelector("#scoreDisplay");
+    const scoreMultiplier = document.querySelector("#scoreMultiplier");
+    const scoreNumpad = document.querySelector(".score-numpad");
+    const scoreCancel = document.querySelector("#scoreCancel");
+    const scoreConfirm = document.querySelector("#scoreConfirm");
+
     let pendingConfirmAction = null;
+    let scoreSheetStudent = null;
+    let scoreInputValue = "0";
+    let longPressTimer = null;
+    let longPressTriggered = false;
+    const LONG_PRESS_MS = 400;
 
     render();
 
@@ -1039,13 +1323,31 @@
     drawerCloseButton.addEventListener("click", closeDrawer);
     drawerScrim.addEventListener("click", closeDrawer);
 
-    settingsButton.addEventListener("click", openSettingsPanel);
-    settingsCloseButton.addEventListener("click", closeAllCenterPanels);
+    settingsButton.addEventListener("click", toggleScoringMode);
 
     addButton.addEventListener("click", openNewAssignmentPanel);
     newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
     newAssignmentCancelButton.addEventListener("click", closeAllCenterPanels);
     newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
+
+    titleButton.addEventListener("click", openQuickPanel);
+    titleButton.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openQuickPanel();
+      }
+    });
+    quickPanelCloseButton.addEventListener("click", closeAllCenterPanels);
+
+    quickAssignmentList.addEventListener("click", (event) => {
+      const chip = event.target.closest(".quick-chip");
+      if (!chip) return;
+
+      appState.currentAssignmentId = chip.dataset.assignmentId;
+      saveAppState();
+      render();
+      closeAllCenterPanels();
+    });
 
     modalScrim.addEventListener("click", () => {
       if (confirmPanel.classList.contains("is-open")) return;
@@ -1066,11 +1368,20 @@
       const card = event.target.closest(".student-card");
       if (!card) return;
 
+      if (longPressTriggered) {
+        longPressTriggered = false;
+        return;
+      }
+
       const assignment = getCurrentAssignment();
       const student = assignment.students.find(item => String(item.id) === card.dataset.id);
-      if (!student) return;
+      if (!student || student.status === STATUS.NONE) return;
 
-      toggleStudent(student);
+      if (appState.scoringMode) {
+        openScoreSheet(student);
+      } else {
+        toggleStudent(student);
+      }
     });
 
     hideNameSwitch.addEventListener("click", () => {
@@ -1129,7 +1440,12 @@
         return;
       }
 
-      if (settingsPanel.classList.contains("is-open") || newAssignmentPanel.classList.contains("is-open")) {
+      if (scoreSheet.classList.contains("is-open")) {
+        closeScoreSheet();
+        return;
+      }
+
+      if (newAssignmentPanel.classList.contains("is-open") || quickPanel.classList.contains("is-open")) {
         closeAllCenterPanels();
         return;
       }
@@ -1145,6 +1461,43 @@
       }
     });
 
+    scoreCancel.addEventListener("click", closeScoreSheet);
+    scoreConfirm.addEventListener("click", confirmScore);
+    scoreSheetScrim.addEventListener("click", closeScoreSheet);
+    scoreMultiplier.addEventListener("click", multiplyScore);
+
+    scoreNumpad.addEventListener("click", (event) => {
+      const btn = event.target.closest(".numpad-btn");
+      if (!btn) return;
+
+      const value = btn.dataset.value;
+      const action = btn.dataset.action;
+
+      if (value !== undefined) {
+        appendDigit(value);
+      } else if (action === "clear") {
+        scoreInputValue = "0";
+      } else if (action === "backspace") {
+        if (scoreInputValue.length > 1) {
+          scoreInputValue = scoreInputValue.slice(0, -1);
+        } else {
+          scoreInputValue = "0";
+        }
+      }
+
+      updateScoreDisplay();
+    });
+
+    grid.addEventListener("touchstart", handleLongPressStart, { passive: true });
+    grid.addEventListener("touchend", handleLongPressEnd);
+    grid.addEventListener("touchcancel", handleLongPressEnd);
+    grid.addEventListener("mousedown", handleLongPressStart);
+    grid.addEventListener("mouseup", handleLongPressEnd);
+    grid.addEventListener("mouseleave", handleLongPressEnd);
+    grid.addEventListener("contextmenu", (event) => {
+      if (longPressTimer) event.preventDefault();
+    });
+
     function render() {
       const assignment = getCurrentAssignment();
 
@@ -1154,6 +1507,8 @@
       renderStudents();
       renderAssignmentList();
       renderSettingsState();
+      renderQuickAssignmentList();
+      renderScoringMode();
       renderProgress();
     }
 
@@ -1213,6 +1568,23 @@
       );
     }
 
+    function renderQuickAssignmentList() {
+      quickAssignmentList.innerHTML = appState.assignments.map(assignment => {
+        const activeClass = assignment.id === appState.currentAssignmentId ? "is-active" : "";
+        return `<button class="quick-chip ${activeClass}" type="button" data-assignment-id="${escapeHTML(assignment.id)}">${escapeHTML(assignment.title)}</button>`;
+      }).join("");
+    }
+
+    function renderScoringMode() {
+      const isOn = appState.scoringMode;
+      settingsButton.classList.toggle("is-on", isOn);
+      settingsButton.setAttribute("aria-pressed", String(isOn));
+      settingsButton.setAttribute(
+        "aria-label",
+        isOn ? "打分模式已开启，点击关闭" : "切换打分模式"
+      );
+    }
+
     function renderProgress() {
       const stats = getAssignmentStats(getCurrentAssignment());
       const ratio = stats.total > 0 ? stats.submitted / stats.total : 0;
@@ -1228,6 +1600,7 @@
     }
 
     function openDrawer() {
+      closeScoreSheet();
       drawer.classList.add("is-open");
       drawerScrim.classList.add("is-open");
       drawer.setAttribute("aria-hidden", "false");
@@ -1241,16 +1614,8 @@
       setThemeColor("#f4f4f4");
     }
 
-    function openSettingsPanel() {
-      closeDrawer();
-      closeAllCenterPanels();
-
-      modalScrim.classList.add("is-open");
-      settingsPanel.classList.add("is-open");
-      settingsPanel.setAttribute("aria-hidden", "false");
-    }
-
     function openNewAssignmentPanel() {
+      closeScoreSheet();
       closeDrawer();
       closeAllCenterPanels();
 
@@ -1265,10 +1630,11 @@
     }
 
     function closeAllCenterPanels() {
+      closeScoreSheet();
       modalScrim.classList.remove("is-open");
 
-      settingsPanel.classList.remove("is-open");
-      settingsPanel.setAttribute("aria-hidden", "true");
+      quickPanel.classList.remove("is-open");
+      quickPanel.setAttribute("aria-hidden", "true");
 
       newAssignmentPanel.classList.remove("is-open");
       newAssignmentPanel.setAttribute("aria-hidden", "true");
@@ -1295,9 +1661,19 @@
       confirmPanel.classList.remove("is-open");
       confirmPanel.setAttribute("aria-hidden", "true");
 
-      if (!settingsPanel.classList.contains("is-open") && !newAssignmentPanel.classList.contains("is-open")) {
+      if (!newAssignmentPanel.classList.contains("is-open") && !quickPanel.classList.contains("is-open")) {
         modalScrim.classList.remove("is-open");
       }
+    }
+
+    function openQuickPanel() {
+      closeScoreSheet();
+      closeDrawer();
+      closeAllCenterPanels();
+
+      modalScrim.classList.add("is-open");
+      quickPanel.classList.add("is-open");
+      quickPanel.setAttribute("aria-hidden", "false");
     }
 
     function createAssignmentFromDialog() {
@@ -1410,9 +1786,17 @@
       announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交");
     }
 
+    function toggleScoringMode() {
+      appState.scoringMode = !appState.scoringMode;
+      saveAppState();
+      render();
+      announce(appState.scoringMode ? "已开启打分模式，点击卡片即可打分" : "已关闭打分模式，长按卡片可打分");
+    }
+
     function loadAppState() {
       const fallback = {
         hideNames: false,
+        scoringMode: false,
         currentAssignmentId: defaultAssignment.id,
         assignments: [clone(defaultAssignment)]
       };
@@ -1441,6 +1825,7 @@
 
         return {
           hideNames: Boolean(parsed.hideNames),
+          scoringMode: Boolean(parsed.scoringMode),
           currentAssignmentId,
           assignments
         };
@@ -1557,6 +1942,91 @@
 
     function announce(message) {
       liveStatus.textContent = message;
+    }
+
+    function handleLongPressStart(event) {
+      const card = event.target.closest(".student-card");
+      if (!card) return;
+
+      const assignment = getCurrentAssignment();
+      const student = assignment.students.find(item => String(item.id) === card.dataset.id);
+      if (!student || student.status === STATUS.NONE) return;
+
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        longPressTriggered = true;
+        openScoreSheet(student);
+      }, LONG_PRESS_MS);
+    }
+
+    function handleLongPressEnd() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }
+
+    function openScoreSheet(student) {
+      scoreSheetStudent = student;
+      const existingScore = student.badgeType === "score" ? student.badge : "0";
+      scoreInputValue = existingScore || "0";
+      updateScoreDisplay();
+
+      scoreSheetScrim.classList.add("is-open");
+      scoreSheet.classList.add("is-open");
+      scoreSheet.setAttribute("aria-hidden", "false");
+    }
+
+    function closeScoreSheet() {
+      scoreSheetStudent = null;
+      scoreInputValue = "0";
+      scoreSheet.classList.remove("is-open");
+      scoreSheetScrim.classList.remove("is-open");
+      scoreSheet.setAttribute("aria-hidden", "true");
+    }
+
+    function updateScoreDisplay() {
+      scoreDisplay.textContent = scoreInputValue;
+    }
+
+    function appendDigit(digit) {
+      if (scoreInputValue === "0") {
+        scoreInputValue = digit;
+      } else if (scoreInputValue.length < 3) {
+        scoreInputValue += digit;
+      }
+      const num = parseInt(scoreInputValue, 10);
+      if (num > 999) scoreInputValue = "999";
+    }
+
+    function multiplyScore() {
+      const num = parseInt(scoreInputValue, 10) || 0;
+      const result = num * 10;
+      if (result <= 999) {
+        scoreInputValue = String(result);
+      } else {
+        scoreInputValue = "999";
+      }
+      updateScoreDisplay();
+    }
+
+    function confirmScore() {
+      if (!scoreSheetStudent) return;
+
+      const score = parseInt(scoreInputValue, 10);
+      if (isNaN(score) || score <= 0) {
+        scoreSheetStudent.badge = "";
+        scoreSheetStudent.badgeType = "";
+      } else {
+        scoreSheetStudent.badge = String(score);
+        scoreSheetStudent.badgeType = "score";
+      }
+
+      scoreSheetStudent.updatedAt = new Date().toISOString();
+      saveAppState();
+      render();
+      closeScoreSheet();
+      announce(`已设置分数：${scoreSheetStudent.badge || "无"}`);
     }
   </script>
 </body>
