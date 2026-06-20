@@ -287,6 +287,19 @@
       transition: color 0.15s ease;
     }
 
+    .note-text {
+      max-width: 90%;
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--muted);
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      margin-top: 2px;
+      z-index: 2;
+    }
+
     .student-card.is-registered {
       background-color: #f0fbf5;
       box-shadow:
@@ -303,6 +316,10 @@
     }
 
     .student-card.is-registered .badge {
+      color: #15803d;
+    }
+
+    .student-card.is-registered .note-text {
       color: #15803d;
     }
 
@@ -834,24 +851,21 @@
       letter-spacing: -1px;
     }
 
-    .score-multiplier {
-      width: 64px;
-      height: 56px;
-      border: 0;
+    .score-mode-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
       border-radius: 16px;
-      background: #f0fbf5;
-      color: #166534;
-      font-size: 18px;
-      font-weight: 700;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: transform 0.12s ease, opacity 0.15s ease;
-      appearance: none;
-      -webkit-appearance: none;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
     }
 
-    .score-multiplier:active {
-      transform: scale(0.95);
+    .score-mode-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .score-numpad {
@@ -918,6 +932,38 @@
     .score-action-primary {
       background: #166534;
       color: #ffffff;
+    }
+
+    .score-note-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .score-note-input {
+      margin-bottom: 0;
+      padding-right: 40px;
+    }
+
+    .score-note-clear {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #a5a8ae;
+      display: none;
+      cursor: pointer;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-note-clear.is-visible {
+      display: flex;
     }
 
     @media (min-width: 431px) {
@@ -993,15 +1039,14 @@
         font-size: 42px;
       }
 
-      .score-multiplier {
-        width: 56px;
-        height: 50px;
-        font-size: 16px;
-      }
-
       .numpad-btn {
         height: 52px;
         font-size: 24px;
+      }
+
+      .score-note-input {
+        font-size: 14px;
+        padding: 12px 36px 12px 12px;
       }
     }
   </style>
@@ -1142,7 +1187,13 @@
       <div class="score-sheet-body">
         <div class="score-display-row">
           <div class="score-display" id="scoreDisplay">0</div>
-          <button class="score-multiplier" id="scoreMultiplier" type="button">×10</button>
+        </div>
+
+        <div class="score-mode-row">
+          <span class="score-mode-label">整十模式</span>
+          <button class="switch" id="scoreModeSwitch" type="button" aria-label="切换整十模式">
+            <span class="switch-knob"></span>
+          </button>
         </div>
 
         <div class="score-numpad">
@@ -1161,6 +1212,15 @@
             <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
               <path d="M22 3H7l-5 9 5 9h15V3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
               <path d="M10 9l4 6M14 9l-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="score-note-wrap">
+          <input class="field score-note-input" id="scoreNoteInput" type="text" placeholder="点击输入备注" maxlength="20" />
+          <button class="score-note-clear" id="scoreNoteClear" type="button" aria-label="清除备注" tabindex="-1">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
             </svg>
           </button>
         </div>
@@ -1305,14 +1365,18 @@
     const scoreSheet = document.querySelector("#scoreSheet");
     const scoreSheetScrim = document.querySelector("#scoreSheetScrim");
     const scoreDisplay = document.querySelector("#scoreDisplay");
-    const scoreMultiplier = document.querySelector("#scoreMultiplier");
+    const scoreModeSwitch = document.querySelector("#scoreModeSwitch");
     const scoreNumpad = document.querySelector(".score-numpad");
+    const scoreNoteInput = document.querySelector("#scoreNoteInput");
+    const scoreNoteClear = document.querySelector("#scoreNoteClear");
     const scoreCancel = document.querySelector("#scoreCancel");
     const scoreConfirm = document.querySelector("#scoreConfirm");
 
     let pendingConfirmAction = null;
     let scoreSheetStudent = null;
     let scoreInputValue = "0";
+    let scoreTensMode = false;
+    let noteInputValue = "";
     let longPressTimer = null;
     let longPressTriggered = false;
     const LONG_PRESS_MS = 400;
@@ -1464,7 +1528,19 @@
     scoreCancel.addEventListener("click", closeScoreSheet);
     scoreConfirm.addEventListener("click", confirmScore);
     scoreSheetScrim.addEventListener("click", closeScoreSheet);
-    scoreMultiplier.addEventListener("click", multiplyScore);
+    scoreModeSwitch.addEventListener("click", toggleTensMode);
+
+    scoreNoteInput.addEventListener("input", () => {
+      noteInputValue = scoreNoteInput.value;
+      scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
+    });
+
+    scoreNoteClear.addEventListener("click", () => {
+      scoreNoteInput.value = "";
+      noteInputValue = "";
+      scoreNoteClear.classList.remove("is-visible");
+      scoreNoteInput.focus();
+    });
 
     scoreNumpad.addEventListener("click", (event) => {
       const btn = event.target.closest(".numpad-btn");
@@ -1474,7 +1550,17 @@
       const action = btn.dataset.action;
 
       if (value !== undefined) {
-        appendDigit(value);
+        if (scoreTensMode) {
+          scoreInputValue = value === "0" ? "100" : String(parseInt(value, 10) * 10);
+        } else {
+          if (scoreInputValue === "0") {
+            scoreInputValue = value;
+          } else if (scoreInputValue.length < 3) {
+            scoreInputValue += value;
+          }
+          const num = parseInt(scoreInputValue, 10);
+          if (num > 999) scoreInputValue = "999";
+        }
       } else if (action === "clear") {
         scoreInputValue = "0";
       } else if (action === "backspace") {
@@ -1533,6 +1619,7 @@
             <div class="serial">${escapeHTML(student.serial)}</div>
             ${badgeHTML}
             <div class="name">${escapeHTML(displayName)}</div>
+            ${student.note ? `<div class="note-text">${escapeHTML(student.note)}</div>` : ""}
           </button>
         `;
       }).join("");
@@ -1859,6 +1946,7 @@
           : STATUS.NORMAL,
         badge: String(student.badge || ""),
         badgeType: String(student.badgeType || ""),
+        note: String(student.note || ""),
         updatedAt: student.updatedAt || ""
       };
     }
@@ -1907,7 +1995,8 @@
       const displayName = getDisplayName(student, index);
       const statusText = getStatusText(student.status);
       const badgeText = student.badge ? `，标记 ${student.badge}` : "";
-      return `${student.serial}号，${displayName}，${statusText}${badgeText}`;
+      const noteText = student.note ? `，备注 ${student.note}` : "";
+      return `${student.serial}号，${displayName}，${statusText}${badgeText}${noteText}`;
     }
 
     function getStatusText(status) {
@@ -1968,8 +2057,27 @@
 
     function openScoreSheet(student) {
       scoreSheetStudent = student;
-      const existingScore = student.badgeType === "score" ? student.badge : "0";
-      scoreInputValue = existingScore || "0";
+
+      if (student.badgeType === "note") {
+        noteInputValue = student.badge || "";
+        student.badge = "";
+        student.badgeType = "";
+        scoreInputValue = "0";
+      } else {
+        noteInputValue = student.note || "";
+        const existingScore = student.badgeType === "score" ? student.badge : "0";
+        scoreInputValue = existingScore || "0";
+      }
+
+      scoreTensMode = false;
+      scoreModeSwitch.classList.remove("is-on");
+      scoreModeSwitch.setAttribute("aria-pressed", "false");
+      scoreModeSwitch.setAttribute("aria-label", "切换整十模式，当前关闭");
+      updateNumpadLabels();
+
+      scoreNoteInput.value = noteInputValue;
+      scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
+
       updateScoreDisplay();
 
       scoreSheetScrim.classList.add("is-open");
@@ -1980,6 +2088,12 @@
     function closeScoreSheet() {
       scoreSheetStudent = null;
       scoreInputValue = "0";
+      noteInputValue = "";
+      scoreTensMode = false;
+      scoreModeSwitch.classList.remove("is-on");
+      scoreNoteInput.value = "";
+      scoreNoteClear.classList.remove("is-visible");
+      updateNumpadLabels();
       scoreSheet.classList.remove("is-open");
       scoreSheetScrim.classList.remove("is-open");
       scoreSheet.setAttribute("aria-hidden", "true");
@@ -1987,27 +2101,6 @@
 
     function updateScoreDisplay() {
       scoreDisplay.textContent = scoreInputValue;
-    }
-
-    function appendDigit(digit) {
-      if (scoreInputValue === "0") {
-        scoreInputValue = digit;
-      } else if (scoreInputValue.length < 3) {
-        scoreInputValue += digit;
-      }
-      const num = parseInt(scoreInputValue, 10);
-      if (num > 999) scoreInputValue = "999";
-    }
-
-    function multiplyScore() {
-      const num = parseInt(scoreInputValue, 10) || 0;
-      const result = num * 10;
-      if (result <= 999) {
-        scoreInputValue = String(result);
-      } else {
-        scoreInputValue = "999";
-      }
-      updateScoreDisplay();
     }
 
     function confirmScore() {
@@ -2022,11 +2115,35 @@
         scoreSheetStudent.badgeType = "score";
       }
 
+      const trimmedNote = noteInputValue.trim();
+      scoreSheetStudent.note = trimmedNote || "";
+
       scoreSheetStudent.updatedAt = new Date().toISOString();
       saveAppState();
       render();
       closeScoreSheet();
-      announce(`已设置分数：${scoreSheetStudent.badge || "无"}`);
+      announce(`已保存：分数 ${scoreSheetStudent.badge || "无"}${trimmedNote ? `，备注 ${trimmedNote}` : ""}`, "polite");
+    }
+
+    function toggleTensMode() {
+      scoreTensMode = !scoreTensMode;
+      scoreModeSwitch.classList.toggle("is-on", scoreTensMode);
+      scoreModeSwitch.setAttribute("aria-pressed", String(scoreTensMode));
+      scoreModeSwitch.setAttribute("aria-label", scoreTensMode ? "切换整十模式，当前开启" : "切换整十模式，当前关闭");
+      updateNumpadLabels();
+    }
+
+    function updateNumpadLabels() {
+      const buttons = scoreNumpad.querySelectorAll(".numpad-btn");
+      buttons.forEach(btn => {
+        if (btn.dataset.action) return;
+        const digit = btn.dataset.value;
+        if (scoreTensMode) {
+          btn.textContent = digit === "0" ? "100" : String(parseInt(digit, 10) * 10);
+        } else {
+          btn.textContent = digit;
+        }
+      });
     }
   </script>
 </body>
