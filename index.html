@@ -6,6 +6,8 @@
   <!-- 保留缩放限制 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
+  <meta name="theme-color" content="#f4f4f4" />
+
   <title>0619作业 UI</title>
 
   <style>
@@ -26,10 +28,14 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      background: #f4f4f4;
+    }
+
     body {
       margin: 0;
       min-height: 100dvh;
-      background: #dedede;
+      background: #f4f4f4;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                    "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
@@ -64,10 +70,34 @@
       position: relative;
       height: 44px;
       padding: 0 14px;
-      border-bottom: 1px solid var(--line);
       background: var(--bg);
       flex-shrink: 0;
       z-index: 10;
+    }
+
+    .progress-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--line);
+      z-index: 11;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .progress-bar::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      background: rgba(22, 101, 52, 0.5);
+      transform: scaleX(var(--progress, 0));
+      transform-origin: left center;
+      transition: transform 320ms var(--motion);
     }
 
     .nav-button,
@@ -247,7 +277,9 @@
 
     .student-card.is-registered {
       background-color: #f0fbf5;
-      box-shadow: 0 1px 0 rgba(22, 101, 52, 0.03);
+      box-shadow:
+        inset 0 0 0 1px rgba(22, 101, 52, 0.22),
+        0 1px 0 rgba(22, 101, 52, 0.05);
     }
 
     .student-card.is-registered .name {
@@ -287,14 +319,12 @@
       opacity: 0;
       pointer-events: none;
       transition:
-        opacity 260ms var(--motion),
-        backdrop-filter 260ms var(--motion),
-        -webkit-backdrop-filter 260ms var(--motion);
+        opacity 260ms var(--motion);
     }
 
     .drawer-scrim {
       z-index: 30;
-      background: rgba(31, 32, 36, 0.16);
+      background: rgba(31, 32, 36, 0.08);
     }
 
     .drawer-scrim.is-open {
@@ -305,8 +335,6 @@
     .modal-scrim {
       z-index: 50;
       background: rgba(244, 244, 244, 0.34);
-      -webkit-backdrop-filter: blur(14px) saturate(1.04);
-      backdrop-filter: blur(14px) saturate(1.04);
     }
 
     .modal-scrim::after {
@@ -330,9 +358,9 @@
       width: min(78%, 310px);
       background: var(--bg);
       border-right: 1px solid var(--line);
-      box-shadow: 24px 0 70px rgba(0,0,0,0.14);
+      box-shadow: 6px 0 24px rgba(0,0,0,0.08);
       z-index: 40;
-      transform: translateX(-102%);
+      transform: translateX(-120%);
       transition: transform 320ms var(--motion);
       will-change: transform;
       display: flex;
@@ -439,13 +467,16 @@
       transition:
         opacity 260ms var(--motion),
         transform 320ms var(--motion);
-      will-change: opacity, transform;
     }
 
     .center-panel.is-open {
       opacity: 1;
       pointer-events: auto;
       transform: translate(-50%, -50%) scale(1);
+    }
+
+    #newAssignmentPanel {
+      top: 35%;
     }
 
     .panel-head {
@@ -776,6 +807,10 @@
           </svg>
         </button>
       </div>
+
+      <div class="progress-bar" id="progressBar" role="progressbar"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+           aria-label="当前作业提交进度"></div>
     </header>
 
     <div class="scroll-container">
@@ -961,9 +996,12 @@
 
     const appState = loadAppState();
 
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
+
     const grid = document.querySelector("#studentGrid");
     const titleNode = document.querySelector("#assignmentTitle");
     const liveStatus = document.querySelector("#liveStatus");
+    const progressBar = document.querySelector("#progressBar");
 
     const menuButton = document.querySelector("#menuButton");
     const settingsButton = document.querySelector("#settingsButton");
@@ -1032,7 +1070,7 @@
       const student = assignment.students.find(item => String(item.id) === card.dataset.id);
       if (!student) return;
 
-      editStudent(student);
+      toggleStudent(student);
     });
 
     hideNameSwitch.addEventListener("click", () => {
@@ -1116,6 +1154,7 @@
       renderStudents();
       renderAssignmentList();
       renderSettingsState();
+      renderProgress();
     }
 
     function renderStudents() {
@@ -1174,16 +1213,32 @@
       );
     }
 
+    function renderProgress() {
+      const stats = getAssignmentStats(getCurrentAssignment());
+      const ratio = stats.total > 0 ? stats.submitted / stats.total : 0;
+      progressBar.style.setProperty("--progress", String(ratio));
+      progressBar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+    }
+
+    function setThemeColor(color) {
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute("content", color);
+      }
+    }
+
     function openDrawer() {
       drawer.classList.add("is-open");
       drawerScrim.classList.add("is-open");
       drawer.setAttribute("aria-hidden", "false");
+      setThemeColor("#f4f4f4");
     }
 
     function closeDrawer() {
       drawer.classList.remove("is-open");
       drawerScrim.classList.remove("is-open");
       drawer.setAttribute("aria-hidden", "true");
+      setThemeColor("#f4f4f4");
     }
 
     function openSettingsPanel() {
@@ -1339,92 +1394,20 @@
       render();
     }
 
-    function editStudent(student) {
-      const assignment = getCurrentAssignment();
-      const index = assignment.students.findIndex(item => item.id === student.id);
-      const displayName = getDisplayName(student, index);
+    function toggleStudent(student) {
+      if (student.status === STATUS.NONE) return;
 
-      const action = prompt(
-        `${student.serial} ${displayName}\n` +
-        `当前状态：${getStatusText(student.status)}\n` +
-        `当前标记：${student.badge || "无"}\n\n` +
-        "1 设为已交\n" +
-        "2 设为普通状态\n" +
-        "3 设为无登记\n" +
-        "4 设置分数\n" +
-        "5 设置备注\n" +
-        "6 清空右上角标记\n" +
-        "7 修改姓名\n\n" +
-        "输入 1-7"
-      );
+      student.status = student.status === STATUS.REGISTERED ? STATUS.NORMAL : STATUS.REGISTERED;
 
-      if (action === null) return;
-
-      const normalized = action.trim();
-
-      if (normalized === "1") {
-        student.status = STATUS.REGISTERED;
-        student.badge = "已交";
-        student.badgeType = "submit";
-      }
-
-      if (normalized === "2") {
-        student.status = STATUS.NORMAL;
-      }
-
-      if (normalized === "3") {
-        student.status = STATUS.NONE;
+      if (student.badgeType === "submit") {
         student.badge = "";
         student.badgeType = "";
-      }
-
-      if (normalized === "4") {
-        const score = prompt("输入分数，例如 98");
-        if (score === null) return;
-
-        const trimmedScore = score.trim();
-        if (!trimmedScore) return;
-
-        student.badge = trimmedScore;
-        student.badgeType = "score";
-      }
-
-      if (normalized === "5") {
-        const note = prompt("输入备注，例如 需重写");
-        if (note === null) return;
-
-        const trimmedNote = note.trim();
-        if (!trimmedNote) return;
-
-        student.badge = trimmedNote;
-        student.badgeType = "note";
-      }
-
-      if (normalized === "6") {
-        student.badge = "";
-        student.badgeType = "";
-      }
-
-      if (normalized === "7") {
-        if (appState.hideNames) {
-          alert("当前已隐藏真实姓名。关闭隐藏后再修改姓名。");
-          return;
-        }
-
-        const newName = prompt("输入新姓名", student.name);
-        if (newName === null) return;
-
-        const trimmedName = newName.trim();
-        if (!trimmedName) return;
-
-        student.name = trimmedName;
       }
 
       student.updatedAt = new Date().toISOString();
-
       saveAppState();
       render();
-      announce(`已更新：${displayName}`);
+      announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交");
     }
 
     function loadAppState() {
