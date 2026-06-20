@@ -1,0 +1,84 @@
+# README — 0619作业 UI
+
+> 开发者自述：怎么跑、怎么改、坏了怎么修。详细代码地图见 `CodeGraph.md`。
+
+## 这是什么
+
+单文件 HTML 原型：在模拟手机视口里管理“作业→学生→提交状态”。纯前端、无构建、无依赖、无服务端，数据存在浏览器 `localStorage`。
+
+只一个源文件：`index.html`（约 1563 行，HTML + 内联 CSS + 内联 vanilla JS）。
+
+## 如何运行
+
+- 直接双击 `index.html` 用浏览器打开；或拖进浏览器窗口。
+- 调试推荐：VS Code Live Server，或 `python -m http.server` 后访问 `http://localhost:8000/`。
+- 无需 `npm install`、无构建步骤。改完保存即生效，刷新页面查看。
+
+## 数据与重置
+
+- 存储键：`localStorage["homework_ui_assignments_v4"]`。
+- 清空重来：控制台执行 `localStorage.removeItem("homework_ui_assignments_v4")` 后刷新；或 DevTools → Application → Local Storage → 删该键。
+- 首次打开若无存储，自动加载 `defaultStudents`（50 人花名册）与默认作业 `0619作业`。
+- 改 `defaultStudents` 只影响“无存储的新用户”；已有存储的用户仍读旧数据（除非清键）。
+
+## 代码组织
+
+全部在 `index.html`，分区固定，行号会随改动漂移：
+
+1. **HTML 结构**（约 781–907 行）：顶栏 / 学生网格容器 / 抽屉 / 设置面板 / 新建作业面板 / 确认对话框。
+2. **CSS**（约 13–778 行）：设计变量在 `:root`（14–24），改主题色与缓动只动这里；三态卡片样式在 `.student-card.*`（278–313）；媒体查询在末尾（710–777）。
+3. **JS**（约 909–1561 行）：
+   - 常量/默认数据：921–995
+   - DOM 引用：999–1032（改 id 必须同步这里）
+   - 事件绑定：1038–1146
+   - 渲染函数：1148–1221
+   - 面板控制：1223–1301
+   - 业务操作：1303–1411
+   - 持久化/规整：1413–1479
+   - 工具函数：1481–1560
+
+完整函数表、调用图、数据模型见 `CodeGraph.md`。
+
+## 状态与交互逻辑
+
+- 学生三态：`NORMAL`（普通）/ `REGISTERED`（已交）/ `NONE`（无登记，锁定不可点）。
+- 点卡片：`NORMAL ⇄ REGISTERED`；`NONE` 不响应。
+- 反选：当前作业内 `NORMAL ⇄ REGISTERED` 互换，`NONE` 不动；会清/补“已交”标记。注意：`NORMAL + 分数` 反选后会变 `REGISTERED + 分数`，语义可能不符预期（见 CodeGraph §10 #5）。
+- 删除作业：二次确认；删完切相邻作业；若一个不剩则自动新建空白作业。
+- 新建作业：基于当前花名册复制，状态重置为 `NORMAL`（`NONE` 保留），清空 badge。
+- 隐藏姓名：开关开=显示真名，关=用天干地支代号（`甲子`/`乙丑`…，按 index 取模）。
+- Esc 键优先级：确认框 > 设置/新建面板 > 抽屉。
+
+## 开发与调试要点
+
+- **改 DOM id**：HTML、JS 引用块（999–1032）、事件绑定区要三处同步。
+- **新增状态值**：`STATUS` 枚举 + `getStateClass` + `getStatusText` + CSS 三态样式，四处同步。
+- **改持久化结构**：要么改 `STORAGE_KEY` 放弃旧数据，要么在 `normalizeAssignment`/`normalizeStudent` 里加兼容字段。无自动迁移。
+- **配额风险**：`saveAppState` 无 try/catch，存储写满会抛未捕获异常；如需稳健，包一层。
+- **渲染性能**：当前每次操作全量 `innerHTML` 重建 50 卡片，可接受；扩到上百项需改差量更新。
+- **无障碍**：`#liveStatus` 是 `aria-live` 公告区，状态变更后调 `announce(msg)` 触发屏读器。
+
+## 常见问题修复路径
+
+| 现象 | 先看这里 |
+|---|---|
+| 改了花名册不生效 | 用户已有 localStorage；清键或改 `loadAppState` 回退逻辑 |
+| 改了样式没反应 | 检查是否被三态类（`.is-registered`/`.no-registration`）覆盖；媒体查询 `max-width:360px` 可能覆盖 |
+| 点卡片没反应 | 学生 `status` 是否为 `NONE`；`card.dataset.id` 与 `student.id` 比较是否一致（String） |
+| 确认框点遮罩不关 | 设计如此；确认框打开时 `modalScrim` 点击被忽略（index.html:1051） |
+| 存储异常/数据回退 | `loadAppState` catch 吞错；加 `console.warn` 排查 |
+| 进度条不动 | `renderProgress` 依赖 `getAssignmentStats`；`NONE` 学生不计入分母 |
+| 抽屉/面板 Esc 不关 | 确认框可能仍开着，Esc 先关确认框 |
+
+## 没有的东西（避免误找）
+
+- 无 `package.json` / 无依赖 / 无构建脚本。
+- 无测试目录 / 无 lint 配置。
+- 无 `AGENTS.md` / 无 `.opencode` 配置。
+- 无后端 / 无网络请求 / 无第三方库。
+- 无 TypeScript / 无模块化（全部裸 JS 在一个 `<script>` 内）。
+
+## Git 现状
+
+- 分支 `master`，1 次提交（`0d78793 Add 0619作业 UI HTML file`）。
+- 工作区 `index.html` 有未提交改动：新增进度条、`theme-color` meta、移除 `backdrop-filter`、调整已交卡片阴影、抽屉位移与阴影、新建面板位置、`editStudent`→`toggleStudent` 重命名等。提交前用 `git diff index.html` 复核。
