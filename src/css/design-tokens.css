@@ -1,0 +1,11 @@
+    :root {
+      --bg: #f4f4f4;
+      --card: #ffffff;
+      --text: #1f2024;
+      --muted: #8b8f97;
+      --icon: #1d1f23;
+      --line: rgba(31, 32, 36, 0.055);
+      --shadow: 0 1px 0 rgba(0,0,0,0.018);
+      --panel-shadow: 0 22px 70px rgba(0,0,0,0.16);
+      --motion: cubic-bezier(.2, .8, .2, 1);
+    }

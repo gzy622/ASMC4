@@ -1,52 +1,68 @@
 # 0619作业 UI — AGENTS.md
 
-单文件 HTML 作业管理原型：学生三态、作业切换、打分面板、localStorage 持久化。纯前端、无构建、无依赖。
+模块化多文件作业管理应用：学生三态、作业切换、打分面板、localStorage 持久化。纯前端、无构建、无依赖。
 
 ## Project
 
 | 属性 | 值 |
 |---|---|
-| 入口 | `index.html`（HTML + 内联 CSS + 内联 JS，~2395 行） |
-| 栈 | 纯 vanilla JS / CSS3 / HTML5 |
+| 入口 | `index.html`（HTML 骨架，209 行） |
+| CSS | `src/css/`（4 文件：设计变量、基础、组件、响应式） |
+| JS | `src/js/`（ESM 模块，30 个文件） |
+| 栈 | Vanilla JS ESM / CSS3 / HTML5 |
 | 存储 | `localStorage["homework_ui_assignments_v4"]` |
 | 语言 | zh-CN |
 
 ## Commands
 
-无构建/测试步骤。直接打开即可：
+不支持 `file://` 协议（ESM 限制），必须通过 HTTP 服务：
 
 ```bash
-# 浏览器直接打开
-start index.html          # Windows
-open index.html           # macOS
-
-# 或启动一个本地服务器调试
 python -m http.server 8000
 # 访问 http://localhost:8000/
 ```
 
 ## Architecture
 
-全部在 `index.html` 中按顺序组织：
+### CSS 层 — `src/css/`
 
-| 区段 | 位置 | 说明 |
-|---|---|---|
-| CSS 设计变量 | `:root` (14–24) | `--bg`/`--card`/`--text`/`--muted`/`--motion`，改主题色只动这里 |
-| CSS 三态样式 | `.student-card.*` (278–313) | `NORMAL` / `REGISTERED`(`.is-registered`) / `NONE`(`.no-registration`) |
-| 媒体查询 | 末尾 (710–777) | 小屏适配 |
-| JS 常量/默认数据 | `STORAGE_KEY` / `STATUS` / `defaultStudents` / `defaultAssignment` | 50 人花名册，三态枚举 |
-| JS DOM 引用 | 所有 `querySelector` 集中段 | **改 DOM id 必须同步这里** |
-| JS 事件绑定 | 委托到 `.student-grid` / `#assignmentList` / `#quickAssignmentList` 等 | `closest()` 找目标 |
-| JS 渲染函数 | `render()` → 子渲染函数 | 每次全量 `innerHTML` 重建 |
-| JS 业务操作 | `toggleStudent` / `invertCurrentAssignmentSubmission` / `deleteCurrentAssignment` / `createAssignmentFromDialog` | 每次操作后调 `saveAppState` → `render` |
-| JS 持久化 | `loadAppState` / `saveAppState` / `normalizeAssignment` / `normalizeStudent` | try/catch 静默回退，无迁移机制 |
-| 打分面板 | `openScoreSheet` / `confirmScore` + 数字键盘 | 长按或打分模式点击触发 |
+| 文件 | 职责 |
+|---|---|
+| `design-tokens.css` | `:root` 设计变量（`--bg`/`--card`/`--text`/`--muted`/`--motion`），改主题色只动这里 |
+| `base.css` | reset、body 居中、`.phone` 容器、`.grid`、`.app-bar`、`.progress-bar` |
+| `components.css` | 全部组件样式（student-card、drawer、panel、score-sheet、numpad 等） |
+| `responsive.css` | 媒体查询窄屏适配 |
+
+### JS 层 — `src/js/`
+
+| 模块 | 职责 |
+|---|---|
+| `constants.js` | `STATUS` 枚举、`STORAGE_KEY`、天干地支表 |
+| `data/defaults.js` | 50 人默认花名册数据 |
+| `state.js` | **核心枢纽** — `appState` 模块私有，通过 `getState()` 只读访问 |
+| `dom-refs.js` | 所有 `querySelector` 唯一集中于此，**改 DOM id 只改此一处** |
+| `runtime.js` | 运行时可变状态（`pendingConfirmAction`、打分输入值、手势变量等） |
+| `render/` | `render()` 编排 + 6 个子渲染函数 |
+| `ui/` | `drawer`、`panels`、`confirm`、`backup` UI 控制 |
+| `business/` | `assignment`、`student` 业务逻辑 |
+| `score-sheet/` | 打分面板交互 + 长按检测 |
+| `gestures/` | 滑动手势（score-swipe、drawer-gestures），副作用模块 |
+| `events/index.js` | 全部 `addEventListener` 绑定入口 |
+| `app.js` | 入口，导入 events + gestures（副作用）后调用 `render()` |
+
+### 数据流
+
+```
+用户操作 → events/ → business/ → state.js (修改) → saveAppState() → render()
+                                                      ↓
+                                               localStorage
+```
 
 ## Conventions
 
-1. **改 DOM id**：HTML 属性 → JS 的 `querySelector` → 事件绑定的引用，**三处同步**。
+1. **改 DOM id**：HTML 属性 → `src/js/dom-refs.js` 中 `querySelector`，**两处同步**（不再需要同步事件绑定，因为使用 class 委托）。
 2. **新增状态值**：`STATUS` 枚举 + `getStateClass` + `getStatusText` + CSS 三态样式，**四处同步**。
-3. **状态变更**：每次操作后依次调用 `saveAppState()` → `render()`。
+3. **状态变更**：通过 `state.js` 的 `getState()` 获取可变引用，修改后依次调用 `saveAppState()` → `render()`。
 4. **学生 id 比较**：始终用 `String(item.id) === card.dataset.id`。
 5. **Esc 优先级**：确认框 > 打分面板 > 新建/快捷面板 > 抽屉。
 6. **渲染**：全量 `innerHTML` 重建（50 卡片可接受），不要改为差量更新除非性能出问题。
@@ -54,6 +70,8 @@ python -m http.server 8000
 8. **深拷贝**：用 `clone(value)` = `JSON.parse(JSON.stringify(value))`。
 9. **存储写满**：`saveAppState` 无 try/catch，改健壮性时添加。
 10. **花名册修改**：改 `defaultStudents` 只影响新用户；老用户需清 `localStorage`。
+11. **ESM 模块**：所有 JS 文件使用 ES Module 语法，`index.html` 通过 `<script type="module" src="src/js/app.js">` 加载。
+12. **无循环依赖**：`state.js` 不导入 `render/`，业务模块导入 `render/` 但 `render/` 不导入业务模块。
 
 ## Notes
 

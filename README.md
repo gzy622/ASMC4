@@ -10,8 +10,9 @@
 
 ## 如何运行
 
-- 直接双击 `index.html` 用浏览器打开；或拖进浏览器窗口。
-- 调试推荐：VS Code Live Server，或 `python -m http.server` 后访问 `http://localhost:8000/`。
+- Windows 下双击 `start-lan-preview.cmd`，会自动打开浏览器并显示可供同一局域网设备访问的地址。
+- 默认端口为 `8000`；也可在终端运行 `.\start-lan-preview.cmd 8001` 指定其他端口。保持命令窗口开启，按 `Ctrl+C` 停止服务。
+- 也可使用 VS Code Live Server，或手动运行 `python -m http.server 8000 --bind 0.0.0.0`。
 - 无需 `npm install`、无构建步骤。改完保存即生效，刷新页面查看。
 
 ## 数据与重置
@@ -73,15 +74,3 @@
 | 进度条不动 | `renderProgress` 依赖 `getAssignmentStats`；`NONE` 学生不计入分母 |
 | 抽屉/面板 Esc 不关 | 确认框可能仍开着，Esc 先关确认框 |
 
-## 没有的东西（避免误找）
-
-- 无 `package.json` / 无依赖 / 无构建脚本。
-- 无测试目录 / 无 lint 配置。
-- 无 `AGENTS.md` / 无 `.opencode` 配置。
-- 无后端 / 无网络请求 / 无第三方库。
-- 无 TypeScript / 无模块化（全部裸 JS 在一个 `<script>` 内）。
-
-## Git 现状
-
-- 分支 `main`，1 次提交（`0d78793 Add 0619作业 UI HTML file`）。
-- 工作区 `index.html` 有未提交改动。提交前用 `git diff index.html` 复核。
