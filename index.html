@@ -2402,6 +2402,8 @@
     function renameAssignment(assignmentId) {
       const assignment = appState.assignments.find(item => item.id === assignmentId);
       if (!assignment) return;
+      // 重入保护：已存在编辑中的 input 则跳过
+      if (assignmentList.querySelector(".assignment-edit-input")) return;
 
       // 在 drawer 中找到对应的 .assignment-name
       const nameSpan = assignmentList.querySelector(
@@ -2452,6 +2454,7 @@
           input.blur(); // 触发 commit
         } else if (e.key === "Escape") {
           e.preventDefault();
+          e.stopPropagation();
           cancel();
         }
       });
