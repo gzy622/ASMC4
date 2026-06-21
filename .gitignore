@@ -1,0 +1,5 @@
+# CodeGraph runtime cache (DB, daemon logs, sockets)
+.codegraph/
+
+# DeepSeek CLI state
+.deepseek/
