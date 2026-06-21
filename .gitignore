@@ -3,3 +3,6 @@
 
 # DeepSeek CLI state
 .deepseek/
+
+# Reasonix desktop topic cache
+.reasonix/
