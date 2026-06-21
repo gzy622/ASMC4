@@ -2518,6 +2518,7 @@
         };
       } catch (error) {
         console.warn("读取存储失败，使用默认数据", error);
+        announce("读取存储失败，已使用默认数据");
         return fallback;
       }
     }
