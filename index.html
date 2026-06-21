@@ -829,6 +829,47 @@
       padding: 16px 16px 20px;
     }
 
+    .score-student-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 0;
+      padding: 2px 12px;
+      margin-bottom: 12px;
+    }
+
+    .score-student-serial {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      min-width: 48px;
+      height: 48px;
+      padding: 0 13px;
+      border-radius: 24px;
+      background: #f0f1f3;
+      font-size: 20px;
+      font-weight: 750;
+      color: #5a5e66;
+      line-height: 1;
+      letter-spacing: 0.2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-student-name {
+      min-width: 0;
+      max-width: calc(100% - 60px);
+      font-size: 25px;
+      font-weight: 750;
+      line-height: 1.2;
+      letter-spacing: -0.4px;
+      color: var(--text);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
     .score-display-row {
       display: flex;
       align-items: center;
@@ -898,10 +939,55 @@
       background-color: #f0f1f3;
     }
 
-    .numpad-btn-secondary {
-      background: #f0f1f3;
+    .numpad-btn-function {
+      border: 1px solid #dfe2e5;
+      background: #f3f4f5;
       color: #5a5e66;
-      box-shadow: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 3px 10px rgba(31, 32, 36, 0.06);
+    }
+
+    .numpad-btn-function:active {
+      background: #e9ebed;
+      box-shadow: inset 0 1px 3px rgba(31, 32, 36, 0.08);
+    }
+
+    .score-tens-btn {
+      background: #eef5f0;
+      border-color: #d3e3d7;
+      color: #166534;
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: -0.2px;
+    }
+
+    .numpad-btn-backspace svg {
+      width: 25px;
+      height: 25px;
+      transition: transform 0.12s ease;
+    }
+
+    .numpad-btn-backspace:active svg {
+      transform: translateX(-1px);
+    }
+
+    .numpad-btn:focus-visible {
+      outline: 3px solid rgba(22, 101, 52, 0.24);
+      outline-offset: 2px;
+    }
+
+    .score-tens-btn.is-on {
+      background: #166534;
+      border-color: #166534;
+      color: #ffffff;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 4px 12px rgba(22, 101, 52, 0.22);
+    }
+
+    .score-tens-btn.is-on:active {
+      background: #145a2f;
     }
 
     .score-actions {
@@ -1048,6 +1134,18 @@
         font-size: 14px;
         padding: 12px 36px 12px 12px;
       }
+
+      .score-student-serial {
+        min-width: 42px;
+        height: 42px;
+        padding: 0 11px;
+        border-radius: 21px;
+        font-size: 17px;
+      }
+
+      .score-student-name {
+        font-size: 21px;
+      }
     }
   </style>
 </head>
@@ -1185,15 +1283,13 @@
     <section class="score-sheet" id="scoreSheet" aria-label="打分面板" aria-hidden="true">
       <div class="score-sheet-handle" aria-hidden="true"></div>
       <div class="score-sheet-body">
-        <div class="score-display-row">
-          <div class="score-display" id="scoreDisplay">0</div>
+        <div class="score-student-info">
+          <span class="score-student-serial" id="scoreStudentSerial">--</span>
+          <span class="score-student-name" id="scoreStudentName">--</span>
         </div>
 
-        <div class="score-mode-row">
-          <span class="score-mode-label">整十模式</span>
-          <button class="switch" id="scoreModeSwitch" type="button" aria-label="切换整十模式">
-            <span class="switch-knob"></span>
-          </button>
+        <div class="score-display-row">
+          <div class="score-display" id="scoreDisplay">0</div>
         </div>
 
         <div class="score-numpad">
@@ -1206,12 +1302,12 @@
           <button class="numpad-btn" data-value="7" type="button">7</button>
           <button class="numpad-btn" data-value="8" type="button">8</button>
           <button class="numpad-btn" data-value="9" type="button">9</button>
-          <button class="numpad-btn numpad-btn-secondary" data-action="clear" type="button">C</button>
+          <button class="numpad-btn numpad-btn-function score-tens-btn" id="scoreTensBtn" data-action="tens" type="button">×10</button>
           <button class="numpad-btn" data-value="0" type="button">0</button>
-          <button class="numpad-btn numpad-btn-secondary" data-action="backspace" type="button">
-            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-              <path d="M22 3H7l-5 9 5 9h15V3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-              <path d="M10 9l4 6M14 9l-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <button class="numpad-btn numpad-btn-function numpad-btn-backspace" data-action="backspace" type="button" aria-label="删除上一位数字" title="删除上一位数字">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 5.5H8.2L3.5 12l4.7 6.5H21V5.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M10.5 9.25l5.5 5.5M16 9.25l-5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
         </div>
@@ -1365,12 +1461,14 @@
     const scoreSheet = document.querySelector("#scoreSheet");
     const scoreSheetScrim = document.querySelector("#scoreSheetScrim");
     const scoreDisplay = document.querySelector("#scoreDisplay");
-    const scoreModeSwitch = document.querySelector("#scoreModeSwitch");
+    const scoreTensBtn = document.querySelector("#scoreTensBtn");
     const scoreNumpad = document.querySelector(".score-numpad");
     const scoreNoteInput = document.querySelector("#scoreNoteInput");
     const scoreNoteClear = document.querySelector("#scoreNoteClear");
     const scoreCancel = document.querySelector("#scoreCancel");
     const scoreConfirm = document.querySelector("#scoreConfirm");
+    const scoreStudentSerial = document.querySelector("#scoreStudentSerial");
+    const scoreStudentName = document.querySelector("#scoreStudentName");
 
     let pendingConfirmAction = null;
     let scoreSheetStudent = null;
@@ -1528,7 +1626,6 @@
     scoreCancel.addEventListener("click", closeScoreSheet);
     scoreConfirm.addEventListener("click", confirmScore);
     scoreSheetScrim.addEventListener("click", closeScoreSheet);
-    scoreModeSwitch.addEventListener("click", toggleTensMode);
 
     scoreNoteInput.addEventListener("input", () => {
       noteInputValue = scoreNoteInput.value;
@@ -1569,6 +1666,8 @@
         } else {
           scoreInputValue = "0";
         }
+      } else if (action === "tens") {
+        toggleTensMode();
       }
 
       updateScoreDisplay();
@@ -2058,6 +2157,11 @@
     function openScoreSheet(student) {
       scoreSheetStudent = student;
 
+      const assignment = getCurrentAssignment();
+      const studentIndex = assignment.students.findIndex(s => String(s.id) === String(student.id));
+      scoreStudentSerial.textContent = student.serial;
+      scoreStudentName.textContent = getDisplayName(student, studentIndex >= 0 ? studentIndex : 0);
+
       if (student.badgeType === "note") {
         noteInputValue = student.badge || "";
         student.badge = "";
@@ -2070,9 +2174,7 @@
       }
 
       scoreTensMode = false;
-      scoreModeSwitch.classList.remove("is-on");
-      scoreModeSwitch.setAttribute("aria-pressed", "false");
-      scoreModeSwitch.setAttribute("aria-label", "切换整十模式，当前关闭");
+      scoreTensBtn.classList.remove("is-on");
       updateNumpadLabels();
 
       scoreNoteInput.value = noteInputValue;
@@ -2089,8 +2191,10 @@
       scoreSheetStudent = null;
       scoreInputValue = "0";
       noteInputValue = "";
+      scoreStudentSerial.textContent = "--";
+      scoreStudentName.textContent = "--";
       scoreTensMode = false;
-      scoreModeSwitch.classList.remove("is-on");
+      scoreTensBtn.classList.remove("is-on");
       scoreNoteInput.value = "";
       scoreNoteClear.classList.remove("is-visible");
       updateNumpadLabels();
@@ -2110,9 +2214,11 @@
       if (isNaN(score) || score <= 0) {
         scoreSheetStudent.badge = "";
         scoreSheetStudent.badgeType = "";
+        scoreSheetStudent.status = STATUS.NORMAL;
       } else {
         scoreSheetStudent.badge = String(score);
         scoreSheetStudent.badgeType = "score";
+        scoreSheetStudent.status = STATUS.REGISTERED;
       }
 
       const trimmedNote = noteInputValue.trim();
@@ -2127,9 +2233,7 @@
 
     function toggleTensMode() {
       scoreTensMode = !scoreTensMode;
-      scoreModeSwitch.classList.toggle("is-on", scoreTensMode);
-      scoreModeSwitch.setAttribute("aria-pressed", String(scoreTensMode));
-      scoreModeSwitch.setAttribute("aria-label", scoreTensMode ? "切换整十模式，当前开启" : "切换整十模式，当前关闭");
+      scoreTensBtn.classList.toggle("is-on", scoreTensMode);
       updateNumpadLabels();
     }
 
