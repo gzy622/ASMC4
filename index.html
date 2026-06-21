@@ -428,7 +428,32 @@
       height: 0;
     }
 
+    .drawer-actions {
+      flex-shrink: 0;
+      padding: 8px 8px 12px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 8px;
+    }
 
+    .drawer-action-btn {
+      flex: 1;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+
+    .drawer-action-btn:active {
+      transform: scale(0.97);
+      background: #f0fbf5;
+    }
 
     .assignment-item {
       width: 100%;
@@ -437,16 +462,15 @@
       border-radius: 14px;
       background: var(--card);
       box-shadow: var(--shadow);
-      padding: 9px 10px;
+      padding: 9px 12px;
       margin-bottom: 8px;
-      text-align: left;
       cursor: pointer;
       font: inherit;
       color: inherit;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 4px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
     }
 
@@ -454,8 +478,73 @@
       transform: scale(0.985);
     }
 
+    .assignment-item-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .assignment-item-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .assignment-item-action {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .assignment-item-action:hover {
+      background: rgba(0,0,0,0.04);
+      color: var(--text);
+    }
+
+    .assignment-item-action.danger:hover {
+      background: rgba(220, 38, 38, 0.1);
+      color: #dc2626;
+    }
+
     .assignment-item.is-active {
       background: #f0fbf5;
+    }
+
+    .assignment-item-add {
+      width: 100%;
+      min-height: 54px;
+      border: 1.5px dashed var(--line);
+      border-radius: 14px;
+      background: transparent;
+      box-shadow: none;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font: inherit;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+    }
+
+    .assignment-item-add:active {
+      transform: scale(0.985);
+      background: #f0fbf5;
+      border-color: #166534;
+      color: #166534;
     }
 
     .assignment-name {
@@ -465,6 +554,22 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .assignment-edit-input {
+      flex: 1;
+      min-width: 0;
+      height: 28px;
+      border: 1px solid #166534;
+      border-radius: 6px;
+      padding: 0 6px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 650;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
     }
 
     .assignment-meta {
@@ -1193,7 +1298,7 @@
 
     <aside class="drawer" id="assignmentDrawer" aria-label="作业项目列表" aria-hidden="true">
       <div class="drawer-head">
-        <div class="drawer-title">作业项目</div>
+        <div class="drawer-title">AssignmentCheck</div>
         <button class="panel-close" id="drawerCloseButton" type="button" aria-label="关闭作业列表">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
@@ -1202,6 +1307,13 @@
       </div>
 
       <div class="drawer-list" id="assignmentList"></div>
+
+      <div class="drawer-actions">
+        <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
+        <button class="drawer-action-btn" id="importBackupBtn" type="button">导入备份</button>
+
+      </div>
+      <input type="file" id="importBackupInput" accept=".json" style="display:none" />
     </aside>
 
     <div class="modal-scrim" id="modalScrim" aria-hidden="true"></div>
@@ -1436,6 +1548,10 @@
     const drawerScrim = document.querySelector("#drawerScrim");
     const drawerCloseButton = document.querySelector("#drawerCloseButton");
     const assignmentList = document.querySelector("#assignmentList");
+    const exportBackupBtn = document.querySelector("#exportBackupBtn");
+    const importBackupBtn = document.querySelector("#importBackupBtn");
+    // newAssignmentDrawerBtn 已迁移至 assignmentList 内嵌条目
+    const importBackupInput = document.querySelector("#importBackupInput");
 
     const modalScrim = document.querySelector("#modalScrim");
     const hideNameSwitch = document.querySelector("#hideNameSwitch");
@@ -1517,6 +1633,31 @@
     });
 
     assignmentList.addEventListener("click", (event) => {
+      // 编辑中输入框不触发切换
+      if (event.target.closest(".assignment-edit-input")) return;
+
+      // 新建作业条目
+      if (event.target.closest(".assignment-item-add")) {
+        closeDrawer();
+        openNewAssignmentPanel();
+        return;
+      }
+
+      // 编辑/删除按钮
+      const actionBtn = event.target.closest(".assignment-item-action");
+      if (actionBtn) {
+        event.stopPropagation();
+        const action = actionBtn.dataset.action;
+        const assignmentId = actionBtn.dataset.assignmentId;
+        if (action === "edit") {
+          renameAssignment(assignmentId);
+        } else if (action === "delete") {
+          deleteAssignmentFromDrawer(assignmentId);
+        }
+        return;
+      }
+
+      // 切换作业
       const item = event.target.closest(".assignment-item");
       if (!item) return;
 
@@ -1526,9 +1667,37 @@
       closeDrawer();
     });
 
+    assignmentList.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        const actionBtn = event.target.closest(".assignment-item-action");
+        if (actionBtn) return; // 按钮自身键盘行为
+
+        // 新建作业条目
+        if (event.target.closest(".assignment-item-add")) {
+          event.preventDefault();
+          closeDrawer();
+          openNewAssignmentPanel();
+          return;
+        }
+
+        const item = event.target.closest(".assignment-item");
+        if (!item) return;
+        event.preventDefault();
+        appState.currentAssignmentId = item.dataset.assignmentId;
+        saveAppState();
+        render();
+        closeDrawer();
+      }
+    });
+
     grid.addEventListener("click", (event) => {
       const card = event.target.closest(".student-card");
       if (!card) return;
+
+      if (suppressNextCardClick) {
+        suppressNextCardClick = false;
+        return;
+      }
 
       if (longPressTriggered) {
         longPressTriggered = false;
@@ -1627,6 +1796,20 @@
     scoreConfirm.addEventListener("click", confirmScore);
     scoreSheetScrim.addEventListener("click", closeScoreSheet);
 
+    exportBackupBtn.addEventListener("click", exportBackup);
+    // newAssignmentDrawerBtn 事件已迁移至 assignmentList 委托
+
+    importBackupBtn.addEventListener("click", () => {
+      importBackupInput.click();
+    });
+
+    importBackupInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      importBackup(file);
+      importBackupInput.value = "";
+    });
+
     scoreNoteInput.addEventListener("input", () => {
       noteInputValue = scoreNoteInput.value;
       scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
@@ -1658,8 +1841,6 @@
           const num = parseInt(scoreInputValue, 10);
           if (num > 999) scoreInputValue = "999";
         }
-      } else if (action === "clear") {
-        scoreInputValue = "0";
       } else if (action === "backspace") {
         if (scoreInputValue.length > 1) {
           scoreInputValue = scoreInputValue.slice(0, -1);
@@ -1681,6 +1862,139 @@
     grid.addEventListener("mouseleave", handleLongPressEnd);
     grid.addEventListener("contextmenu", (event) => {
       if (longPressTimer) event.preventDefault();
+    });
+
+    // ===== Swipe gestures =====
+
+    // Score sheet: swipe down to close
+    let scoreSwipeStartY = null;
+    let scoreSwipeStartX = null;
+
+    scoreSheet.addEventListener("touchstart", (event) => {
+      const touch = event.touches[0];
+      scoreSwipeStartY = touch.clientY;
+      scoreSwipeStartX = touch.clientX;
+    }, { passive: true });
+
+    scoreSheet.addEventListener("touchend", (event) => {
+      if (scoreSwipeStartY === null) return;
+      const touch = event.changedTouches[0];
+      const dy = touch.clientY - scoreSwipeStartY;
+      const dx = touch.clientX - scoreSwipeStartX;
+      scoreSwipeStartY = null;
+      scoreSwipeStartX = null;
+
+      if (dy < 80) return;
+      if (dy < Math.abs(dx) * 1.5) return;
+      closeScoreSheet();
+    });
+
+    scoreSheet.addEventListener("touchcancel", () => {
+      scoreSwipeStartY = null;
+      scoreSwipeStartX = null;
+    });
+
+    // Main area: swipe right to open drawer, swipe left to close drawer
+    let phoneSwipeStartX = null;
+    let phoneSwipeStartY = null;
+    let phoneSwipeGestureActive = false;
+    let suppressNextCardClick = false;
+
+    const phoneEl = document.querySelector(".phone");
+
+    phoneEl.addEventListener("touchstart", (event) => {
+      // Only exclude panels/drawer, NOT student-card (to detect swipe from card area)
+      if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return;
+      const touch = event.touches[0];
+      phoneSwipeStartX = touch.clientX;
+      phoneSwipeStartY = touch.clientY;
+      phoneSwipeGestureActive = false;
+    }, { passive: true });
+
+    phoneEl.addEventListener("touchmove", (event) => {
+      if (phoneSwipeStartX === null) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - phoneSwipeStartX;
+      const dy = touch.clientY - phoneSwipeStartY;
+
+      // Any movement > 10px cancels the long press timer (directly, without touching phone swipe state)
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        longPressTriggered = false;
+      }
+
+      // If horizontal movement is dominant and past 15px, mark as gesture
+      if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        phoneSwipeGestureActive = true;
+      }
+    }, { passive: true });
+
+    phoneEl.addEventListener("touchend", (event) => {
+      if (phoneSwipeStartX === null) return;
+      if (!phoneSwipeGestureActive) {
+        phoneSwipeStartX = null;
+        phoneSwipeStartY = null;
+        return;
+      }
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - phoneSwipeStartX;
+      const dy = touch.clientY - phoneSwipeStartY;
+      phoneSwipeStartX = null;
+      phoneSwipeStartY = null;
+      phoneSwipeGestureActive = false;
+
+      const threshold = 50;
+      if (Math.abs(dx) < threshold) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+      suppressNextCardClick = true;
+
+      if (dx > 0 && !drawer.classList.contains("is-open")) {
+        openDrawer();
+      } else if (dx < 0 && drawer.classList.contains("is-open")) {
+        closeDrawer();
+      }
+    });
+
+    phoneEl.addEventListener("touchcancel", () => {
+      phoneSwipeStartX = null;
+      phoneSwipeStartY = null;
+      phoneSwipeGestureActive = false;
+    });
+
+    // Drawer itself: swipe left to close
+    let drawerSwipeStartX = null;
+    let drawerSwipeStartY = null;
+
+    drawer.addEventListener("touchstart", (event) => {
+      const touch = event.touches[0];
+      drawerSwipeStartX = touch.clientX;
+      drawerSwipeStartY = touch.clientY;
+    }, { passive: true });
+
+    drawer.addEventListener("touchend", (event) => {
+      if (drawerSwipeStartX === null) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - drawerSwipeStartX;
+      const dy = touch.clientY - drawerSwipeStartY;
+      drawerSwipeStartX = null;
+      drawerSwipeStartY = null;
+
+      const threshold = 50;
+      if (Math.abs(dx) < threshold) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+      if (dx < 0 && drawer.classList.contains("is-open")) {
+        closeDrawer();
+      }
+    });
+
+    drawer.addEventListener("touchcancel", () => {
+      drawerSwipeStartX = null;
+      drawerSwipeStartY = null;
     });
 
     function render() {
@@ -1730,17 +2044,31 @@
         const activeClass = assignment.id === appState.currentAssignmentId ? "is-active" : "";
 
         return `
-          <button
+          <div
             class="assignment-item ${activeClass}"
-            type="button"
+            role="button"
+            tabindex="0"
             data-assignment-id="${assignment.id}"
             aria-label="${escapeHTML(assignment.title)}，${stats.submitted}/${stats.total} 已交"
           >
-            <span class="assignment-name">${escapeHTML(assignment.title)}</span>
-            <span class="assignment-meta">${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
-          </button>
+            <div class="assignment-item-body">
+              <span class="assignment-name" data-assignment-id="${assignment.id}">${escapeHTML(assignment.title)}</span>
+              <span class="assignment-meta">${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
+            </div>
+            <div class="assignment-item-actions">
+              <button class="assignment-item-action" data-action="edit" data-assignment-id="${assignment.id}" type="button" aria-label="编辑 ${escapeHTML(assignment.title)}">✎</button>
+              <button class="assignment-item-action danger" data-action="delete" data-assignment-id="${assignment.id}" type="button" aria-label="删除 ${escapeHTML(assignment.title)}">✕</button>
+            </div>
+          </div>
         `;
-      }).join("");
+      }).join("") + `
+        <div class="assignment-item-add" role="button" tabindex="0" aria-label="新建作业">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+          <span style="font-size:15px;font-weight:600;">新建作业</span>
+        </div>
+      `;
     }
 
     function renderSettingsState() {
@@ -1798,6 +2126,82 @@
       drawerScrim.classList.remove("is-open");
       drawer.setAttribute("aria-hidden", "true");
       setThemeColor("#f4f4f4");
+    }
+
+    function exportBackup() {
+      try {
+        const json = JSON.stringify(appState, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const now = new Date();
+        const ts = now.getFullYear()
+          + String(now.getMonth() + 1).padStart(2, "0")
+          + String(now.getDate()).padStart(2, "0") + "_"
+          + String(now.getHours()).padStart(2, "0")
+          + String(now.getMinutes()).padStart(2, "0")
+          + String(now.getSeconds()).padStart(2, "0");
+        a.href = url;
+        a.download = `homework_backup_${ts}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert("导出失败：" + error.message);
+      }
+    }
+
+    function importBackup(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+
+          if (!data || !Array.isArray(data.assignments)) {
+            alert("备份文件格式无效：缺少 assignments 数组");
+            return;
+          }
+
+          openConfirm({
+            title: "导入备份",
+            message: "当前所有数据将被覆盖，确定导入此备份吗？",
+            okText: "导入",
+            danger: true,
+            onConfirm: function() {
+              try {
+                const assignments = data.assignments
+                  .filter(function(item) { return item && Array.isArray(item.students); })
+                  .map(normalizeAssignment);
+
+                if (assignments.length === 0) {
+                  alert("备份文件中没有有效的作业数据");
+                  return;
+                }
+
+                const currentAssignmentId = assignments.some(function(item) {
+                  return item.id === data.currentAssignmentId;
+                }) ? data.currentAssignmentId : assignments[0].id;
+
+                appState.hideNames = Boolean(data.hideNames);
+                appState.scoringMode = Boolean(data.scoringMode);
+                appState.currentAssignmentId = currentAssignmentId;
+                appState.assignments = assignments;
+
+                saveAppState();
+                render();
+                closeDrawer();
+                announce("备份已导入");
+              } catch (err) {
+                alert("导入失败：" + err.message);
+              }
+            }
+          });
+        } catch (error) {
+          alert("无法解析备份文件：" + error.message);
+        }
+      };
+      reader.readAsText(file);
     }
 
     function openNewAssignmentPanel() {
@@ -1956,6 +2360,103 @@
       render();
     }
 
+    function deleteAssignmentFromDrawer(assignmentId) {
+      const assignment = appState.assignments.find(item => item.id === assignmentId);
+      if (!assignment) return;
+
+      openConfirm({
+        title: "删除作业",
+        message: `确认删除"${assignment.title}"？该作业中的提交状态、分数和备注会一并删除。`,
+        okText: "确认删除",
+        danger: true,
+        onConfirm: function() {
+          const wasCurrent = appState.currentAssignmentId === assignmentId;
+
+          const idx = appState.assignments.findIndex(item => item.id === assignmentId);
+          if (idx >= 0) {
+            appState.assignments.splice(idx, 1);
+          }
+
+          if (appState.assignments.length === 0) {
+            const fallback = {
+              id: makeId("assignment"),
+              title: "新作业",
+              createdAt: new Date().toISOString(),
+              students: createFreshStudentsFrom(defaultStudents)
+            };
+            appState.assignments.push(fallback);
+            appState.currentAssignmentId = fallback.id;
+          } else if (wasCurrent) {
+            const nextIndex = Math.max(0, idx - 1);
+            appState.currentAssignmentId = appState.assignments[nextIndex].id;
+          }
+
+          saveAppState();
+          render();
+          closeConfirm();
+          announce("已删除作业");
+        }
+      });
+    }
+
+    function renameAssignment(assignmentId) {
+      const assignment = appState.assignments.find(item => item.id === assignmentId);
+      if (!assignment) return;
+
+      // 在 drawer 中找到对应的 .assignment-name
+      const nameSpan = assignmentList.querySelector(
+        `.assignment-name[data-assignment-id="${assignmentId}"]`
+      );
+      if (!nameSpan) return;
+
+      // 创建 input
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "assignment-edit-input";
+      input.value = assignment.title;
+      input.setAttribute("aria-label", "编辑作业名称");
+      input.maxLength = 24;
+
+      // 替换 span 为 input
+      nameSpan.replaceWith(input);
+      input.focus();
+      input.select();
+
+      // 完成编辑
+      function commit() {
+        const trimmed = input.value.trim();
+        if (trimmed && trimmed !== assignment.title) {
+          assignment.title = trimmed;
+          assignment.updatedAt = new Date().toISOString();
+          saveAppState();
+          render();
+          announce("已重命名为" + trimmed);
+        } else if (!trimmed) {
+          // 空名称 → 还原
+          render();
+        } else {
+          // 没改动 → 还原
+          render();
+        }
+      }
+
+      // 取消编辑
+      function cancel() {
+        render();
+      }
+
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          input.blur(); // 触发 commit
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          cancel();
+        }
+      });
+    }
+
     function toggleStudent(student) {
       if (student.status === STATUS.NONE) return;
 
@@ -2016,12 +2517,17 @@
           assignments
         };
       } catch (error) {
+        console.warn("读取存储失败，使用默认数据", error);
         return fallback;
       }
     }
 
     function saveAppState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (error) {
+        console.warn("保存失败：localStorage 可能已满", error);
+      }
     }
 
     function normalizeAssignment(assignment, assignmentIndex) {
@@ -2152,6 +2658,7 @@
         clearTimeout(longPressTimer);
         longPressTimer = null;
       }
+      longPressTriggered = false;
     }
 
     function openScoreSheet(student) {
@@ -2227,8 +2734,9 @@
       scoreSheetStudent.updatedAt = new Date().toISOString();
       saveAppState();
       render();
+      const savedBadge = scoreSheetStudent.badge || "无";
       closeScoreSheet();
-      announce(`已保存：分数 ${scoreSheetStudent.badge || "无"}${trimmedNote ? `，备注 ${trimmedNote}` : ""}`, "polite");
+      announce(`已保存：分数 ${savedBadge}${trimmedNote ? `，备注 ${trimmedNote}` : ""}`);
     }
 
     function toggleTensMode() {
