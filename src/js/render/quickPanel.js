@@ -1,5 +1,5 @@
 import { escapeHTML } from "../utils/escapeHTML.js";
-import { quickAssignmentList, quickSubjectSelect } from "../dom-refs.js";
+import { quickAssignmentList, quickRenameInput, quickSubjectSelect } from "../dom-refs.js";
 import { getCurrentAssignment } from "../state.js";
 
 export function renderQuickAssignmentList(state) {
@@ -8,8 +8,11 @@ export function renderQuickAssignmentList(state) {
     return `<button class="quick-chip ${activeClass}" type="button" data-assignment-id="${escapeHTML(assignment.id)}">${escapeHTML(assignment.title)}</button>`;
   }).join("");
 
+  const current = getCurrentAssignment();
+  if (quickRenameInput) {
+    quickRenameInput.value = current.title || "";
+  }
   if (quickSubjectSelect) {
-    const current = getCurrentAssignment();
     quickSubjectSelect.value = current.subject || "";
   }
 }

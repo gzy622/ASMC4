@@ -150,10 +150,18 @@
           </button>
         </div>
 
+        <div class="setting-row">
+          <div class="setting-text">
+            <p class="setting-title">作业名称</p>
+            <p class="setting-desc">按 Enter 或离开输入框时保存。</p>
+          </div>
+          <input class="setting-input" id="quickRenameInput" type="text" maxlength="24" />
+        </div>
+
         <div class="setting-row" id="quickSubjectRow">
           <div class="setting-text">
-            <p class="setting-title">当前作业科目</p>
-            <p class="setting-desc">设为"英语"时，名单中标记为"非英语"的学生将自动视为无需登记。</p>
+            <p class="setting-title">科目</p>
+            <p class="setting-desc">根据科目可自动过滤非英语学生。</p>
           </div>
           <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目">
             <option value="">未指定</option>

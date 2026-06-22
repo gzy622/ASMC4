@@ -5,8 +5,8 @@ export const defaultStudents = [
   { id: 1, serial: "01", name: "林子安", status: STATUS.NORMAL, badge: "98", badgeType: "score" },
   { id: 2, serial: "02", name: "陈雨", status: STATUS.REGISTERED, badge: "已交", badgeType: "submit" },
   { id: 3, serial: "03", name: "何思远", status: STATUS.REGISTERED, badge: "100", badgeType: "score" },
-  { id: 4, serial: "04", name: "李昕", status: STATUS.NONE, badge: "", badgeType: "" },
-  { id: 5, serial: "05", name: "周嘉宁", status: STATUS.NONE, badge: "", badgeType: "" },
+  { id: 4, serial: "04", name: "李昕", status: STATUS.NORMAL, badge: "", badgeType: "" },
+  { id: 5, serial: "05", name: "周嘉宁", status: STATUS.NORMAL, badge: "", badgeType: "" },
 
   { id: 6, serial: "06", name: "黄一诺", status: STATUS.NORMAL, badge: "需重写", badgeType: "note" },
   { id: 7, serial: "07", name: "吴泽", status: STATUS.REGISTERED, badge: "已阅", badgeType: "review" },

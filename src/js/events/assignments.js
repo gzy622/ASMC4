@@ -7,6 +7,7 @@ import {
   newAssignmentCreateButton,
   newAssignmentInput,
   quickAssignmentList,
+  quickRenameInput,
   quickSubjectSelect
 } from "../dom-refs.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
@@ -120,6 +121,45 @@ export function bindAssignmentEvents() {
   confirmOkButton.addEventListener("click", () => {
     if (typeof pendingConfirmAction === "function") pendingConfirmAction();
   });
+
+  if (quickRenameInput) {
+    let renameSettled = false;
+    function commitRename() {
+      if (renameSettled) return;
+      renameSettled = true;
+      const trimmed = quickRenameInput.value.trim();
+      const assignment = getCurrentAssignment();
+      if (trimmed && trimmed !== assignment.title) {
+        assignment.title = trimmed;
+        assignment.updatedAt = new Date().toISOString();
+        saveAppState();
+        render();
+        announce("已重命名为" + trimmed);
+      }
+    }
+    function cancelRename() {
+      if (renameSettled) return;
+      renameSettled = true;
+      render();
+    }
+    quickRenameInput.addEventListener("blur", () => {
+      renameSettled = false;
+      commitRename();
+    });
+    quickRenameInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        quickRenameInput.blur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        cancelRename();
+      }
+    });
+    quickRenameInput.addEventListener("focus", () => {
+      renameSettled = false;
+    });
+  }
 
   if (quickSubjectSelect) {
     quickSubjectSelect.addEventListener("change", () => {
