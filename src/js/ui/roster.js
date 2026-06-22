@@ -14,6 +14,8 @@ import {
   rosterEditorList
 } from "../dom-refs.js";
 
+let dragOriginatedFromHandle = false;
+
 export function openRosterEditor() {
   closeScoreSheet();
   closeDrawer();
@@ -100,9 +102,7 @@ function refreshRowIndices() {
 
 function handleDragStart(event) {
   const row = event.target.closest(".roster-row");
-  if (!row) { event.preventDefault(); return; }
-  const handle = event.target.closest(".roster-row-handle");
-  if (!handle) { event.preventDefault(); return; }
+  if (!row || !dragOriginatedFromHandle) { event.preventDefault(); return; }
   row.classList.add("dragging");
   event.dataTransfer.effectAllowed = "move";
   event.dataTransfer.setData("text/plain", row.dataset.id);
@@ -152,12 +152,16 @@ function handleDrop(event) {
 }
 
 function handleDragEnd() {
+  dragOriginatedFromHandle = false;
   document.querySelectorAll(".roster-row.dragging, .roster-row.drag-over-top, .roster-row.drag-over-bottom").forEach(el => {
     el.classList.remove("dragging", "drag-over-top", "drag-over-bottom");
   });
 }
 
 export function setupDragHandlers() {
+  rosterEditorList.addEventListener("pointerdown", event => {
+    dragOriginatedFromHandle = !!event.target.closest(".roster-row-handle");
+  });
   rosterEditorList.addEventListener("dragstart", handleDragStart);
   rosterEditorList.addEventListener("dragover", handleDragOver);
   rosterEditorList.addEventListener("dragleave", handleDragLeave);
