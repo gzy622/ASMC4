@@ -2,7 +2,7 @@ import { saveAppState, getState } from "../state.js";
 import { render } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
-import { normalizeAssignment } from "../utils/normalize.js";
+import { normalizeAssignment, normalizeRosterEntry } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
 import { importBackupInput } from "../dom-refs.js";
 
@@ -67,6 +67,9 @@ export function importBackup(file) {
             state.scoringMode = Boolean(data.scoringMode);
             state.currentAssignmentId = currentAssignmentId;
             state.assignments = assignments;
+            state.roster = Array.isArray(data.roster)
+              ? data.roster.map(normalizeRosterEntry)
+              : assignments[0].students.map(s => ({ id: s.id, serial: s.serial, name: s.name, nonEnglish: false }));
 
             saveAppState();
             render();

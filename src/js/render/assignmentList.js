@@ -8,6 +8,9 @@ export function renderAssignmentList(state) {
     const activeClass = assignment.id === state.currentAssignmentId ? "is-active" : "";
     const safeId = escapeHTML(assignment.id);
     const safeTitle = escapeHTML(assignment.title);
+    const subjectTag = assignment.subject
+      ? `<span class="assignment-subject-tag">${escapeHTML(assignment.subject)}</span>`
+      : "";
 
     return `
       <div
@@ -19,7 +22,7 @@ export function renderAssignmentList(state) {
       >
         <div class="assignment-item-body">
           <span class="assignment-name" data-assignment-id="${safeId}">${safeTitle}</span>
-          <span class="assignment-meta">${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
+          <span class="assignment-meta">${subjectTag}${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
         </div>
         <div class="assignment-item-actions">
           <button class="assignment-item-action" data-action="edit" data-assignment-id="${safeId}" type="button" aria-label="编辑 ${safeTitle}">✎</button>

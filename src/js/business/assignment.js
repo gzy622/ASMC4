@@ -1,10 +1,11 @@
 import { getState, saveAppState, getCurrentAssignment, defaultStudents } from "../state.js";
 import { STATUS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
-import { newAssignmentInput } from "../dom-refs.js";
+import { newAssignmentInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
+import { isStudentForceNone } from "../utils/display.js";
 import { assignmentList } from "../dom-refs.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
 import { closeDrawer } from "../ui/drawer.js";
@@ -13,12 +14,14 @@ import { closeAllCenterPanels } from "../ui/panels.js";
 export function createAssignmentFromDialog() {
   const inputValue = newAssignmentInput.value.trim();
   const title = inputValue || makeDefaultAssignmentTitle();
+  const subject = (newAssignmentSubjectInput && newAssignmentSubjectInput.value.trim()) || "";
 
   const current = getCurrentAssignment();
 
   const nextAssignment = {
     id: makeId("assignment"),
     title,
+    subject,
     createdAt: new Date().toISOString(),
     students: createFreshStudentsFrom(current.students)
   };
@@ -54,6 +57,7 @@ export function invertCurrentAssignmentSubmission() {
 
   assignment.students.forEach(student => {
     if (student.status === STATUS.NONE) return;
+    if (isStudentForceNone(student, assignment)) return;
 
     if (student.status === STATUS.REGISTERED) {
       student.status = STATUS.NORMAL;

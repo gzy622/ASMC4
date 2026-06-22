@@ -1,7 +1,7 @@
 ---
 description: 低成本代码侦查 agent，专注代码库探索和信息收集
 mode: subagent
-model: opencode/deepseek-v4-flash
+model: opencode-go/deepseek-v4-flash
 permission:
   edit: deny
   task: deny

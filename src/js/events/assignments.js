@@ -6,7 +6,8 @@ import {
   invertButton,
   newAssignmentCreateButton,
   newAssignmentInput,
-  quickAssignmentList
+  quickAssignmentList,
+  quickSubjectSelect
 } from "../dom-refs.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { pendingConfirmAction } from "../runtime.js";
@@ -119,4 +120,14 @@ export function bindAssignmentEvents() {
   confirmOkButton.addEventListener("click", () => {
     if (typeof pendingConfirmAction === "function") pendingConfirmAction();
   });
+
+  if (quickSubjectSelect) {
+    quickSubjectSelect.addEventListener("change", () => {
+      const assignment = getCurrentAssignment();
+      assignment.subject = quickSubjectSelect.value;
+      saveAppState();
+      render();
+      announce(assignment.subject ? `科目已设为${assignment.subject}` : "已清除科目");
+    });
+  }
 }

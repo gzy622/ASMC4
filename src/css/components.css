@@ -948,3 +948,239 @@
     .score-note-clear.is-visible {
       display: flex;
     }
+
+    .roster-editor {
+      position: absolute;
+      inset: 0;
+      z-index: 70;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms var(--motion);
+    }
+
+    .roster-editor.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .roster-editor-head {
+      height: 52px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .roster-editor-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 8px 12px;
+    }
+
+    .roster-editor-body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .roster-editor-foot {
+      flex-shrink: 0;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .roster-foot-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .roster-foot-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .roster-foot-btn:active {
+      transform: scale(0.97);
+    }
+
+    .roster-foot-btn.primary {
+      background: #166534;
+      color: #fff;
+      border-color: #166534;
+    }
+
+    .roster-foot-btn.danger {
+      color: #9f1239;
+      border-color: #e5b8c7;
+      background: #fef2f5;
+    }
+
+    .roster-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .roster-row:last-of-type {
+      border-bottom: none;
+    }
+
+    .roster-row-index {
+      width: 36px;
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .roster-row-input {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font: inherit;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .roster-row-input:focus {
+      border-color: #166534;
+      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
+    }
+
+    .roster-row-btn {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #a5a8ae;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .roster-row-btn:active {
+      background: rgba(31, 32, 36, 0.06);
+    }
+
+    .roster-row-btn.danger {
+      color: #e11d48;
+    }
+
+    .roster-row-btn.danger:active {
+      background: rgba(225, 29, 72, 0.08);
+    }
+
+    .roster-add-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 0;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      margin-top: 4px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+      background: transparent;
+      width: 100%;
+      font: inherit;
+    }
+
+    .roster-add-row:active {
+      color: #166534;
+      border-color: #166534;
+    }
+
+    .assignment-subject-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #166534;
+      background: #f0fbf5;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .roster-row-nonenglish {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c2410c;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .roster-row-nonenglish input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #c2410c;
+      margin: 0;
+    }
+
+    .roster-row-nonenglish span {
+      line-height: 1;
+    }
+
+    .subject-select {
+      flex-shrink: 0;
+      height: 36px;
+      padding: 0 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font: inherit;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .subject-select:focus {
+      border-color: #166534;
+      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
+    }
+
+    #newAssignmentPanel .field + .field {
+      margin-top: 10px;
+    }

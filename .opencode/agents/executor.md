@@ -1,7 +1,7 @@
 ---
 description: 低成本执行 agent，严格按计划实现代码修改
 mode: subagent
-model: opencode/deepseek-v4-flash
+model: opencode-go/deepseek-v4-flash
 permission:
   task: deny
 ---

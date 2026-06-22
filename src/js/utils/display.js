@@ -1,9 +1,29 @@
 import { getState } from "../state.js";
 import { STEMS, BRANCHES, STATUS } from "../constants.js";
 
-export function getStateClass(student) {
-  if (student.status === STATUS.REGISTERED) return "is-registered";
-  if (student.status === STATUS.NONE) return "no-registration";
+export function isNonEnglishRosterEntry(studentId) {
+  const state = getState();
+  const entry = state.roster.find(r => String(r.id) === String(studentId));
+  return Boolean(entry && entry.nonEnglish);
+}
+
+export function isSubjectEnglish(assignment) {
+  return Boolean(assignment && assignment.subject === "英语");
+}
+
+export function isStudentForceNone(student, assignment) {
+  return isSubjectEnglish(assignment) && isNonEnglishRosterEntry(student.id);
+}
+
+export function getEffectiveStatus(student, assignment) {
+  if (isStudentForceNone(student, assignment)) return STATUS.NONE;
+  return student.status;
+}
+
+export function getStateClass(student, assignment) {
+  const status = getEffectiveStatus(student, assignment);
+  if (status === STATUS.REGISTERED) return "is-registered";
+  if (status === STATUS.NONE) return "no-registration";
   return "";
 }
 
@@ -18,12 +38,15 @@ export function getStemBranchName(index) {
   return `${stem}${branch}`;
 }
 
-export function getCardAriaLabel(student, index) {
+export function getCardAriaLabel(student, index, assignment) {
   const displayName = getDisplayName(student, index);
-  const statusText = getStatusText(student.status);
+  const effectiveStatus = getEffectiveStatus(student, assignment);
+  const statusText = getStatusText(effectiveStatus);
+  const forcedNone = isStudentForceNone(student, assignment);
+  const reasonText = forcedNone ? "，非英语" : "";
   const badgeText = student.badge ? `，标记 ${student.badge}` : "";
   const noteText = student.note ? `，备注 ${student.note}` : "";
-  return `${student.serial}号，${displayName}，${statusText}${badgeText}${noteText}`;
+  return `${student.serial}号，${displayName}，${statusText}${reasonText}${badgeText}${noteText}`;
 }
 
 export function getStatusText(status) {

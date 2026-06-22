@@ -6,6 +6,7 @@ import {
   setLongPressTimer,
   setLongPressTriggered
 } from "../runtime.js";
+import { isStudentForceNone } from "../utils/display.js";
 import { openScoreSheet } from "./index.js";
 
 let longPressResetTimer = null;
@@ -17,6 +18,7 @@ export function handleLongPressStart(event) {
   const assignment = getCurrentAssignment();
   const student = assignment.students.find(item => String(item.id) === card.dataset.id);
   if (!student || student.status === STATUS.NONE) return;
+  if (isStudentForceNone(student, assignment)) return;
 
   setLongPressTimer(setTimeout(() => {
     setLongPressTimer(null);

@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { modalScrim, newAssignmentPanel, newAssignmentInput, quickPanel } from "../dom-refs.js";
+import { modalScrim, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 
@@ -9,6 +9,7 @@ export function openNewAssignmentPanel() {
   closeAllCenterPanels();
 
   newAssignmentInput.value = "";
+  if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "";
   modalScrim.classList.add("is-open");
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");

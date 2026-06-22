@@ -11,6 +11,7 @@ import {
 import { toggleScoringMode, toggleStudent } from "../business/student.js";
 import { openScoreSheet } from "../score-sheet/index.js";
 import { handleLongPressEnd, handleLongPressStart } from "../score-sheet/longpress.js";
+import { isStudentForceNone } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 
@@ -31,10 +32,12 @@ export function bindStudentEvents() {
       return;
     }
 
-    const student = getCurrentAssignment().students.find(
+    const assignment = getCurrentAssignment();
+    const student = assignment.students.find(
       item => String(item.id) === card.dataset.id
     );
     if (!student || student.status === STATUS.NONE) return;
+    if (isStudentForceNone(student, assignment)) return;
 
     if (getState().scoringMode) {
       openScoreSheet(student);

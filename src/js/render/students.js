@@ -1,10 +1,10 @@
 import { escapeHTML } from "../utils/escapeHTML.js";
-import { getStateClass, getDisplayName, getCardAriaLabel } from "../utils/display.js";
+import { getStateClass, getDisplayName, getCardAriaLabel, isStudentForceNone } from "../utils/display.js";
 import { grid } from "../dom-refs.js";
 
 export function renderStudents(state, assignment) {
   grid.innerHTML = assignment.students.map((student, index) => {
-    const stateClass = getStateClass(student);
+    const stateClass = getStateClass(student, assignment);
     const displayName = getDisplayName(student, index);
 
     const badgeHTML = student.badge
@@ -16,7 +16,7 @@ export function renderStudents(state, assignment) {
         class="student-card ${stateClass}"
         type="button"
         data-id="${student.id}"
-        aria-label="${escapeHTML(getCardAriaLabel(student, index))}"
+        aria-label="${escapeHTML(getCardAriaLabel(student, index, assignment))}"
       >
         <div class="serial">${escapeHTML(student.serial)}</div>
         ${badgeHTML}

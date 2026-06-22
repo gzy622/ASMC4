@@ -15,7 +15,17 @@
       .replaceAll("'", "&#039;");
   }
 
-  function getStateClass(student) {
+  function isStudentForceNone(student, assignment, roster) {
+    if (!assignment || assignment.subject !== "英语") return false;
+    if (!roster) return false;
+    for (var i = 0; i < roster.length; i++) {
+      if (String(roster[i].id) === String(student.id) && roster[i].nonEnglish) return true;
+    }
+    return false;
+  }
+
+  function getStateClass(student, assignment, roster) {
+    if (isStudentForceNone(student, assignment, roster)) return "no-registration";
     if (student.status === STATUS.REGISTERED) return "is-registered";
     if (student.status === STATUS.NONE) return "no-registration";
     return "";
@@ -36,18 +46,33 @@
     return "普通状态";
   }
 
-  function getCardAriaLabel(student, index, hideNames) {
+  function getCardAriaLabel(student, index, hideNames, assignment, roster) {
     var displayName = getDisplayName(student, index, hideNames);
-    var statusText = getStatusText(student.status);
+    var forcedNone = isStudentForceNone(student, assignment, roster);
+    var statusText = getStatusText(forcedNone ? STATUS.NONE : student.status);
+    var reasonText = forcedNone ? "，非英语" : "";
     var badgeText = student.badge ? "，标记 " + student.badge : "";
     var noteText = student.note ? "，备注 " + student.note : "";
-    return student.serial + "号，" + displayName + "，" + statusText + badgeText + noteText;
+    return student.serial + "号，" + displayName + "，" + statusText + reasonText + badgeText + noteText;
   }
 
-  function getAssignmentStats(students) {
+  function getAssignmentStats(students, assignment, roster) {
+    var isEnglish = assignment && assignment.subject === "英语";
+    var rosterMap = {};
+    if (roster) {
+      for (var r = 0; r < roster.length; r++) {
+        rosterMap[String(roster[r].id)] = roster[r];
+      }
+    }
     var active = [];
     for (var i = 0; i < students.length; i++) {
-      if (students[i].status !== STATUS.NONE) active.push(students[i]);
+      if (students[i].status !== STATUS.NONE) {
+        if (isEnglish) {
+          var entry = rosterMap[String(students[i].id)];
+          if (entry && entry.nonEnglish) continue;
+        }
+        active.push(students[i]);
+      }
     }
     var submitted = 0;
     for (var j = 0; j < active.length; j++) {
@@ -88,7 +113,8 @@
 
       return {
         hideNames: Boolean(parsed.hideNames),
-        assignment: currentAssignment
+        assignment: currentAssignment,
+        roster: Array.isArray(parsed.roster) ? parsed.roster : []
       };
     } catch (e) {
       return null;
@@ -101,6 +127,7 @@
 
     var assignment = data.assignment;
     var hideNames = data.hideNames;
+    var roster = data.roster || [];
     var students = assignment.students;
 
     var titleEl = document.getElementById("assignmentTitle");
@@ -108,7 +135,7 @@
 
     document.title = assignment.title + " UI";
 
-    var stats = getAssignmentStats(students);
+    var stats = getAssignmentStats(students, assignment, roster);
     var progressBar = document.getElementById("progressBar");
     if (progressBar) {
       var ratio = stats.total > 0 ? stats.submitted / stats.total : 0;
@@ -122,7 +149,7 @@
     var html = "";
     for (var i = 0; i < students.length; i++) {
       var student = students[i];
-      var stateClass = getStateClass(student);
+      var stateClass = getStateClass(student, assignment, roster);
       var displayName = getDisplayName(student, i, hideNames);
       var badgeHTML = student.badge
         ? '<div class="badge">' + escapeHTML(student.badge) + "</div>"
@@ -130,7 +157,7 @@
       var noteHTML = student.note
         ? '<div class="note-text">' + escapeHTML(student.note) + "</div>"
         : "";
-      var ariaLabel = escapeHTML(getCardAriaLabel(student, i, hideNames));
+      var ariaLabel = escapeHTML(getCardAriaLabel(student, i, hideNames, assignment, roster));
 
       html +=
         '<button class="student-card ' + stateClass + '" type="button" data-id="' + student.id + '" aria-label="' + ariaLabel + '">' +

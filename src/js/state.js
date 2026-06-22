@@ -1,5 +1,5 @@
 import { STORAGE_KEY, STATUS } from "./constants.js";
-import { normalizeAssignment } from "./utils/normalize.js";
+import { normalizeAssignment, normalizeRosterEntry } from "./utils/normalize.js";
 import { clone } from "./utils/clone.js";
 import { defaultStudents, defaultAssignment } from "./data/defaults.js";
 
@@ -31,7 +31,18 @@ export function getCurrentAssignment() {
 }
 
 export function getAssignmentStats(assignment) {
-  const activeStudents = assignment.students.filter(student => student.status !== STATUS.NONE);
+  const isEnglish = assignment.subject === "英语";
+  const rosterMap = new Map(appState.roster.map(r => [String(r.id), r]));
+
+  const activeStudents = assignment.students.filter(student => {
+    if (student.status === STATUS.NONE) return false;
+    if (isEnglish) {
+      const entry = rosterMap.get(String(student.id));
+      if (entry && entry.nonEnglish) return false;
+    }
+    return true;
+  });
+
   const submitted = activeStudents.filter(student => student.status === STATUS.REGISTERED).length;
   const total = activeStudents.length;
 
@@ -43,11 +54,19 @@ export function getAssignmentStats(assignment) {
 }
 
 function loadAppState() {
+  const rosterFromDefault = () => defaultStudents.map(s => ({
+    id: s.id,
+    serial: s.serial,
+    name: s.name,
+    nonEnglish: false
+  }));
+
   const fallback = {
     hideNames: false,
     scoringMode: false,
     currentAssignmentId: defaultAssignment.id,
-    assignments: [clone(defaultAssignment)]
+    assignments: [clone(defaultAssignment)],
+    roster: rosterFromDefault()
   };
 
   try {
@@ -72,11 +91,16 @@ function loadAppState() {
       ? parsed.currentAssignmentId
       : assignments[0].id;
 
+    const roster = Array.isArray(parsed.roster)
+      ? parsed.roster.map(normalizeRosterEntry)
+      : assignments[0].students.map(s => ({ id: s.id, serial: s.serial, name: s.name, nonEnglish: false }));
+
     return {
       hideNames: Boolean(parsed.hideNames),
       scoringMode: Boolean(parsed.scoringMode),
       currentAssignmentId,
-      assignments
+      assignments,
+      roster
     };
   } catch (error) {
     console.warn("读取存储失败，使用默认数据", error);

@@ -5,6 +5,7 @@ export function normalizeAssignment(assignment, assignmentIndex) {
   return {
     id: String(assignment.id || makeId(`assignment-${assignmentIndex}`)),
     title: String(assignment.title || "未命名作业"),
+    subject: String(assignment.subject || ""),
     createdAt: assignment.createdAt || new Date().toISOString(),
     students: assignment.students.map(normalizeStudent)
   };
@@ -24,5 +25,15 @@ export function normalizeStudent(student, index) {
     badgeType: String(student.badgeType || ""),
     note: String(student.note || ""),
     updatedAt: student.updatedAt || ""
+  };
+}
+
+export function normalizeRosterEntry(entry, index) {
+  const fallbackSerial = String(index + 1).padStart(2, "0");
+  return {
+    id: Number(entry.id) || index + 1,
+    serial: String(entry.serial || fallbackSerial).padStart(2, "0"),
+    name: String(entry.name || "").trim() || "未命名",
+    nonEnglish: Boolean(entry.nonEnglish)
   };
 }

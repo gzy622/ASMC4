@@ -1,10 +1,12 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
+import { isStudentForceNone } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 
 export function toggleStudent(student) {
   if (student.status === STATUS.NONE) return;
+  if (isStudentForceNone(student, getCurrentAssignment())) return;
 
   student.status = student.status === STATUS.REGISTERED ? STATUS.NORMAL : STATUS.REGISTERED;
 

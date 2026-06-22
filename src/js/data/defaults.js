@@ -62,6 +62,7 @@ export const defaultStudents = [
 export const defaultAssignment = {
   id: "assignment-0619",
   title: "0619作业",
+  subject: "",
   createdAt: new Date().toISOString(),
   students: clone(defaultStudents)
 };
