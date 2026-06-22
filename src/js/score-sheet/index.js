@@ -1,4 +1,4 @@
-import { getState, getCurrentAssignment, saveAppState } from "../state.js";
+import { getCurrentAssignment, saveAppState } from "../state.js";
 import { scoreSheet, scoreSheetScrim, scoreDisplay, scoreTensBtn, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreNumpad } from "../dom-refs.js";
 import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setScoreTensMode, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
 import { getDisplayName } from "../utils/display.js";
@@ -15,9 +15,7 @@ export function openScoreSheet(student) {
   scoreStudentName.textContent = getDisplayName(student, studentIndex >= 0 ? studentIndex : 0);
 
   if (student.badgeType === "note") {
-    setNoteInputValue(student.badge || "");
-    student.badge = "";
-    student.badgeType = "";
+    setNoteInputValue(student.note || student.badge || "");
     setScoreInputValue("0");
   } else {
     setNoteInputValue(student.note || "");

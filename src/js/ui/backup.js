@@ -1,6 +1,6 @@
 import { saveAppState, getState } from "../state.js";
 import { render } from "../render/index.js";
-import { openConfirm } from "./confirm.js";
+import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { normalizeAssignment } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
@@ -71,6 +71,7 @@ export function importBackup(file) {
             saveAppState();
             render();
             closeDrawer();
+            closeConfirm();
             announce("备份已导入");
           } catch (err) {
             alert("导入失败：" + err.message);

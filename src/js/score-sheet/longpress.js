@@ -1,7 +1,14 @@
 import { getCurrentAssignment } from "../state.js";
 import { STATUS, LONG_PRESS_MS } from "../constants.js";
-import { longPressTimer, setLongPressTimer, setLongPressTriggered } from "../runtime.js";
+import {
+  longPressTimer,
+  longPressTriggered,
+  setLongPressTimer,
+  setLongPressTriggered
+} from "../runtime.js";
 import { openScoreSheet } from "./index.js";
+
+let longPressResetTimer = null;
 
 export function handleLongPressStart(event) {
   const card = event.target.closest(".student-card");
@@ -14,6 +21,11 @@ export function handleLongPressStart(event) {
   setLongPressTimer(setTimeout(() => {
     setLongPressTimer(null);
     setLongPressTriggered(true);
+    clearTimeout(longPressResetTimer);
+    longPressResetTimer = setTimeout(() => {
+      setLongPressTriggered(false);
+      longPressResetTimer = null;
+    }, 800);
     openScoreSheet(student);
   }, LONG_PRESS_MS));
 }
@@ -23,5 +35,12 @@ export function handleLongPressEnd() {
     clearTimeout(longPressTimer);
     setLongPressTimer(null);
   }
-  setLongPressTriggered(false);
+
+  if (longPressTriggered) {
+    clearTimeout(longPressResetTimer);
+    longPressResetTimer = setTimeout(() => {
+      setLongPressTriggered(false);
+      longPressResetTimer = null;
+    }, 500);
+  }
 }

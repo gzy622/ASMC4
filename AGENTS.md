@@ -47,7 +47,7 @@ python -m http.server 8000
 | `business/` | `assignment`、`student` 业务逻辑 |
 | `score-sheet/` | 打分面板交互 + 长按检测 |
 | `gestures/` | 滑动手势（score-swipe、drawer-gestures），副作用模块 |
-| `events/index.js` | 全部 `addEventListener` 绑定入口 |
+| `events/` | 按导航、作业、学生、打分、备份拆分事件绑定，`index.js` 统一启动 |
 | `app.js` | 入口，导入 events + gestures（副作用）后调用 `render()` |
 
 ### 数据流
@@ -68,7 +68,7 @@ python -m http.server 8000
 6. **渲染**：全量 `innerHTML` 重建（50 卡片可接受），不要改为差量更新除非性能出问题。
 7. **用户输入**：必须经 `escapeHTML()` 转义 5 字符（`& < > " '`）。
 8. **深拷贝**：用 `clone(value)` = `JSON.parse(JSON.stringify(value))`。
-9. **存储写满**：`saveAppState` 无 try/catch，改健壮性时添加。
+9. **存储写满**：`saveAppState` 会捕获并记录异常；如需更强反馈，在 UI 公告保存失败。
 10. **花名册修改**：改 `defaultStudents` 只影响新用户；老用户需清 `localStorage`。
 11. **ESM 模块**：所有 JS 文件使用 ES Module 语法，`index.html` 通过 `<script type="module" src="src/js/app.js">` 加载。
 12. **无循环依赖**：`state.js` 不导入 `render/`，业务模块导入 `render/` 但 `render/` 不导入业务模块。

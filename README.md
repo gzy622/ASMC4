@@ -4,9 +4,9 @@
 
 ## 这是什么
 
-单文件 HTML 原型：在模拟手机视口里管理“作业→学生→提交状态”。纯前端、无构建、无依赖、无服务端，数据存在浏览器 `localStorage`。
+模块化纯前端应用：在模拟手机视口里管理“作业→学生→提交状态”。无构建、无依赖、无服务端，数据存在浏览器 `localStorage`。
 
-只一个源文件：`index.html`（约 1563 行，HTML + 内联 CSS + 内联 vanilla JS）。
+`index.html` 只保留页面骨架；样式位于 `src/css/`，ES Module 逻辑位于 `src/js/`。
 
 ## 如何运行
 
@@ -24,19 +24,16 @@
 
 ## 代码组织
 
-全部在 `index.html`，分区固定，行号会随改动漂移：
-
-1. **HTML 结构**：顶栏 / 学生网格容器 / 抽屉（纯作业导航） / 快捷面板 / 新建作业面板 / 确认对话框。
-2. **CSS**（约 13–778 行）：设计变量在 `:root`（14–24），改主题色与缓动只动这里；三态卡片样式在 `.student-card.*`（278–313）；媒体查询在末尾（710–777）。
-3. **JS**（约 900–1900+ 行）：
-   - 常量/默认数据
-   - DOM 引用（改 id 必须同步这里）
-   - 事件绑定
-   - 渲染函数（含 `renderScoringMode`）
-   - 面板控制
-   - 业务操作（含 `toggleScoringMode`）
-   - 持久化/规整（含 `scoringMode` 字段）
-   - 工具函数
+1. **HTML**：`index.html` 仅包含顶栏、学生网格、抽屉和各面板的语义骨架。
+2. **CSS**：`src/css/` 按设计变量、基础、组件、响应式四层组织。
+3. **JS**：
+   - `app.js`：启动入口，只负责绑定事件和首次渲染。
+   - `events/`：按导航、作业、学生、打分、备份五个交互域绑定事件。
+   - `business/`：作业和学生业务操作。
+   - `render/`：全量渲染编排与子渲染器。
+   - `score-sheet/`、`gestures/`、`ui/`：独立交互组件。
+   - `state.js`、`runtime.js`：持久状态与临时运行状态。
+   - `utils/`：无界面依赖的通用函数。
 
 完整函数表、调用图、数据模型见 `CodeGraph.md`。
 
@@ -54,10 +51,10 @@
 
 ## 开发与调试要点
 
-- **改 DOM id**：HTML、JS 引用块（999–1032）、事件绑定区要三处同步。
+- **改 DOM id**：同步修改 HTML 与 `src/js/dom-refs.js`；事件模块统一复用 DOM 引用。
 - **新增状态值**：`STATUS` 枚举 + `getStateClass` + `getStatusText` + CSS 三态样式，四处同步。
 - **改持久化结构**：要么改 `STORAGE_KEY` 放弃旧数据，要么在 `normalizeAssignment`/`normalizeStudent` 里加兼容字段。无自动迁移。
-- **配额风险**：`saveAppState` 无 try/catch，存储写满会抛未捕获异常；如需稳健，包一层。
+- **配额风险**：`saveAppState` 会捕获并记录写入失败，但目前不会在界面中显示失败提示。
 - **渲染性能**：当前每次操作全量 `innerHTML` 重建 50 卡片，可接受；扩到上百项需改差量更新。
 - **无障碍**：`#liveStatus` 是 `aria-live` 公告区，状态变更后调 `announce(msg)` 触发屏读器。
 
@@ -73,4 +70,3 @@
 | 存储异常/数据回退 | `loadAppState` catch 吞错；加 `console.warn` 排查 |
 | 进度条不动 | `renderProgress` 依赖 `getAssignmentStats`；`NONE` 学生不计入分母 |
 | 抽屉/面板 Esc 不关 | 确认框可能仍开着，Esc 先关确认框 |
-

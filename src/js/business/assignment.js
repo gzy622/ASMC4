@@ -153,9 +153,9 @@ export function renameAssignment(assignmentId) {
 
   if (assignmentList.querySelector(".assignment-edit-input")) return;
 
-  const nameSpan = assignmentList.querySelector(
-    `.assignment-name[data-assignment-id="${assignmentId}"]`
-  );
+  const nameSpan = Array.from(
+    assignmentList.querySelectorAll(".assignment-name")
+  ).find(node => node.dataset.assignmentId === String(assignmentId));
   if (!nameSpan) return;
 
   const input = document.createElement("input");
@@ -168,8 +168,11 @@ export function renameAssignment(assignmentId) {
   nameSpan.replaceWith(input);
   input.focus();
   input.select();
+  let settled = false;
 
   function commit() {
+    if (settled) return;
+    settled = true;
     const trimmed = input.value.trim();
     if (trimmed && trimmed !== assignment.title) {
       assignment.title = trimmed;
@@ -185,6 +188,8 @@ export function renameAssignment(assignmentId) {
   }
 
   function cancel() {
+    if (settled) return;
+    settled = true;
     render();
   }
 

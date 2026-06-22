@@ -61,11 +61,83 @@ function Get-LanIPv4Address {
     return $addresses[0].IPAddress
 }
 
+function Stop-ExistingServer {
+    param([int]$Port)
+    
+    $connections = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+    if ($null -eq $connections -or $connections.Count -eq 0) {
+        return $false
+    }
+
+    $pids = @($connections | Select-Object -ExpandProperty OwningProcess -Unique)
+    foreach ($pid in $pids) {
+        $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        if ($null -ne $process) {
+            Write-Host "  Found process: $($process.Name) (PID: $pid)" -ForegroundColor Yellow
+            try {
+                Stop-Process -Id $pid -Force -ErrorAction Stop
+                Write-Host "  Stopped process $($process.Name) (PID: $pid)" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "  Failed to stop process: $_" -ForegroundColor Red
+                return $false
+            }
+        }
+    }
+    Start-Sleep -Milliseconds 500
+    return $true
+}
+
 try {
     $existingListener = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
         Select-Object -First 1
     if ($null -ne $existingListener) {
-        throw "Port $Port is already in use. Run again with another port, for example: start-lan-preview.cmd 8001"
+        $existingPid = $existingListener.OwningProcess
+        $existingProcess = Get-Process -Id $existingPid -ErrorAction SilentlyContinue
+        $processName = if ($null -ne $existingProcess) { $existingProcess.Name } else { "Unknown" }
+        
+        Write-Host ''
+        Write-Host "Port $Port is already in use by: $processName (PID: $existingPid)" -ForegroundColor Yellow
+        Write-Host ''
+        Write-Host 'Options:' -ForegroundColor Cyan
+        Write-Host '  [K] Kill existing process and start server'
+        Write-Host '  [N] Start on next available port'
+        Write-Host '  [Q] Quit'
+        Write-Host ''
+        
+        $choice = ''
+        while ($choice -notin @('K', 'N', 'Q')) {
+            $choice = Read-Host 'Choose an option (K/N/Q)'
+            $choice = $choice.ToUpper()
+        }
+        
+        switch ($choice) {
+            'K' {
+                Write-Host ''
+                Write-Host 'Stopping existing server...' -ForegroundColor Yellow
+                $stopped = Stop-ExistingServer -Port $Port
+                if (-not $stopped) {
+                    throw "Failed to stop existing server on port $Port"
+                }
+                Write-Host 'Existing server stopped.' -ForegroundColor Green
+            }
+            'N' {
+                $newPort = $Port
+                do {
+                    $newPort++
+                    $portInUse = Get-NetTCPConnection -State Listen -LocalPort $newPort -ErrorAction SilentlyContinue
+                } while ($null -ne $portInUse)
+                
+                Write-Host ''
+                Write-Host "Starting server on port $newPort instead..." -ForegroundColor Cyan
+                $Port = $newPort
+            }
+            'Q' {
+                Write-Host ''
+                Write-Host 'Cancelled.' -ForegroundColor Yellow
+                exit 0
+            }
+        }
     }
 
     $pythonCommand = Get-PythonCommand
