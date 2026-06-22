@@ -52,5 +52,4 @@ export const rosterSaveBtn = document.querySelector("#rosterSaveBtn");
 export const rosterResetBtn = document.querySelector("#rosterResetBtn");
 export const newAssignmentSubjectInput = document.querySelector("#newAssignmentSubjectInput");
 export const quickRenameInput = document.querySelector("#quickRenameInput");
-export const quickSubjectRow = document.querySelector("#quickSubjectRow");
 export const quickSubjectSelect = document.querySelector("#quickSubjectSelect");

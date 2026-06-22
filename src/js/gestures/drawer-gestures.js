@@ -1,6 +1,6 @@
 import { phoneEl, drawer } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
-import { longPressTimer, setLongPressTimer, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
+import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
 
 let phoneSwipeStartX = null;
 let phoneSwipeStartY = null;
@@ -23,10 +23,7 @@ phoneEl.addEventListener("touchmove", (event) => {
   const dy = touch.clientY - phoneSwipeStartY;
 
   if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
+    clearAllLongPressTimers();
     setLongPressTriggered(false);
   }
 

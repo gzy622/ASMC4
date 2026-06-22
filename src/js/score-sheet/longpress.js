@@ -1,9 +1,10 @@
 import { getCurrentAssignment } from "../state.js";
 import { STATUS, LONG_PRESS_MS } from "../constants.js";
 import {
-  longPressTimer,
+  longPressTimers,
   longPressTriggered,
   setLongPressTimer,
+  clearLongPressTimer,
   setLongPressTriggered
 } from "../runtime.js";
 import { isStudentForceNone } from "../utils/display.js";
@@ -20,8 +21,9 @@ export function handleLongPressStart(event) {
   if (!student || student.status === STATUS.NONE) return;
   if (isStudentForceNone(student, assignment)) return;
 
-  setLongPressTimer(setTimeout(() => {
-    setLongPressTimer(null);
+  const pointerId = event.pointerId;
+  setLongPressTimer(pointerId, setTimeout(() => {
+    setLongPressTimer(pointerId, null);
     setLongPressTriggered(true);
     clearTimeout(longPressResetTimer);
     longPressResetTimer = setTimeout(() => {
@@ -32,11 +34,8 @@ export function handleLongPressStart(event) {
   }, LONG_PRESS_MS));
 }
 
-export function handleLongPressEnd() {
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    setLongPressTimer(null);
-  }
+export function handleLongPressEnd(event) {
+  clearLongPressTimer(event.pointerId);
 
   if (longPressTriggered) {
     clearTimeout(longPressResetTimer);

@@ -2,7 +2,7 @@ import { grid, hideNameSwitch, settingsButton } from "../dom-refs.js";
 import { STATUS } from "../constants.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import {
-  longPressTimer,
+  longPressTimers,
   longPressTriggered,
   setLongPressTriggered,
   setSuppressNextCardClick,
@@ -59,6 +59,6 @@ export function bindStudentEvents() {
   grid.addEventListener("pointercancel", handleLongPressEnd);
   grid.addEventListener("pointerleave", handleLongPressEnd);
   grid.addEventListener("contextmenu", event => {
-    if (longPressTimer || longPressTriggered) event.preventDefault();
+    if (longPressTimers.size > 0 || longPressTriggered) event.preventDefault();
   });
 }
