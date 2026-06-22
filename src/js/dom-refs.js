@@ -25,6 +25,7 @@ export const newAssignmentInput = document.querySelector("#newAssignmentInput");
 export const newAssignmentCloseButton = document.querySelector("#newAssignmentCloseButton");
 export const newAssignmentCancelButton = document.querySelector("#newAssignmentCancelButton");
 export const newAssignmentCreateButton = document.querySelector("#newAssignmentCreateButton");
+export const confirmScrim = document.querySelector("#confirmScrim");
 export const confirmPanel = document.querySelector("#confirmPanel");
 export const confirmTitle = document.querySelector("#confirmTitle");
 export const confirmMessage = document.querySelector("#confirmMessage");

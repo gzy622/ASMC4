@@ -171,6 +171,27 @@
       pointer-events: auto;
     }
 
+    .confirm-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 75;
+      background: rgba(244, 244, 244, 0.34);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms var(--motion);
+    }
+    .confirm-scrim::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(31, 32, 36, 0.08);
+      pointer-events: none;
+    }
+    .confirm-scrim.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .drawer {
       position: absolute;
       left: 0;
@@ -386,7 +407,7 @@
       max-height: min(76dvh, 620px);
       overflow: hidden;
       border-radius: 24px;
-      background: rgba(244, 244, 244, 0.96);
+      background: rgb(244, 244, 244);
       box-shadow: var(--panel-shadow);
       border: 1px solid rgba(31, 32, 36, 0.045);
       z-index: 60;
@@ -659,6 +680,14 @@
       z-index: 80;
       width: min(calc(100% - 64px), 320px);
       box-shadow: 0 26px 80px rgba(0,0,0,0.20);
+    }
+    @keyframes confirm-flash {
+      0%, 100% { border-color: rgba(31, 32, 36, 0.045); }
+      25%, 75% { border-color: #166534; }
+      50% { border-color: #166534; box-shadow: 0 26px 80px rgba(0,0,0,0.20), 0 0 0 4px rgba(22, 101, 52, 0.25); }
+    }
+    .confirm-panel.is-flashing {
+      animation: confirm-flash 0.5s ease 2;
     }
 
     .confirm-message {
@@ -1045,13 +1074,31 @@
       border-bottom: none;
     }
 
-    .roster-row-index {
+    .roster-row-handle {
       width: 36px;
       flex-shrink: 0;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
       font-size: 13px;
       font-weight: 600;
       color: var(--muted);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .roster-row-handle:active {
+      cursor: grabbing;
+    }
+    .roster-row.dragging {
+      opacity: 0.4;
+    }
+    .roster-row.drag-over-top {
+      border-top: 2px solid #166534;
+    }
+    .roster-row.drag-over-bottom {
+      border-bottom: 2px solid #166534;
     }
 
     .roster-row-input {

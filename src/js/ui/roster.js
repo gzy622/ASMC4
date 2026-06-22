@@ -36,15 +36,13 @@ export function renderRosterRows(roster) {
     const serial = String(index + 1).padStart(2, "0");
     const nonEnglishChecked = entry.nonEnglish ? "checked" : "";
     return `
-      <div class="roster-row" data-id="${entry.id}">
-        <span class="roster-row-index">${serial}</span>
+      <div class="roster-row" draggable="true" data-id="${entry.id}">
+        <span class="roster-row-handle">&#x2261; ${serial}</span>
         <input class="roster-row-input roster-row-name" type="text" value="${escapeHTML(entry.name)}" placeholder="姓名" maxlength="10" />
         <label class="roster-row-nonenglish">
           <input class="roster-row-nonenglish-input" type="checkbox" data-action="toggle-nonenglish" ${nonEnglishChecked} />
           <span>非英语</span>
         </label>
-        <button class="roster-row-btn" data-action="move-up" type="button" aria-label="上移" ${index === 0 ? "disabled" : ""}>&#9650;</button>
-        <button class="roster-row-btn" data-action="move-down" type="button" aria-label="下移" ${index === roster.length - 1 ? "disabled" : ""}>&#9660;</button>
         <button class="roster-row-btn danger" data-action="delete" type="button" aria-label="删除">&#10005;</button>
       </div>
     `;
@@ -64,16 +62,15 @@ export function addEmptyRow() {
 
   const row = document.createElement("div");
   row.className = "roster-row";
+  row.draggable = true;
   row.dataset.id = newId;
   row.innerHTML = `
-    <span class="roster-row-index">${String(newIndex + 1).padStart(2, "0")}</span>
+    <span class="roster-row-handle">&#x2261; ${String(newIndex + 1).padStart(2, "0")}</span>
     <input class="roster-row-input roster-row-name" type="text" value="" placeholder="姓名" maxlength="10" />
     <label class="roster-row-nonenglish">
       <input class="roster-row-nonenglish-input" type="checkbox" data-action="toggle-nonenglish" />
       <span>非英语</span>
     </label>
-    <button class="roster-row-btn" data-action="move-up" type="button" aria-label="上移" disabled>&#9650;</button>
-    <button class="roster-row-btn" data-action="move-down" type="button" aria-label="下移" disabled>&#9660;</button>
     <button class="roster-row-btn danger" data-action="delete" type="button" aria-label="删除">&#10005;</button>
   `;
 
@@ -92,28 +89,80 @@ export function removeRow(rowEl) {
   refreshRowIndices();
 }
 
-export function moveRow(rowEl, direction) {
-  const target = direction === "up" ? rowEl.previousElementSibling : rowEl.nextElementSibling;
-  if (!target || target.classList.contains("roster-add-row")) return;
-
-  if (direction === "up") {
-    rowEl.parentNode.insertBefore(rowEl, target);
-  } else {
-    rowEl.parentNode.insertBefore(target, rowEl);
-  }
-  refreshRowIndices();
-}
-
 function refreshRowIndices() {
   const rows = rosterEditorList.querySelectorAll(".roster-row");
   rows.forEach((row, i) => {
     const serial = String(i + 1).padStart(2, "0");
-    row.querySelector(".roster-row-index").textContent = serial;
-    const upBtn = row.querySelector('[data-action="move-up"]');
-    const downBtn = row.querySelector('[data-action="move-down"]');
-    upBtn.disabled = i === 0;
-    downBtn.disabled = i === rows.length - 1;
+    const handle = row.querySelector(".roster-row-handle");
+    if (handle) handle.innerHTML = "&#x2261; " + serial;
   });
+}
+
+function handleDragStart(event) {
+  const row = event.target.closest(".roster-row");
+  if (!row) { event.preventDefault(); return; }
+  const handle = event.target.closest(".roster-row-handle");
+  if (!handle) { event.preventDefault(); return; }
+  row.classList.add("dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", row.dataset.id);
+}
+
+function handleDragOver(event) {
+  const target = event.target.closest(".roster-row");
+  if (!target || target.classList.contains("dragging")) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+
+  const rect = target.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  const isAbove = event.clientY < midY;
+
+  document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom").forEach(el => {
+    el.classList.remove("drag-over-top", "drag-over-bottom");
+  });
+  target.classList.add(isAbove ? "drag-over-top" : "drag-over-bottom");
+}
+
+function handleDragLeave(event) {
+  const target = event.target.closest(".roster-row");
+  if (!target) return;
+  target.classList.remove("drag-over-top", "drag-over-bottom");
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  const target = event.target.closest(".roster-row");
+  if (!target) return;
+  target.classList.remove("drag-over-top", "drag-over-bottom");
+
+  const draggedRow = rosterEditorList.querySelector(".roster-row.dragging");
+  if (!draggedRow || draggedRow === target) return;
+
+  const rect = target.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  const insertBefore = event.clientY < midY;
+
+  if (insertBefore) {
+    target.parentNode.insertBefore(draggedRow, target);
+  } else {
+    target.parentNode.insertBefore(draggedRow, target.nextElementSibling);
+  }
+  refreshRowIndices();
+}
+
+function handleDragEnd() {
+  document.querySelectorAll(".roster-row.dragging, .roster-row.drag-over-top, .roster-row.drag-over-bottom").forEach(el => {
+    el.classList.remove("dragging", "drag-over-top", "drag-over-bottom");
+  });
+}
+
+export function setupDragHandlers() {
+  rosterEditorList.addEventListener("dragstart", handleDragStart);
+  rosterEditorList.addEventListener("dragover", handleDragOver);
+  rosterEditorList.addEventListener("dragleave", handleDragLeave);
+  rosterEditorList.addEventListener("drop", handleDrop);
+  rosterEditorList.addEventListener("dragend", handleDragEnd);
 }
 
 export function collectRosterFromEditor() {

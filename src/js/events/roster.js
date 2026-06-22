@@ -11,9 +11,9 @@ import {
   closeRosterEditor,
   addEmptyRow,
   removeRow,
-  moveRow,
   saveRoster,
-  resetRoster
+  resetRoster,
+  setupDragHandlers
 } from "../ui/roster.js";
 
 export function bindRosterEvents() {
@@ -22,6 +22,7 @@ export function bindRosterEvents() {
   rosterCancelBtn.addEventListener("click", closeRosterEditor);
   rosterSaveBtn.addEventListener("click", saveRoster);
   rosterResetBtn.addEventListener("click", resetRoster);
+  setupDragHandlers();
 
   rosterEditorList.addEventListener("click", event => {
     const row = event.target.closest(".roster-row");
@@ -45,10 +46,6 @@ export function bindRosterEvents() {
 
     if (action === "delete") {
       removeRow(row);
-    } else if (action === "move-up") {
-      moveRow(row, "up");
-    } else if (action === "move-down") {
-      moveRow(row, "down");
     }
   });
 
