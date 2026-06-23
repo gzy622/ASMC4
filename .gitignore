@@ -6,3 +6,9 @@
 
 # Reasonix desktop topic cache
 .reasonix/
+
+# Build output
+dist/
+
+# Node.js dependencies
+node_modules/
