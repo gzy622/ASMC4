@@ -13,22 +13,15 @@ import {
   rosterEditorPanel,
   rosterEditorList
 } from "../dom-refs.js";
+import { openOverlay, closeOverlay } from "./overlay.js";
 
 export function openRosterEditor() {
-  closeScoreSheet();
-  closeDrawer();
-  closeAllCenterPanels();
-
   const state = getState();
-  renderRosterRows(state.roster);
-
-  rosterEditorPanel.classList.add("is-open");
-  rosterEditorPanel.setAttribute("aria-hidden", "false");
+  openOverlay(rosterEditorPanel, () => renderRosterRows(state.roster));
 }
 
-export function closeRosterEditor() {
-  rosterEditorPanel.classList.remove("is-open");
-  rosterEditorPanel.setAttribute("aria-hidden", "true");
+export async function closeRosterEditor() {
+  return closeOverlay(rosterEditorPanel);
 }
 
 export function renderRosterRows(roster) {

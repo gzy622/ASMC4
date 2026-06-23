@@ -1,22 +1,12 @@
 import { settingsPanel } from "../dom-refs.js";
-import { closeScoreSheet } from "../score-sheet/index.js";
-import { closeAllCenterPanels } from "./panels.js";
-import { closeDrawer } from "./drawer.js";
 import { renderSettingsState } from "../render/settings.js";
 import { getState } from "../state.js";
+import { openOverlay, closeOverlay } from "./overlay.js";
 
 export function openSettings() {
-  closeScoreSheet();
-  closeDrawer();
-  closeAllCenterPanels();
-
-  renderSettingsState(getState());
-
-  settingsPanel.classList.add("is-open");
-  settingsPanel.setAttribute("aria-hidden", "false");
+  openOverlay(settingsPanel, () => renderSettingsState(getState()));
 }
 
-export function closeSettings() {
-  settingsPanel.classList.remove("is-open");
-  settingsPanel.setAttribute("aria-hidden", "true");
+export async function closeSettings() {
+  return closeOverlay(settingsPanel);
 }

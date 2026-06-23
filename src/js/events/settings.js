@@ -36,8 +36,8 @@ export function bindSettingsEvents() {
 
   settingsImportBtn.addEventListener("click", () => importBackupInput.click());
 
-  settingsRosterBtn.addEventListener("click", () => {
-    closeSettings();
+  settingsRosterBtn.addEventListener("click", async () => {
+    await closeSettings();
     openRosterEditor();
   });
 }
