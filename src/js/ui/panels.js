@@ -1,7 +1,9 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { modalScrim, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel } from "../dom-refs.js";
+import { getState } from "../state.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
+import { renderQuickAssignmentList } from "../render/quickPanel.js";
 
 export function openNewAssignmentPanel() {
   closeScoreSheet();
@@ -36,6 +38,7 @@ export function openQuickPanel() {
   closeScoreSheet();
   closeDrawer();
   closeAllCenterPanels();
+  renderQuickAssignmentList(getState());
 
   modalScrim.classList.add("is-open");
   quickPanel.classList.add("is-open");
