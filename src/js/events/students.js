@@ -1,4 +1,4 @@
-import { grid, hideNameSwitch, settingsButton } from "../dom-refs.js";
+import { grid, hideNameSwitch, scoringToggle } from "../dom-refs.js";
 import { STATUS } from "../constants.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import {
@@ -16,7 +16,7 @@ import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 
 export function bindStudentEvents() {
-  settingsButton.addEventListener("click", toggleScoringMode);
+  scoringToggle.addEventListener("click", toggleScoringMode);
 
   grid.addEventListener("click", event => {
     const card = event.target.closest(".student-card");
@@ -42,7 +42,7 @@ export function bindStudentEvents() {
     if (getState().scoringMode) {
       openScoreSheet(student);
     } else {
-      toggleStudent(student);
+      toggleStudent(student, card);
     }
   });
 

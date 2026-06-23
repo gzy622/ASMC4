@@ -1,14 +1,14 @@
 # 0619作业 UI — AGENTS.md
 
-模块化多文件作业管理应用：学生三态、作业切换、打分面板、localStorage 持久化。纯前端、无构建、无依赖。
+模块化多文件作业管理应用：学生三态、作业切换、打分面板、localStorage 持久化。纯前端、无运行时依赖。
 
 ## Project
 
 | 属性 | 值 |
 |---|---|
-| 入口 | `index.html`（HTML 骨架，209 行） |
+| 入口 | `index.html`（HTML 骨架，302 行） |
 | CSS | `src/css/`（4 文件：设计变量、基础、组件、响应式） |
-| JS | `src/js/`（ESM 模块，30 个文件） |
+| JS | `src/js/`（ESM 模块，42 个文件） |
 | 栈 | Vanilla JS ESM / CSS3 / HTML5 |
 | 存储 | `localStorage["homework_ui_assignments_v4"]` |
 | 语言 | zh-CN |
@@ -44,30 +44,33 @@
 | `state.js` | **核心枢纽** — `appState` 模块私有，通过 `getState()` 只读访问 |
 | `dom-refs.js` | 所有 `querySelector` 唯一集中于此，**改 DOM id 只改此一处** |
 | `runtime.js` | 运行时可变状态（`pendingConfirmAction`、打分输入值、手势变量等） |
-| `render/` | `render()` 编排 + 6 个子渲染函数 |
-| `ui/` | `drawer`、`panels`、`confirm`、`backup` UI 控制 |
-| `business/` | `assignment`、`student` 业务逻辑 |
+| `render/` | `render()` 编排 + 7 个子渲染函数 |
+| `ui/` | `drawer`、`panels`、`confirm`、`overlay`、`settings`、`roster`、`backup` UI 控制 |
+| `business/` | `assignment`、`student`、`roster` 业务逻辑 |
 | `score-sheet/` | 打分面板交互 + 长按检测 |
 | `gestures/` | 滑动手势（score-swipe、drawer-gestures），副作用模块 |
-| `events/` | 按导航、作业、学生、打分、备份拆分事件绑定，`index.js` 统一启动 |
+| `events/` | 按导航、作业、学生、打分、备份、设置、花名册拆分事件绑定，`index.js` 统一启动 |
 | `app.js` | 入口，导入 events + gestures（副作用）后调用 `render()` |
 
 ### 数据流
 
 ```
-用户操作 → events/ → business/ → state.js (修改) → saveAppState() → render()
+用户操作 → events/ → business/ → state.js (修改) → saveAppState()
                                                       ↓
                                                localStorage
+                                                      ↓
+                                               render()（大多数路径）
+                                               或就地 DOM class 切换 + 部分渲染（学生点切）
 ```
 
 ## Conventions
 
 1. **改 DOM id**：HTML 属性 → `src/js/dom-refs.js` 中 `querySelector`，**两处同步**（不再需要同步事件绑定，因为使用 class 委托）。
 2. **新增状态值**：`STATUS` 枚举 + `getStateClass` + `getStatusText` + CSS 三态样式，**四处同步**。
-3. **状态变更**：通过 `state.js` 的 `getState()` 获取可变引用，修改后依次调用 `saveAppState()` → `render()`。
+3. **状态变更**：通过 `state.js` 的 `getState()` 获取可变引用，修改后依次调用 `saveAppState()` → `render()`。例外：学生卡片点切（`toggleStudent`）就地更新 DOM class + 部分渲染（`renderProgress` + `renderScoringMode`），不调全量 `render()`。
 4. **学生 id 比较**：始终用 `String(item.id) === card.dataset.id`。
-5. **Esc 优先级**：确认框 > 打分面板 > 新建/快捷面板 > 抽屉。
-6. **渲染**：全量 `innerHTML` 重建（50 卡片可接受），不要改为差量更新除非性能出问题。
+5. **Esc 优先级**：确认框 > 打分面板 > 花名册编辑/设置页 overlay > 快捷面板/新建作业面板 > 抽屉。
+6. **渲染**：全量 `innerHTML` 重建（50 卡片可接受），不要改为差量更新除非性能出问题。学生卡片点切例外（就地 class 切换 + 部分渲染，见约定 3）。
 7. **用户输入**：必须经 `escapeHTML()` 转义 5 字符（`& < > " '`）。
 8. **深拷贝**：用 `clone(value)` = `JSON.parse(JSON.stringify(value))`。
 9. **存储写满**：`saveAppState` 会捕获并记录异常；如需更强反馈，在 UI 公告保存失败。

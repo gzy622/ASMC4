@@ -51,6 +51,27 @@ export async function openOverlay(panel, renderFn) {
   setOverlayTransitionBusy(false);
 }
 
+export async function swapOverlay(fromPanel, toPanel, renderFn) {
+  if (overlayTransitionBusy) return;
+  setOverlayTransitionBusy(true);
+
+  fromPanel.classList.add("is-closing");
+  fromPanel.classList.remove("is-open");
+  fromPanel.setAttribute("aria-hidden", "true");
+  await wait(CONTENT_FADE);
+  fromPanel.classList.remove("is-closing");
+
+  renderFn();
+
+  toPanel.classList.remove("is-closing");
+  toPanel.classList.add("is-open");
+  toPanel.setAttribute("aria-hidden", "false");
+  await wait(CONTENT_FADE);
+
+  snapResetDrawer();
+  setOverlayTransitionBusy(false);
+}
+
 export async function closeOverlay(panel) {
   if (overlayTransitionBusy) return;
   setOverlayTransitionBusy(true);

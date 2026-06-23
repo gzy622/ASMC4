@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -105,8 +105,24 @@ if (-not $NoOpen) {
     Start-Process "http://localhost:$Port/"
 }
 
-# 用 $pythonPath 的目录 + python.exe 启动
-$pythonDir = Split-Path -Parent $pythonPath
-$pythonExe = Join-Path -Path $pythonDir -ChildPath 'python.exe'
-& $pythonExe -m http.server $Port --bind $bindIp
-exit $LASTEXITCODE
+try {
+    # ── 构建 ────────────────────────────
+    Write-Host '  [构建] 正在打包 JS & CSS…'
+    node build.mjs
+    if ($LASTEXITCODE -ne 0) { throw '构建失败，请检查上方错误信息。' }
+
+    # ── 后台监听 ────────────────────────
+    Write-Host '  [监听] 文件变更自动构建已启动（保存后刷新浏览器即可看到更新）' -ForegroundColor Cyan
+    $watchProcess = Start-Process -FilePath node -ArgumentList 'build.mjs', '--watch' -WindowStyle Hidden -PassThru
+
+    # ── 启动 HTTP 服务 ──────────────────
+    $pythonDir = Split-Path -Parent $pythonPath
+    $pythonExe = Join-Path -Path $pythonDir -ChildPath 'python.exe'
+    & $pythonExe -m http.server $Port --bind $bindIp --directory dist
+}
+finally {
+    if ($watchProcess -and !$watchProcess.HasExited) {
+        $watchProcess.Kill()
+        Write-Host '  [监听] 后台进程已关闭' -ForegroundColor DarkGray
+    }
+}

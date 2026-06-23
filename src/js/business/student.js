@@ -1,10 +1,11 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
-import { isStudentForceNone } from "../utils/display.js";
-import { render } from "../render/index.js";
+import { isStudentForceNone, getStateClass } from "../utils/display.js";
+import { renderProgress } from "../render/progress.js";
+import { renderScoringMode } from "../render/scoringMode.js";
 import { announce } from "../utils/dom.js";
 
-export function toggleStudent(student) {
+export function toggleStudent(student, cardEl) {
   if (student.status === STATUS.NONE) return;
   if (isStudentForceNone(student, getCurrentAssignment())) return;
 
@@ -17,7 +18,17 @@ export function toggleStudent(student) {
 
   student.updatedAt = new Date().toISOString();
   saveAppState();
-  render();
+
+  const state = getState();
+  const assignment = getCurrentAssignment();
+  const newClass = getStateClass(student, assignment);
+
+  if (cardEl) {
+    cardEl.className = `student-card ${newClass}`;
+  }
+
+  renderProgress(state, assignment);
+  renderScoringMode(state);
   announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交");
 }
 

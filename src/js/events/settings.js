@@ -6,14 +6,17 @@ import {
   settingsExportBtn,
   settingsImportBtn,
   settingsRosterBtn,
-  importBackupInput
+  importBackupInput,
+  settingsPanel,
+  rosterEditorPanel
 } from "../dom-refs.js";
 import { getState, saveAppState } from "../state.js";
 import { setScoreTensMode } from "../runtime.js";
 import { toggleScoringMode } from "../business/student.js";
 import { exportBackup } from "../ui/backup.js";
-import { openRosterEditor } from "../ui/roster.js";
 import { openSettings, closeSettings } from "../ui/settings.js";
+import { renderRosterRows } from "../ui/roster.js";
+import { swapOverlay } from "../ui/overlay.js";
 import { announce } from "../utils/dom.js";
 import { render } from "../render/index.js";
 
@@ -36,8 +39,8 @@ export function bindSettingsEvents() {
 
   settingsImportBtn.addEventListener("click", () => importBackupInput.click());
 
-  settingsRosterBtn.addEventListener("click", async () => {
-    await closeSettings();
-    openRosterEditor();
+  settingsRosterBtn.addEventListener("click", () => {
+    const state = getState();
+    swapOverlay(settingsPanel, rosterEditorPanel, () => renderRosterRows(state.roster));
   });
 }

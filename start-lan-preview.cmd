@@ -17,13 +17,21 @@ shift
 goto :parse_args
 :done_parse
 
-rem --- Build bundle ---
+rem --- Initial build ---
 echo   [Build] Bundling JS ^& CSS via esbuild...
 call node build.mjs
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed. Check the error messages above.
     pause
     exit /b %errorlevel%
+)
+
+rem --- Background watch for auto-rebuild ---
+echo   [Watch] Auto-rebuild active. Refresh browser to see changes.
+for /f "tokens=1" %%i in ('powershell -NoProfile -Command "try { $p=Start-Process -FilePath node -ArgumentList 'build.mjs','--watch' -WindowStyle Hidden -PassThru; $p.Id } catch { Write-Output -1 }"') do set WATCH_PID=%%i
+if "!WATCH_PID!"=="-1" (
+    echo   [WARN] Watch failed to start. Run manually: node build.mjs --watch
+    set WATCH_PID=
 )
 
 rem --- Check Python ---
@@ -76,4 +84,11 @@ if %errorlevel% neq 0 (
     echo [ERROR] Server exited abnormally. Check port %PORT%.
     pause
 )
+
+rem --- Cleanup: stop background watch ---
+if defined WATCH_PID (
+    taskkill /pid !WATCH_PID! /f >nul 2>&1
+    echo   [Watch] Background node process stopped.
+)
+
 exit /b %errorlevel%
