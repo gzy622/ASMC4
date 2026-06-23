@@ -1,175 +1,112 @@
 #requires -Version 5.1
 
+<#
+.SYNOPSIS
+  启动 0619作业 UI 开发服务器
+.DESCRIPTION
+  启动 Python http.server 并绑定到 127.0.0.1（默认）或 0.0.0.0（加 -Lan）。
+  端口被占用时自动递增。
+.PARAMETER Port
+  起始端口（默认 8000），被占用会自动找下一个空闲端口。
+.PARAMETER Lan
+  绑定到 0.0.0.0 以允许局域网其他设备访问（可能触发 Windows 防火墙弹窗）。
+.PARAMETER NoOpen
+  不自动打开浏览器。
+.EXAMPLE
+  .\scripts\start-lan-preview.ps1           # 127.0.0.1:8000
+  .\scripts\start-lan-preview.ps1 3000      # 127.0.0.1:3000
+  .\scripts\start-lan-preview.ps1 -Lan      # 0.0.0.0:8000
+  .\scripts\start-lan-preview.ps1 -Lan -NoOpen  # 不打开浏览器
+#>
+
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
     [ValidateRange(1, 65535)]
     [int]$Port = 8000,
 
+    [switch]$Lan,
     [switch]$NoOpen
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$projectRoot = Split-Path -Parent $PSScriptRoot
-Set-Location -LiteralPath $projectRoot
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+Set-Location -LiteralPath $ProjectRoot
 
-function Get-PythonCommand {
-    $launcher = Get-Command -Name 'py.exe' -ErrorAction SilentlyContinue
-    if ($null -ne $launcher) {
-        & $launcher.Source -3 --version *> $null
-        if ($LASTEXITCODE -eq 0) {
-            return @{
-                FilePath = $launcher.Source
-                PrefixArguments = @('-3')
-            }
-        }
+# ── 找 Python ──────────────────────────────
+$pythonPath = $null
+foreach ($candidate in @('py', 'python', 'python3')) {
+    $cmd = Get-Command -Name $candidate -ErrorAction SilentlyContinue
+    if ($null -ne $cmd) {
+        $pythonPath = $cmd.Source
+        break
     }
-
-    $python = Get-Command -Name 'python.exe' -ErrorAction SilentlyContinue
-    if ($null -ne $python) {
-        & $python.Source --version *> $null
-        if ($LASTEXITCODE -eq 0) {
-            return @{
-                FilePath = $python.Source
-                PrefixArguments = @()
-            }
-        }
-    }
-
-    throw 'Python 3 was not found. Install Python 3 and enable the Python launcher or add python.exe to PATH.'
+}
+if (-not $pythonPath) {
+    throw 'Python 3 未找到。请安装 Python 3 并确保它在 PATH 中。'
 }
 
-function Get-LanIPv4Address {
-    $configuration = Get-NetIPConfiguration -ErrorAction SilentlyContinue |
+# ── 找空闲端口 ────────────────────────────
+$originalPort = $Port
+while ($Port -le 65535) {
+    $inUse = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
+    if (-not $inUse) { break }
+    $Port++
+}
+if ($Port -gt 65535) {
+    throw "端口范围已耗尽（起始端口 $originalPort），无法启动。"
+}
+if ($Port -ne $originalPort) {
+    Write-Host "端口 $originalPort 已被占用，已自动切换到端口 $Port" -ForegroundColor Yellow
+}
+
+# ── 检测 LAN IPv4 地址 ────────────────────
+$lanAddress = $null
+if ($Lan) {
+    # 跳过虚拟/隧道接口的关键词
+    $skipPatterns = @('Hyper-V', 'WSL', 'Bluetooth', 'VPN', 'Tunnel', 'MHM')
+    $interfaces = Get-NetIPConfiguration -ErrorAction SilentlyContinue |
         Where-Object {
-            ($null -ne $_.IPv4DefaultGateway) -and
-            ($null -ne $_.IPv4Address)
-        } |
-        Select-Object -First 1
-
-    if ($null -eq $configuration) {
-        return $null
-    }
-
-    $addresses = @($configuration.IPv4Address)
-    if ($addresses.Count -eq 0) {
-        return $null
-    }
-
-    return $addresses[0].IPAddress
-}
-
-function Stop-ExistingServer {
-    param([int]$Port)
-    
-    $connections = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue
-    if ($null -eq $connections -or $connections.Count -eq 0) {
-        return $false
-    }
-
-    $pids = @($connections | Select-Object -ExpandProperty OwningProcess -Unique)
-    foreach ($pid in $pids) {
-        $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($null -ne $process) {
-            Write-Host "  Found process: $($process.Name) (PID: $pid)" -ForegroundColor Yellow
-            try {
-                Stop-Process -Id $pid -Force -ErrorAction Stop
-                Write-Host "  Stopped process $($process.Name) (PID: $pid)" -ForegroundColor Green
-            }
-            catch {
-                Write-Host "  Failed to stop process: $_" -ForegroundColor Red
-                return $false
-            }
+            $_.IPv4DefaultGateway -and
+            $_.IPv4Address -and
+            $_.InterfaceAlias -notmatch ($skipPatterns -join '|')
+        }
+    foreach ($iface in $interfaces) {
+        $addr = $iface.IPv4Address.IPAddress
+        if ($addr -and $addr -notmatch '^169\.254\.') {
+            $lanAddress = $addr
+            break
         }
     }
-    Start-Sleep -Milliseconds 500
-    return $true
+    $bindIp = '0.0.0.0'
+} else {
+    $bindIp = '127.0.0.1'
 }
 
-try {
-    $existingListener = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($null -ne $existingListener) {
-        $existingPid = $existingListener.OwningProcess
-        $existingProcess = Get-Process -Id $existingPid -ErrorAction SilentlyContinue
-        $processName = if ($null -ne $existingProcess) { $existingProcess.Name } else { "Unknown" }
-        
-        Write-Host ''
-        Write-Host "Port $Port is already in use by: $processName (PID: $existingPid)" -ForegroundColor Yellow
-        Write-Host ''
-        Write-Host 'Options:' -ForegroundColor Cyan
-        Write-Host '  [K] Kill existing process and start server'
-        Write-Host '  [N] Start on next available port'
-        Write-Host '  [Q] Quit'
-        Write-Host ''
-        
-        $choice = ''
-        while ($choice -notin @('K', 'N', 'Q')) {
-            $choice = Read-Host 'Choose an option (K/N/Q)'
-            $choice = $choice.ToUpper()
-        }
-        
-        switch ($choice) {
-            'K' {
-                Write-Host ''
-                Write-Host 'Stopping existing server...' -ForegroundColor Yellow
-                $stopped = Stop-ExistingServer -Port $Port
-                if (-not $stopped) {
-                    throw "Failed to stop existing server on port $Port"
-                }
-                Write-Host 'Existing server stopped.' -ForegroundColor Green
-            }
-            'N' {
-                $newPort = $Port
-                do {
-                    $newPort++
-                    $portInUse = Get-NetTCPConnection -State Listen -LocalPort $newPort -ErrorAction SilentlyContinue
-                } while ($null -ne $portInUse)
-                
-                Write-Host ''
-                Write-Host "Starting server on port $newPort instead..." -ForegroundColor Cyan
-                $Port = $newPort
-            }
-            'Q' {
-                Write-Host ''
-                Write-Host 'Cancelled.' -ForegroundColor Yellow
-                exit 0
-            }
-        }
-    }
-
-    $pythonCommand = Get-PythonCommand
-    $localUrl = "http://localhost:$Port/"
-    $lanAddress = Get-LanIPv4Address
-
-    $Host.UI.RawUI.WindowTitle = "ASMC4 LAN Preview - Port $Port"
+# ── 启动 ────────────────────────────────────
+$Host.UI.RawUI.WindowTitle = "0619作业 UI — 端口 $Port"
+Write-Host ''
+Write-Host ' >>>  0619作业 UI — 开发服务器' -ForegroundColor Green
+Write-Host ''
+Write-Host " 本地地址    http://localhost:$Port/"
+if ($Lan) {
+    $lanMsg = if ($lanAddress) { "$lanAddress" } else { '无法检测局域网 IP，请用 ipconfig 查看' }
+    Write-Host " 局域网地址  http://${lanMsg}:$Port/" -ForegroundColor Cyan
     Write-Host ''
-    Write-Host 'ASMC4 preview server is starting...' -ForegroundColor Green
-    Write-Host "Local: $localUrl"
-    if ([string]::IsNullOrWhiteSpace($lanAddress)) {
-        Write-Host 'LAN: unable to detect an IPv4 address; check ipconfig manually.' -ForegroundColor Yellow
-    }
-    else {
-        Write-Host "LAN:   http://${lanAddress}:$Port/" -ForegroundColor Cyan
-    }
-    Write-Host ''
-    Write-Host 'Keep this window open. Press Ctrl+C to stop the server.'
-    Write-Host 'Windows Firewall may ask for permission on the first run.'
-    Write-Host ''
-
-    if (-not $NoOpen) {
-        Start-Process -FilePath $localUrl
-    }
-
-    $serverArguments = @($pythonCommand.PrefixArguments) +
-        @('-m', 'http.server', $Port.ToString(), '--bind', '0.0.0.0', '--directory', $projectRoot)
-    & $pythonCommand.FilePath @serverArguments
-    exit $LASTEXITCODE
+    Write-Host ' ⚠ 绑定到 0.0.0.0，防火墙可能弹出提示，请允许。' -ForegroundColor Yellow
 }
-catch {
-    Write-Error $_
-    exit 1
+Write-Host ''
+Write-Host ' 按 Ctrl+C 停止服务器' -ForegroundColor DarkGray
+Write-Host ''
+
+if (-not $NoOpen) {
+    Start-Process "http://localhost:$Port/"
 }
 
+# 用 $pythonPath 的目录 + python.exe 启动
+$pythonDir = Split-Path -Parent $pythonPath
+$pythonExe = Join-Path -Path $pythonDir -ChildPath 'python.exe'
+& $pythonExe -m http.server $Port --bind $bindIp
+exit $LASTEXITCODE
