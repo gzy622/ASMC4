@@ -7,6 +7,8 @@ const longPressTimers = new Map();
 let longPressTriggered = false;
 let suppressNextCardClick = false;
 
+let overlayTransitionBusy = false;
+
 export {
   pendingConfirmAction,
   scoreSheetStudent,
@@ -15,7 +17,8 @@ export {
   noteInputValue,
   longPressTimers,
   longPressTriggered,
-  suppressNextCardClick
+  suppressNextCardClick,
+  overlayTransitionBusy
 };
 
 export function setPendingConfirmAction(val) { pendingConfirmAction = val; }
@@ -38,3 +41,4 @@ export function clearAllLongPressTimers() {
 }
 export function setLongPressTriggered(val) { longPressTriggered = val; }
 export function setSuppressNextCardClick(val) { suppressNextCardClick = val; }
+export function setOverlayTransitionBusy(val) { overlayTransitionBusy = val; }

@@ -208,14 +208,40 @@
       box-shadow: 6px 0 24px rgba(0,0,0,0.08);
       z-index: 40;
       transform: translateX(-120%);
-      transition: transform 320ms var(--motion);
-      will-change: transform;
       display: flex;
       flex-direction: column;
+      transition:
+        transform 320ms var(--motion),
+        width 280ms var(--motion),
+        border-color 280ms var(--motion),
+        box-shadow 280ms var(--motion);
     }
 
     .drawer.is-open {
       transform: translateX(0);
+    }
+
+    .drawer.is-expanding {
+      width: 100%;
+      border-right-color: transparent;
+      box-shadow: none;
+    }
+
+    .drawer-head,
+    .drawer-list,
+    .drawer-actions {
+      transition: opacity 180ms var(--motion);
+    }
+
+    .drawer.is-expanding .drawer-head,
+    .drawer.is-expanding .drawer-list,
+    .drawer.is-expanding .drawer-actions {
+      opacity: 0;
+    }
+
+    .drawer.no-anim,
+    .drawer.no-anim * {
+      transition: none !important;
     }
 
     .drawer-head {
