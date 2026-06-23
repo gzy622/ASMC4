@@ -14,8 +14,6 @@ import {
   rosterEditorList
 } from "../dom-refs.js";
 
-let dragOriginatedFromHandle = false;
-
 export function openRosterEditor() {
   closeScoreSheet();
   closeDrawer();
@@ -38,7 +36,7 @@ export function renderRosterRows(roster) {
     const serial = String(index + 1).padStart(2, "0");
     const nonEnglishChecked = entry.nonEnglish ? "checked" : "";
     return `
-      <div class="roster-row" draggable="true" data-id="${entry.id}">
+      <div class="roster-row" data-id="${entry.id}">
         <span class="roster-row-handle">&#x2261; ${serial}</span>
         <input class="roster-row-input roster-row-name" type="text" value="${escapeHTML(entry.name)}" placeholder="姓名" maxlength="10" />
         <label class="roster-row-nonenglish">
@@ -64,7 +62,6 @@ export function addEmptyRow() {
 
   const row = document.createElement("div");
   row.className = "roster-row";
-  row.draggable = true;
   row.dataset.id = newId;
   row.innerHTML = `
     <span class="roster-row-handle">&#x2261; ${String(newIndex + 1).padStart(2, "0")}</span>
@@ -100,73 +97,72 @@ function refreshRowIndices() {
   });
 }
 
-function handleDragStart(event) {
-  const row = event.target.closest(".roster-row");
-  if (!row || !dragOriginatedFromHandle) { event.preventDefault(); return; }
-  row.classList.add("dragging");
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", row.dataset.id);
-}
-
-function handleDragOver(event) {
-  const target = event.target.closest(".roster-row");
-  if (!target || target.classList.contains("dragging")) return;
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-
-  const rect = target.getBoundingClientRect();
-  const midY = rect.top + rect.height / 2;
-  const isAbove = event.clientY < midY;
-
-  document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom").forEach(el => {
-    el.classList.remove("drag-over-top", "drag-over-bottom");
-  });
-  target.classList.add(isAbove ? "drag-over-top" : "drag-over-bottom");
-}
-
-function handleDragLeave(event) {
-  const target = event.target.closest(".roster-row");
-  if (!target) return;
-  target.classList.remove("drag-over-top", "drag-over-bottom");
-}
-
-function handleDrop(event) {
-  event.preventDefault();
-  const target = event.target.closest(".roster-row");
-  if (!target) return;
-  target.classList.remove("drag-over-top", "drag-over-bottom");
-
-  const draggedRow = rosterEditorList.querySelector(".roster-row.dragging");
-  if (!draggedRow || draggedRow === target) return;
-
-  const rect = target.getBoundingClientRect();
-  const midY = rect.top + rect.height / 2;
-  const insertBefore = event.clientY < midY;
-
-  if (insertBefore) {
-    target.parentNode.insertBefore(draggedRow, target);
-  } else {
-    target.parentNode.insertBefore(draggedRow, target.nextElementSibling);
-  }
-  refreshRowIndices();
-}
-
-function handleDragEnd() {
-  dragOriginatedFromHandle = false;
-  document.querySelectorAll(".roster-row.dragging, .roster-row.drag-over-top, .roster-row.drag-over-bottom").forEach(el => {
-    el.classList.remove("dragging", "drag-over-top", "drag-over-bottom");
-  });
-}
-
 export function setupDragHandlers() {
-  rosterEditorList.addEventListener("pointerdown", event => {
-    dragOriginatedFromHandle = !!event.target.closest(".roster-row-handle");
+  let dragState = null;
+
+  rosterEditorList.addEventListener("pointerdown", e => {
+    const handle = e.target.closest(".roster-row-handle");
+    if (!handle) return;
+    const row = handle.closest(".roster-row");
+    if (!row) return;
+
+    dragState = { row };
+    row.classList.add("dragging");
+    row.setPointerCapture(e.pointerId);
+    e.preventDefault();
   });
-  rosterEditorList.addEventListener("dragstart", handleDragStart);
-  rosterEditorList.addEventListener("dragover", handleDragOver);
-  rosterEditorList.addEventListener("dragleave", handleDragLeave);
-  rosterEditorList.addEventListener("drop", handleDrop);
-  rosterEditorList.addEventListener("dragend", handleDragEnd);
+
+  rosterEditorList.addEventListener("pointermove", e => {
+    if (!dragState) return;
+    e.preventDefault();
+
+    const targets = document.elementsFromPoint(e.clientX, e.clientY);
+    const targetRow = targets.find(el => el.classList?.contains("roster-row"));
+
+    document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
+      .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));
+
+    if (!targetRow || targetRow === dragState.row) {
+      dragState.targetRow = null;
+      return;
+    }
+
+    const rect = targetRow.getBoundingClientRect();
+    const after = e.clientY > rect.top + rect.height / 2;
+
+    targetRow.classList.add(after ? "drag-over-bottom" : "drag-over-top");
+    dragState.targetRow = targetRow;
+    dragState.after = after;
+  });
+
+  rosterEditorList.addEventListener("pointerup", e => {
+    if (!dragState) return;
+    e.preventDefault();
+
+    dragState.row.classList.remove("dragging");
+
+    document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
+      .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));
+
+    if (dragState.targetRow) {
+      const { row, targetRow, after } = dragState;
+      if (after) {
+        targetRow.parentNode.insertBefore(row, targetRow.nextElementSibling);
+      } else {
+        targetRow.parentNode.insertBefore(row, targetRow);
+      }
+      refreshRowIndices();
+    }
+    dragState = null;
+  });
+
+  rosterEditorList.addEventListener("pointercancel", () => {
+    if (!dragState) return;
+    dragState.row.classList.remove("dragging");
+    document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
+      .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));
+    dragState = null;
+  });
 }
 
 export function collectRosterFromEditor() {

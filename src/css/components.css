@@ -1127,6 +1127,7 @@
       font-weight: 600;
       color: var(--muted);
       cursor: grab;
+      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
     }
