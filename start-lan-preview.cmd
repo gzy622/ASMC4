@@ -17,6 +17,15 @@ shift
 goto :parse_args
 :done_parse
 
+rem --- Build bundle ---
+echo   [Build] Bundling JS & CSS via esbuild...
+call node build.mjs
+if %errorlevel% neq 0 (
+    echo [ERROR] Build failed. Check the error messages above.
+    pause
+    exit /b %errorlevel%
+)
+
 rem --- Check Python ---
 where python >nul 2>&1
 if %errorlevel% neq 0 (
@@ -61,7 +70,7 @@ if "%NO_OPEN%"=="0" (
     start "" "http://localhost:%PORT%/"
 )
 
-python -m http.server %PORT% --bind %BIND%
+python -m http.server %PORT% --bind %BIND% --directory dist
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Server exited abnormally. Check port %PORT%.
