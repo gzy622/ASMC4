@@ -18,8 +18,10 @@
 不支持 `file://` 协议（ESM 限制），必须通过 HTTP 服务：
 
 ```bash
-python -m http.server 8000
-# 访问 http://localhost:8000/
+.\start-lan-preview.cmd          # 127.0.0.1:8000，自动打开浏览器
+.\start-lan-preview.cmd --lan    # 0.0.0.0:8000，局域网可访问
+.\start-lan-preview.cmd 3000     # 指定端口
+# 也可用: python -m http.server 8000 --bind 127.0.0.1
 ```
 
 ## Architecture
@@ -72,6 +74,7 @@ python -m http.server 8000
 10. **花名册修改**：改 `defaultStudents` 只影响新用户；老用户需清 `localStorage`。
 11. **ESM 模块**：所有 JS 文件使用 ES Module 语法，`index.html` 通过 `<script type="module" src="src/js/app.js">` 加载。
 12. **无循环依赖**：`state.js` 不导入 `render/`，业务模块导入 `render/` 但 `render/` 不导入业务模块。
+
 
 ## Notes
 

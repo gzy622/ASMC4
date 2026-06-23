@@ -10,10 +10,38 @@
 
 ## 如何运行
 
-- Windows 下双击 `start-lan-preview.cmd`，会自动打开浏览器并显示可供同一局域网设备访问的地址。
-- 默认端口为 `8000`；也可在终端运行 `.\start-lan-preview.cmd 8001` 指定其他端口。保持命令窗口开启，按 `Ctrl+C` 停止服务。
-- 也可使用 VS Code Live Server，或手动运行 `python -m http.server 8000 --bind 0.0.0.0`。
-- 无需 `npm install`、无构建步骤。改完保存即生效，刷新页面查看。
+### 方式一：双击脚本（推荐）
+
+**`start-lan-preview.cmd`**（纯 CMD，不依赖 PowerShell）：
+
+```bash
+# 默认端口 8000，绑定 127.0.0.1（本地访问）
+.\start-lan-preview.cmd
+
+# 指定端口
+.\start-lan-preview.cmd 3000
+
+# 局域网访问（绑定 0.0.0.0，可能触发防火墙）
+.\start-lan-preview.cmd --lan
+```
+
+端口被占用时自动递增。保持命令窗口开启，按 `Ctrl+C` 停止服务。
+
+也可使用 PowerShell 脚本：
+
+```powershell
+.\scripts\start-lan-preview.ps1              # 127.0.0.1:8000
+.\scripts\start-lan-preview.ps1 -Lan          # 0.0.0.0:8000
+.\scripts\start-lan-preview.ps1 3000 -NoOpen  # 不打开浏览器
+```
+
+### 方式二：其他方式
+
+- VS Code Live Server
+- `python -m http.server 8000 --bind 127.0.0.1`
+- 如需构建后预览：`npm run build && npm run preview`
+
+无需 `npm install`、无构建步骤。改完保存即生效，刷新页面查看。
 
 ## 数据与重置
 
