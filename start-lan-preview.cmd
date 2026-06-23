@@ -18,7 +18,7 @@ goto :parse_args
 :done_parse
 
 rem --- Build bundle ---
-echo   [Build] Bundling JS & CSS via esbuild...
+echo   [Build] Bundling JS ^& CSS via esbuild...
 call node build.mjs
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed. Check the error messages above.
