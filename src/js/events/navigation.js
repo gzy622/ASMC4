@@ -13,6 +13,7 @@ import {
   quickPanelCloseButton,
   rosterEditorPanel,
   scoreSheet,
+  settingsPanel,
   titleButton
 } from "../dom-refs.js";
 import { closeDrawer, openDrawer } from "../ui/drawer.js";
@@ -24,6 +25,7 @@ import {
 import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
+import { closeSettings } from "../ui/settings.js";
 
 export function bindNavigationEvents() {
   menuButton.addEventListener("click", openDrawer);
@@ -57,6 +59,8 @@ export function bindNavigationEvents() {
       closeScoreSheet();
     } else if (rosterEditorPanel.classList.contains("is-open")) {
       closeRosterEditor();
+    } else if (settingsPanel.classList.contains("is-open")) {
+      closeSettings();
     } else if (
       newAssignmentPanel.classList.contains("is-open")
       || quickPanel.classList.contains("is-open")

@@ -4,6 +4,7 @@ import { bindNavigationEvents } from "./navigation.js";
 import { bindScoreEvents } from "./score.js";
 import { bindStudentEvents } from "./students.js";
 import { bindRosterEvents } from "./roster.js";
+import { bindSettingsEvents } from "./settings.js";
 
 export function bindEvents() {
   bindNavigationEvents();
@@ -12,4 +13,5 @@ export function bindEvents() {
   bindScoreEvents();
   bindRosterEvents();
   bindBackupEvents();
+  bindSettingsEvents();
 }

@@ -73,11 +73,12 @@
       <div class="drawer-list" id="assignmentList"></div>
 
       <div class="drawer-actions">
-        <button class="drawer-action-btn full" id="editRosterBtn" type="button">编辑名单</button>
         <div class="drawer-actions-row">
           <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
           <button class="drawer-action-btn" id="importBackupBtn" type="button">导入备份</button>
         </div>
+        <button class="drawer-action-btn full" id="editRosterBtn" type="button">编辑名单</button>
+        <button class="drawer-action-btn full" id="settingsBtn" type="button">设置</button>
       </div>
       <input type="file" id="importBackupInput" accept=".json" style="display:none" />
     </aside>
@@ -195,6 +196,50 @@
         <div class="roster-foot-actions">
           <button class="roster-foot-btn" id="rosterCancelBtn" type="button">取消</button>
           <button class="roster-foot-btn primary" id="rosterSaveBtn" type="button">保存名单</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="roster-editor" id="settingsPanel" aria-label="设置" aria-hidden="true">
+      <div class="roster-editor-head">
+        <div class="panel-title">设置</div>
+        <button class="panel-close" id="settingsCloseButton" type="button" aria-label="关闭设置">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="roster-editor-body" id="settingsBody">
+        <div class="settings-section">
+          <div class="settings-section-title">打分</div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">打分模式</p>
+              <p class="setting-desc">开启后点卡片即可打分，关闭则需长按。</p>
+            </div>
+            <button class="switch" id="scoringModeSwitch" type="button" aria-label="切换打分模式">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">×10 模式</p>
+              <p class="setting-desc">打分面板数字键按一次相当于输入十位。</p>
+            </div>
+            <button class="switch" id="scoreTensModeSwitch" type="button" aria-label="切换×10模式">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">数据</div>
+          <div class="settings-data-row">
+            <button class="drawer-action-btn" id="settingsExportBtn" type="button">导出备份</button>
+            <button class="drawer-action-btn" id="settingsImportBtn" type="button">导入备份</button>
+          </div>
+          <button class="drawer-action-btn full" id="settingsRosterBtn" type="button">编辑名单</button>
         </div>
       </div>
     </section>
