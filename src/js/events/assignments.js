@@ -46,6 +46,7 @@ export function bindAssignmentEvents() {
 
   assignmentList.addEventListener("click", event => {
     if (event.target.closest(".assignment-edit-input")) return;
+    if (event.target.closest(".assignment-edit-subject")) return;
 
     if (event.target.closest(".assignment-item-add")) {
       closeDrawer();
@@ -71,6 +72,7 @@ export function bindAssignmentEvents() {
   assignmentList.addEventListener("keydown", event => {
     if (event.key !== "Enter" && event.key !== " ") return;
     if (event.target.closest(".assignment-item-action")) return;
+    if (event.target.closest(".assignment-edit-subject")) return;
 
     if (event.target.closest(".assignment-item-add")) {
       event.preventDefault();

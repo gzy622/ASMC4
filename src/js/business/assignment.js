@@ -150,6 +150,19 @@ export function deleteAssignmentFromDrawer(assignmentId) {
   });
 }
 
+const SUBJECT_OPTIONS = [
+  { value: "", label: "不指定" },
+  { value: "英语", label: "英语" },
+  { value: "数学", label: "数学" },
+  { value: "语文", label: "语文" },
+  { value: "物理", label: "物理" },
+  { value: "化学", label: "化学" },
+  { value: "生物", label: "生物" },
+  { value: "历史", label: "历史" },
+  { value: "地理", label: "地理" },
+  { value: "政治", label: "政治" }
+];
+
 export function renameAssignment(assignmentId) {
   const state = getState();
   const assignment = state.assignments.find(item => item.id === assignmentId);
@@ -162,6 +175,9 @@ export function renameAssignment(assignmentId) {
   ).find(node => node.dataset.assignmentId === String(assignmentId));
   if (!nameSpan) return;
 
+  const item = nameSpan.closest(".assignment-item");
+  if (!item) return;
+
   const input = document.createElement("input");
   input.type = "text";
   input.className = "assignment-edit-input";
@@ -172,20 +188,59 @@ export function renameAssignment(assignmentId) {
   nameSpan.replaceWith(input);
   input.focus();
   input.select();
+
+  const select = document.createElement("select");
+  select.className = "assignment-edit-subject";
+  select.setAttribute("aria-label", "修改作业科目");
+  SUBJECT_OPTIONS.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.value;
+    opt.textContent = s.label;
+    if (s.value === assignment.subject) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  const meta = item.querySelector(".assignment-meta");
+  const subjectTag = meta.querySelector(".assignment-subject-tag");
+  if (subjectTag) {
+    subjectTag.replaceWith(select);
+  } else {
+    meta.insertBefore(select, meta.firstChild);
+  }
+
   let settled = false;
 
   function commit() {
     if (settled) return;
     settled = true;
+
     const trimmed = input.value.trim();
-    if (trimmed && trimmed !== assignment.title) {
+    const newSubject = select.value;
+
+    if (!trimmed) {
+      render();
+      return;
+    }
+
+    const titleChanged = trimmed !== assignment.title;
+    const subjectChanged = newSubject !== assignment.subject;
+
+    if (titleChanged) {
       assignment.title = trimmed;
+    }
+
+    if (subjectChanged) {
+      assignment.subject = newSubject;
+    }
+
+    if (titleChanged || subjectChanged) {
       assignment.updatedAt = new Date().toISOString();
       saveAppState();
       render();
-      announce("已重命名为" + trimmed);
-    } else if (!trimmed) {
-      render();
+      const parts = [];
+      if (titleChanged) parts.push(`已重命名为${trimmed}`);
+      if (subjectChanged) parts.push(newSubject ? `科目已设为${newSubject}` : "已清除科目");
+      announce(parts.join("，"));
     } else {
       render();
     }
@@ -197,12 +252,31 @@ export function renameAssignment(assignmentId) {
     render();
   }
 
-  input.addEventListener("blur", commit);
+  input.addEventListener("blur", function(e) {
+    if (e.relatedTarget && e.relatedTarget.closest(".assignment-edit-subject")) return;
+    commit();
+  });
+
   input.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       e.preventDefault();
       input.blur();
     } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  });
+
+  select.addEventListener("change", commit);
+
+  select.addEventListener("blur", function(e) {
+    if (e.relatedTarget && e.relatedTarget.closest(".assignment-edit-input")) return;
+    commit();
+  });
+
+  select.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
       cancel();
