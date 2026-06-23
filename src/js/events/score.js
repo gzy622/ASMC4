@@ -46,6 +46,8 @@ export function bindScoreEvents() {
     if (value !== undefined) {
       if (scoreTensMode) {
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
+        confirmScore();
+        return;
       } else if (scoreInputValue === "0") {
         setScoreInputValue(value);
       } else if (scoreInputValue.length < 3) {

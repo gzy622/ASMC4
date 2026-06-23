@@ -1,4 +1,4 @@
-import { getCurrentAssignment, saveAppState } from "../state.js";
+import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreSheetScrim, scoreDisplay, scoreTensBtn, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreNumpad } from "../dom-refs.js";
 import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setScoreTensMode, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
 import { getDisplayName } from "../utils/display.js";
@@ -23,8 +23,9 @@ export function openScoreSheet(student) {
     setScoreInputValue(existingScore || "0");
   }
 
-  setScoreTensMode(false);
-  scoreTensBtn.classList.remove("is-on");
+  const restoredTens = getState().scoreTensMode;
+  setScoreTensMode(restoredTens);
+  scoreTensBtn.classList.toggle("is-on", restoredTens);
   updateNumpadLabels();
 
   scoreNoteInput.value = noteInputValue;
@@ -43,8 +44,6 @@ export function closeScoreSheet() {
   setNoteInputValue("");
   scoreStudentSerial.textContent = "--";
   scoreStudentName.textContent = "--";
-  setScoreTensMode(false);
-  scoreTensBtn.classList.remove("is-on");
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
   updateNumpadLabels();
@@ -85,6 +84,8 @@ export function confirmScore() {
 export function toggleTensMode() {
   setScoreTensMode(!scoreTensMode);
   scoreTensBtn.classList.toggle("is-on", scoreTensMode);
+  getState().scoreTensMode = scoreTensMode;
+  saveAppState();
   updateNumpadLabels();
 }
 

@@ -64,6 +64,7 @@ function loadAppState() {
   const fallback = {
     hideNames: false,
     scoringMode: false,
+    scoreTensMode: false,
     currentAssignmentId: defaultAssignment.id,
     assignments: [clone(defaultAssignment)],
     roster: rosterFromDefault()
@@ -98,6 +99,7 @@ function loadAppState() {
     return {
       hideNames: Boolean(parsed.hideNames),
       scoringMode: Boolean(parsed.scoringMode),
+      scoreTensMode: Boolean(parsed.scoreTensMode),
       currentAssignmentId,
       assignments,
       roster
