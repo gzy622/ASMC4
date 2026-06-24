@@ -5,6 +5,7 @@ import { render } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { renderScoringMode } from "../render/scoringMode.js";
 import { announce } from "../utils/dom.js";
+import { hapticLight } from "../utils/haptics.js";
 
 export function toggleStudent(student, cardEl) {
   if (student.status === STATUS.NONE) return;
@@ -19,6 +20,7 @@ export function toggleStudent(student, cardEl) {
 
   student.updatedAt = new Date().toISOString();
   saveAppState();
+  hapticLight();
 
   const state = getState();
   const assignment = getCurrentAssignment();

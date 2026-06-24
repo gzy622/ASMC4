@@ -1,3 +1,4 @@
+import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreSheetScrim, scoreDisplay, scoreTensBtn, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreNumpad } from "../dom-refs.js";
 import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setScoreTensMode, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
@@ -33,6 +34,7 @@ export function openScoreSheet(student) {
 
   updateScoreDisplay();
 
+  hapticLight();
   scoreSheetScrim.classList.add("is-open");
   scoreSheet.classList.add("is-open");
   scoreSheet.setAttribute("aria-hidden", "false");
@@ -73,6 +75,7 @@ export function confirmScore() {
   const trimmedNote = noteInputValue.trim();
   scoreSheetStudent.note = trimmedNote || "";
 
+  hapticLight();
   scoreSheetStudent.updatedAt = new Date().toISOString();
   saveAppState();
   render();

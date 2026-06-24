@@ -13,6 +13,7 @@ import {
   setNoteInputValue,
   setScoreInputValue
 } from "../runtime.js";
+import { hapticLight } from "../utils/haptics.js";
 import {
   closeScoreSheet,
   confirmScore,
@@ -45,6 +46,7 @@ export function bindScoreEvents() {
 
     if (value !== undefined) {
       if (scoreTensMode) {
+        hapticLight();
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
         confirmScore();
         return;

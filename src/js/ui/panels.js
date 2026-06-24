@@ -10,6 +10,9 @@ export function openNewAssignmentPanel() {
   closeDrawer();
   closeAllCenterPanels();
 
+  quickPanel.classList.remove("is-open");
+  quickPanel.setAttribute("aria-hidden", "true");
+
   newAssignmentInput.value = "";
   if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "";
   modalScrim.classList.add("is-open");
