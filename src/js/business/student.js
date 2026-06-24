@@ -1,6 +1,7 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
 import { isStudentForceNone, getStateClass } from "../utils/display.js";
+import { render } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { renderScoringMode } from "../render/scoringMode.js";
 import { announce } from "../utils/dom.js";
