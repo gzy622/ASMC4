@@ -1,0 +1,9 @@
+{
+  "appId": "com.gzy622.asmc4",
+  "appName": "ASMC4",
+  "webDir": "dist",
+  "backgroundColor": "#f4f4f4",
+  "android": {
+    "backgroundColor": "#f4f4f4"
+  }
+}

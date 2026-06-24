@@ -30,6 +30,17 @@
       flex-direction: column;
     }
 
+    .is-native .phone {
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body.is-native {
+      display: block;
+      place-items: stretch;
+    }
+
     .scroll-container {
       flex: 1;
       overflow-y: auto;

@@ -12,3 +12,12 @@ dist/
 
 # Node.js dependencies
 node_modules/
+
+# Capacitor Android project (build outputs only)
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+
+# Keystore (signing key for release APK)
+asmc4.keystore
