@@ -489,6 +489,7 @@
       width: auto;
       max-width: none;
       overflow: visible;
+      border: 0;
       border-radius: 0 0 24px 24px;
       box-shadow: none;
       opacity: 1;
