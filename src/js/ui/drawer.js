@@ -3,7 +3,9 @@ import { drawer, drawerScrim } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { overlayTransitionBusy } from "../runtime.js";
+import { overlayTransitionBusy, setOverlayTransitionBusy } from "../runtime.js";
+
+const DRAWER_TRANSITION_MS = 320;
 
 export function openDrawer() {
   if (overlayTransitionBusy) return;
@@ -21,6 +23,8 @@ export function closeDrawer() {
   drawerScrim.classList.remove("is-open");
   drawer.setAttribute("aria-hidden", "true");
   setThemeColor("#f4f4f4");
+  setOverlayTransitionBusy(true);
+  setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
 }
 
 export function expandDrawer() {
