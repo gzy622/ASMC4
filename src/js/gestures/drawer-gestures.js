@@ -1,94 +1,154 @@
 import { phoneEl, drawer } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
-import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
+import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
 
-let phoneSwipeStartX = null;
-let phoneSwipeStartY = null;
-let phoneSwipeGestureActive = false;
-let drawerSwipeStartX = null;
-let drawerSwipeStartY = null;
+const DRAG_START_THRESHOLD = 15;
+const DRAG_CLOSE_THRESHOLD = 50;
+const DRAG_SLOPE = 1.5;
+
+function drawerClosedPx() {
+  return -1.2 * drawer.offsetWidth;
+}
+
+/* ── Phone swipe → open drawer ── */
+
+let phoneStartX = null;
+let phoneStartY = null;
+let phoneDragging = false;
 
 phoneEl.addEventListener("touchstart", (event) => {
   if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return;
+  if (overlayTransitionBusy) return;
   const touch = event.touches[0];
-  phoneSwipeStartX = touch.clientX;
-  phoneSwipeStartY = touch.clientY;
-  phoneSwipeGestureActive = false;
+  phoneStartX = touch.clientX;
+  phoneStartY = touch.clientY;
+  phoneDragging = false;
 }, { passive: true });
 
 phoneEl.addEventListener("touchmove", (event) => {
-  if (phoneSwipeStartX === null) return;
+  if (phoneStartX === null) return;
   const touch = event.touches[0];
-  const dx = touch.clientX - phoneSwipeStartX;
-  const dy = touch.clientY - phoneSwipeStartY;
+  const dx = touch.clientX - phoneStartX;
+  const dy = touch.clientY - phoneStartY;
 
   if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
     clearAllLongPressTimers();
     setLongPressTriggered(false);
   }
 
-  if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-    phoneSwipeGestureActive = true;
+  if (Math.abs(dx) > 2 && Math.abs(dx) > Math.abs(dy)) {
+    event.preventDefault();
   }
-}, { passive: true });
 
-phoneEl.addEventListener("touchend", (event) => {
-  if (phoneSwipeStartX === null) return;
-  if (!phoneSwipeGestureActive) {
-    phoneSwipeStartX = null;
-    phoneSwipeStartY = null;
+  if (!phoneDragging) {
+    if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
+      phoneDragging = true;
+      drawer.style.transition = "none";
+    }
     return;
   }
+
+  const closedPx = drawerClosedPx();
+  const clamped = Math.max(closedPx, Math.min(0, closedPx + dx));
+  drawer.style.transform = `translateX(${clamped}px)`;
+  event.preventDefault();
+}, { passive: false });
+
+phoneEl.addEventListener("touchend", (event) => {
+  if (phoneStartX === null) return;
   const touch = event.changedTouches[0];
-  const dx = touch.clientX - phoneSwipeStartX;
-  const dy = touch.clientY - phoneSwipeStartY;
-  phoneSwipeStartX = null;
-  phoneSwipeStartY = null;
-  phoneSwipeGestureActive = false;
+  const dx = touch.clientX - phoneStartX;
+  const wasDragging = phoneDragging;
 
-  const threshold = 50;
-  if (Math.abs(dx) < threshold) return;
-  if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  phoneStartX = null;
+  phoneStartY = null;
+  phoneDragging = false;
 
-  setSuppressNextCardClick(true);
+  if (wasDragging) {
+    drawer.style.transition = "";
+    drawer.style.transform = "";
 
-  if (dx > 0 && !drawer.classList.contains("is-open")) {
-    openDrawer();
-  } else if (dx < 0 && drawer.classList.contains("is-open")) {
-    closeDrawer();
+    if (dx >= DRAG_CLOSE_THRESHOLD) {
+      setSuppressNextCardClick(true);
+      openDrawer();
+    }
   }
 });
 
 phoneEl.addEventListener("touchcancel", () => {
-  phoneSwipeStartX = null;
-  phoneSwipeStartY = null;
-  phoneSwipeGestureActive = false;
+  if (phoneDragging) {
+    drawer.style.transition = "";
+    drawer.style.transform = "";
+  }
+  phoneStartX = null;
+  phoneStartY = null;
+  phoneDragging = false;
 });
 
+/* ── Drawer swipe → close drawer ── */
+
+let drawerStartX = null;
+let drawerStartY = null;
+let drawerDragging = false;
+
 drawer.addEventListener("touchstart", (event) => {
+  if (overlayTransitionBusy) return;
   const touch = event.touches[0];
-  drawerSwipeStartX = touch.clientX;
-  drawerSwipeStartY = touch.clientY;
+  drawerStartX = touch.clientX;
+  drawerStartY = touch.clientY;
+  drawerDragging = false;
 }, { passive: true });
 
+drawer.addEventListener("touchmove", (event) => {
+  if (drawerStartX === null) return;
+  const touch = event.touches[0];
+  const dx = touch.clientX - drawerStartX;
+  const dy = touch.clientY - drawerStartY;
+
+  if (Math.abs(dx) > 2 && Math.abs(dx) > Math.abs(dy)) {
+    event.preventDefault();
+  }
+
+  if (!drawerDragging) {
+    if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
+      drawerDragging = true;
+      drawer.style.transition = "none";
+    }
+    return;
+  }
+
+  const closedPx = drawerClosedPx();
+  const clamped = Math.max(closedPx, Math.min(0, dx));
+  drawer.style.transform = `translateX(${clamped}px)`;
+  event.preventDefault();
+}, { passive: false });
+
 drawer.addEventListener("touchend", (event) => {
-  if (drawerSwipeStartX === null) return;
+  if (drawerStartX === null) return;
   const touch = event.changedTouches[0];
-  const dx = touch.clientX - drawerSwipeStartX;
-  const dy = touch.clientY - drawerSwipeStartY;
-  drawerSwipeStartX = null;
-  drawerSwipeStartY = null;
+  const dx = touch.clientX - drawerStartX;
+  const wasDragging = drawerDragging;
 
-  const threshold = 50;
-  if (Math.abs(dx) < threshold) return;
-  if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  drawerStartX = null;
+  drawerStartY = null;
+  drawerDragging = false;
 
-  if (dx < 0 && drawer.classList.contains("is-open")) {
-    closeDrawer();
+  if (wasDragging) {
+    drawer.style.transition = "";
+    drawer.style.transform = "";
+
+    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) {
+      closeDrawer();
+    }
   }
 });
 
 drawer.addEventListener("touchcancel", () => {
-  drawerSwipeStartX = null;
-  drawerSwipeStartY = null;
+  if (drawerDragging) {
+    drawer.style.transition = "";
+    drawer.style.transform = "";
+  }
+  drawerStartX = null;
+  drawerStartY = null;
+  drawerDragging = false;
 });
