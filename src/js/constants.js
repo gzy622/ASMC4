@@ -1,4 +1,4 @@
-export const STORAGE_KEY = "homework_ui_assignments_v4";
+export const STORAGE_KEY = "asmc4_assignments_v1";
 
 export const STATUS = {
   NORMAL: "normal",

@@ -1,4 +1,4 @@
-# 0619作业 UI — AGENTS.md
+# ASMC4 — AGENTS.md
 
 模块化多文件作业管理应用：学生三态、作业切换、打分面板、localStorage 持久化。纯前端、无运行时依赖。
 
@@ -10,7 +10,7 @@
 | CSS | `src/css/`（4 文件：设计变量、基础、组件、响应式） |
 | JS | `src/js/`（ESM 模块，42 个文件） |
 | 栈 | Vanilla JS ESM / CSS3 / HTML5 |
-| 存储 | `localStorage["homework_ui_assignments_v4"]` |
+| 存储 | `localStorage["asmc4_assignments_v1"]` |
 | 语言 | zh-CN |
 
 ## Commands

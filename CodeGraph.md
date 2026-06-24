@@ -1,4 +1,4 @@
-# CodeGraph — 0619作业 UI
+# CodeGraph — ASMC4
 
 ## 启动链
 
@@ -70,7 +70,7 @@ index.html
 }
 ```
 
-存储键为 `homework_ui_assignments_v4`。读取和导入都会经过
+存储键为 `asmc4_assignments_v1`。读取和导入都会经过
 `normalizeAssignment()` / `normalizeStudent()` 兼容旧数据。
 
 ## 维护约束

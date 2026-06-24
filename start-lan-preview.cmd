@@ -56,10 +56,10 @@ if !errorlevel! equ 0 (
 )
 
 rem --- Set title ---
-title 0619 Homework UI -- Port %PORT%
+title ASMC4 -- Port %PORT%
 
 echo.
-echo   ^>^>^>  0619 Homework UI -- Dev Server
+echo   ^>^>^>  ASMC4 -- Dev Server
 echo.
 echo   Local     http://localhost:%PORT%/
 if "%LAN_MODE%"=="1" (

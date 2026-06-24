@@ -54,6 +54,21 @@ export function getAssignmentStats(assignment) {
 }
 
 function loadAppState() {
+  const LEGACY_KEYS = ["homework_ui_assignments_v4"];
+
+  try {
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      for (const legacyKey of LEGACY_KEYS) {
+        const legacyData = localStorage.getItem(legacyKey);
+        if (legacyData) {
+          localStorage.setItem(STORAGE_KEY, legacyData);
+          localStorage.removeItem(legacyKey);
+          break;
+        }
+      }
+    }
+  } catch (_) {}
+
   const rosterFromDefault = () => defaultStudents.map(s => ({
     id: s.id,
     serial: s.serial,

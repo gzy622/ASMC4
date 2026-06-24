@@ -1,5 +1,6 @@
 import { clone } from "../utils/clone.js";
 import { STATUS } from "../constants.js";
+import { makeDefaultAssignmentTitle } from "../utils/id.js";
 
 export const defaultStudents = [
   { id: 1, serial: "01", name: "林子安", status: STATUS.NORMAL, badge: "98", badgeType: "score" },
@@ -60,8 +61,8 @@ export const defaultStudents = [
 ];
 
 export const defaultAssignment = {
-  id: "assignment-0619",
-  title: "0619作业",
+  id: "assignment-default",
+  title: makeDefaultAssignmentTitle(),
   subject: "",
   createdAt: new Date().toISOString(),
   students: clone(defaultStudents)

@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-  启动 0619作业 UI 开发服务器
+  启动 ASMC4 开发服务器
 .DESCRIPTION
   启动 Python http.server 并绑定到 127.0.0.1（默认）或 0.0.0.0（加 -Lan）。
   端口被占用时自动递增。
@@ -86,9 +86,9 @@ if ($Lan) {
 }
 
 # ── 启动 ────────────────────────────────────
-$Host.UI.RawUI.WindowTitle = "0619作业 UI — 端口 $Port"
+$Host.UI.RawUI.WindowTitle = "ASMC4 — 端口 $Port"
 Write-Host ''
-Write-Host ' >>>  0619作业 UI — 开发服务器' -ForegroundColor Green
+Write-Host ' >>>  ASMC4 — 开发服务器' -ForegroundColor Green
 Write-Host ''
 Write-Host " 本地地址    http://localhost:$Port/"
 if ($Lan) {

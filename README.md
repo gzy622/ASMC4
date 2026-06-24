@@ -1,4 +1,4 @@
-# README — 0619作业 UI
+# README — ASMC4
 
 > 开发者自述：怎么跑、怎么改、坏了怎么修。详细代码地图见 `CodeGraph.md`。
 
@@ -53,9 +53,9 @@ npm run preview      # 在 dist/ 目录启动 HTTP 服务预览
 
 ## 数据与重置
 
-- 存储键：`localStorage["homework_ui_assignments_v4"]`。
-- 清空重来：控制台执行 `localStorage.removeItem("homework_ui_assignments_v4")` 后刷新；或 DevTools → Application → Local Storage → 删该键。
-- 首次打开若无存储，自动加载 `defaultStudents`（50 人花名册）与默认作业 `0619作业`。
+- 存储键：`localStorage["asmc4_assignments_v1"]`。
+- 清空重来：控制台执行 `localStorage.removeItem("asmc4_assignments_v1")` 后刷新；或 DevTools → Application → Local Storage → 删该键。
+- 首次打开若无存储，自动加载 `defaultStudents`（50 人花名册）与默认作业（标题为当天 `MMDD作业`）。
 - 改 `defaultStudents` 只影响“无存储的新用户”；已有存储的用户仍读旧数据（除非清键）。
 
 ## 代码组织
