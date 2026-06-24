@@ -1,4 +1,4 @@
-const DRAG_START_THRESHOLD = 10;
+const DRAG_START_THRESHOLD = 8;
 
 export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = 80, slope = 1.5 }) {
   let startY = null;
@@ -27,6 +27,9 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
       dragging = true;
       el.style.transition = "none";
+      startY = touch.clientY;
+      startX = touch.clientX;
+      return;
     }
 
     let clamped;
