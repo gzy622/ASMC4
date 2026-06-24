@@ -16,6 +16,10 @@ export function handleLongPressStart(event) {
   const card = event.target.closest(".student-card");
   if (!card) return;
 
+  setLongPressTriggered(false);
+  clearTimeout(longPressResetTimer);
+  longPressResetTimer = null;
+
   const assignment = getCurrentAssignment();
   const student = assignment.students.find(item => String(item.id) === card.dataset.id);
   if (!student || student.status === STATUS.NONE) return;

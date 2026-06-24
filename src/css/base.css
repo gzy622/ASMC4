@@ -40,6 +40,16 @@
       display: block;
       place-items: stretch;
     }
+    .is-native .app-bar {
+      padding-top: env(safe-area-inset-top);
+      height: calc(44px + env(safe-area-inset-top));
+    }
+    .is-native .app-bar > .nav-button,
+    .is-native .app-bar > .bar-stats,
+    .is-native .app-bar > .title-wrap,
+    .is-native .app-bar > .right-actions {
+      top: calc(50% + env(safe-area-inset-top) / 2);
+    }
 
     .scroll-container {
       flex: 1;

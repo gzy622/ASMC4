@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
 
   <!-- 保留缩放限制 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <meta name="theme-color" content="#f4f4f4" />
 
@@ -15,9 +15,24 @@
   <link rel="stylesheet" href="src/css/base.css" />
   <link rel="stylesheet" href="src/css/components.css" />
   <link rel="stylesheet" href="src/css/responsive.css" />
+  <style>
+    #bootMask {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #f4f4f4;
+      background: var(--bg, #f4f4f4);
+      transition: opacity 220ms ease;
+    }
+    #bootMask.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
-<body>
+<body style="background:#f4f4f4">
+  <div id="bootMask" aria-hidden="true"></div>
   <main class="phone" aria-label="作业管理界面">
     <header class="app-bar">
       <button class="nav-button" id="menuButton" type="button" aria-label="打开作业列表">

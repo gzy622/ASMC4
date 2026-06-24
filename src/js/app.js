@@ -10,3 +10,13 @@ document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4
 
 bindEvents();
 render();
+
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    const bootMask = document.getElementById("bootMask");
+    if (bootMask) {
+      bootMask.classList.add("is-hidden");
+      bootMask.addEventListener("transitionend", () => bootMask.remove(), { once: true });
+    }
+  });
+});
