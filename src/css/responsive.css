@@ -16,6 +16,10 @@
         left: 10px;
       }
 
+      .bar-stats {
+        left: 48px;
+      }
+
       .nav-button,
       .icon-button {
         width: 34px;

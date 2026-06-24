@@ -62,3 +62,4 @@ export const scoreTensModeSwitch = document.querySelector("#scoreTensModeSwitch"
 export const settingsExportBtn = document.querySelector("#settingsExportBtn");
 export const settingsImportBtn = document.querySelector("#settingsImportBtn");
 export const settingsRosterBtn = document.querySelector("#settingsRosterBtn");
+export const barStats = document.querySelector("#barStats");
