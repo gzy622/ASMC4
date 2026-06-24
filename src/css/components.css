@@ -315,7 +315,7 @@
 
     .assignment-item {
       width: 100%;
-      min-height: 54px;
+      height: 56px;
       border: 0;
       border-radius: 14px;
       background: var(--card);
@@ -329,6 +329,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      overflow: hidden;
       transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
       touch-action: manipulation;
     }
@@ -373,8 +374,8 @@
     }
 
     .assignment-item-action.danger:hover {
-      background: rgba(220, 38, 38, 0.1);
-      color: #dc2626;
+      background: rgba(185, 28, 28, 0.08);
+      color: #b91c1c;
     }
 
     .assignment-item.is-active {
@@ -383,7 +384,7 @@
 
     .assignment-item-add {
       width: 100%;
-      min-height: 54px;
+      height: 56px;
       border: 1.5px dashed var(--line);
       border-radius: 14px;
       background: transparent;
@@ -421,39 +422,51 @@
     .assignment-edit-input {
       flex: 1;
       min-width: 0;
-      height: 28px;
-      border: 1px solid #166534;
-      border-radius: 6px;
-      padding: 0 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      min-height: 0;
+      box-sizing: border-box;
+      height: 17px;
+      border: none;
+      border-bottom: 1.5px solid #166534;
+      padding: 0 2px;
       font: inherit;
       font-size: 15px;
       font-weight: 650;
+      line-height: 15px;
       color: var(--text);
-      background: #fff;
+      background: transparent;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
     }
 
     .assignment-edit-subject {
+      appearance: none;
+      -webkit-appearance: none;
       display: inline-block;
+      height: 13px;
       font-size: 11px;
       font-weight: 600;
       color: #166534;
-      background: #fff;
-      padding: 1px 4px;
-      border: 1px solid #166534;
+      background: #e8f5ee;
+      padding: 0 6px;
+      border: none;
       border-radius: 4px;
       margin-right: 6px;
-      vertical-align: middle;
-      outline: none;
+      line-height: 1.2;
+      vertical-align: top;
       cursor: pointer;
-      box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
+      outline: none;
     }
 
     .assignment-meta {
       font-size: 12px;
       color: var(--muted);
       line-height: 1.1;
+    }
+
+    .assignment-item:has(.assignment-edit-input) .assignment-meta {
+      font-size: 0;
+      line-height: 0;
     }
 
     .assignment-item.is-active .assignment-name {
@@ -702,7 +715,7 @@
       font-weight: 650;
       color: var(--text);
       cursor: pointer;
-      transition: transform 0.12s ease, background-color 0.15s ease;
+      transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
       touch-action: manipulation;
     }
 
@@ -712,8 +725,12 @@
     }
 
     .quick-action-btn.danger {
-      color: #9f1239;
-      background: #fff5f7;
+      color: #b91c1c;
+      background: var(--card);
+      border: 1.5px solid #fecaca;
+    }
+    .quick-action-btn.danger:hover {
+      border-color: #fca5a5;
     }
 
     .switch {
@@ -799,7 +816,7 @@
       font-weight: 650;
       cursor: pointer;
       color: var(--text);
-      transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
+      transition: transform 0.12s ease, opacity 0.15s ease;
       touch-action: manipulation;
     }
 
@@ -814,7 +831,12 @@
     }
 
     .dialog-button.danger {
-      color: #9f1239;
+      color: #b91c1c;
+      background: var(--card);
+      border: 1.5px solid #fecaca;
+    }
+    .dialog-button.danger:hover {
+      border-color: #fca5a5;
     }
 
     .confirm-panel {
@@ -1234,9 +1256,9 @@
     }
 
     .roster-foot-btn.danger {
-      color: #9f1239;
-      border-color: #e5b8c7;
-      background: #fef2f5;
+      color: #b91c1c;
+      border-color: #fecaca;
+      background: var(--card);
     }
 
     .roster-row {
@@ -1321,12 +1343,12 @@
     }
 
     .roster-row-btn.danger {
-      color: #e11d48;
+      color: #b91c1c;
     }
 
     .roster-row-btn.danger:active,
     .roster-row-btn.danger.is-pressed {
-      background: rgba(225, 29, 72, 0.08);
+      background: rgba(185, 28, 28, 0.08);
     }
 
     .roster-add-row {
