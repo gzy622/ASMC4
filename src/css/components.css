@@ -12,6 +12,7 @@
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.1s ease, opacity 0.15s ease;
+      touch-action: manipulation;
 
       border: 0;
       width: 100%;
@@ -22,7 +23,8 @@
       -webkit-appearance: none;
     }
 
-    .student-card:active {
+    .student-card:active,
+    .student-card.is-pressed {
       transform: scale(0.95);
     }
 
@@ -301,9 +303,11 @@
       cursor: pointer;
       color: var(--text);
       transition: background 0.15s ease, transform 0.12s ease;
+      touch-action: manipulation;
     }
 
-    .drawer-action-btn:active {
+    .drawer-action-btn:active,
+    .drawer-action-btn.is-pressed {
       transform: scale(0.97);
       background: #f0fbf5;
     }
@@ -325,9 +329,11 @@
       justify-content: space-between;
       gap: 8px;
       transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
+      touch-action: manipulation;
     }
 
-    .assignment-item:active:not(:has(.assignment-item-action:active)):not(:has(.assignment-edit-input:active)):not(:has(.assignment-edit-subject:active)) {
+    .assignment-item:active:not(:has(.assignment-item-action:active)):not(:has(.assignment-edit-input:active)):not(:has(.assignment-edit-subject:active)),
+    .assignment-item.is-pressed {
       transform: scale(0.985);
     }
 
@@ -391,9 +397,11 @@
       justify-content: center;
       gap: 6px;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+      touch-action: manipulation;
     }
 
-    .assignment-item-add:active {
+    .assignment-item-add:active,
+    .assignment-item-add.is-pressed {
       transform: scale(0.985);
       background: #f0fbf5;
       border-color: #166534;
@@ -548,9 +556,11 @@
       place-items: center;
       color: var(--icon);
       cursor: pointer;
+      touch-action: manipulation;
     }
 
-    .panel-close:active {
+    .panel-close:active,
+    .panel-close.is-pressed {
       background: rgba(31, 32, 36, 0.06);
     }
 
@@ -626,9 +636,11 @@
       cursor: pointer;
       white-space: nowrap;
       transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+      touch-action: manipulation;
     }
 
-    .quick-chip:active {
+    .quick-chip:active,
+    .quick-chip.is-pressed {
       transform: scale(0.96);
     }
 
@@ -690,9 +702,11 @@
       color: var(--text);
       cursor: pointer;
       transition: transform 0.12s ease, background-color 0.15s ease;
+      touch-action: manipulation;
     }
 
-    .quick-action-btn:active {
+    .quick-action-btn:active,
+    .quick-action-btn.is-pressed {
       transform: scale(0.985);
     }
 
@@ -785,9 +799,11 @@
       cursor: pointer;
       color: var(--text);
       transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
+      touch-action: manipulation;
     }
 
-    .dialog-button:active {
+    .dialog-button:active,
+    .dialog-button.is-pressed {
       transform: scale(0.985);
     }
 
@@ -994,11 +1010,13 @@
       align-items: center;
       justify-content: center;
       transition: transform 0.12s ease, background-color 0.15s ease;
+      touch-action: manipulation;
       appearance: none;
       -webkit-appearance: none;
     }
 
-    .numpad-btn:active {
+    .numpad-btn:active,
+    .numpad-btn.is-pressed {
       transform: scale(0.95);
       background-color: #f0f1f3;
     }
@@ -1012,7 +1030,8 @@
         0 3px 10px rgba(31, 32, 36, 0.06);
     }
 
-    .numpad-btn-function:active {
+    .numpad-btn-function:active,
+    .numpad-btn-function.is-pressed {
       background: #e9ebed;
       box-shadow: inset 0 1px 3px rgba(31, 32, 36, 0.08);
     }
@@ -1032,7 +1051,8 @@
       transition: transform 0.12s ease;
     }
 
-    .numpad-btn-backspace:active svg {
+    .numpad-btn-backspace:active svg,
+    .numpad-btn-backspace.is-pressed svg {
       transform: translateX(-1px);
     }
 
@@ -1050,7 +1070,8 @@
         0 4px 12px rgba(22, 101, 52, 0.22);
     }
 
-    .score-tens-btn.is-on:active {
+    .score-tens-btn.is-on:active,
+    .score-tens-btn.is-on.is-pressed {
       background: #145a2f;
     }
 
@@ -1071,11 +1092,13 @@
       color: var(--text);
       cursor: pointer;
       transition: transform 0.12s ease, opacity 0.15s ease;
+      touch-action: manipulation;
       appearance: none;
       -webkit-appearance: none;
     }
 
-    .score-action-btn:active {
+    .score-action-btn:active,
+    .score-action-btn.is-pressed {
       transform: scale(0.97);
     }
 
@@ -1195,9 +1218,11 @@
       color: var(--text);
       cursor: pointer;
       transition: transform 0.12s ease, opacity 0.15s ease;
+      touch-action: manipulation;
     }
 
-    .roster-foot-btn:active {
+    .roster-foot-btn:active,
+    .roster-foot-btn.is-pressed {
       transform: scale(0.97);
     }
 
@@ -1286,9 +1311,11 @@
       font-size: 16px;
       line-height: 1;
       padding: 0;
+      touch-action: manipulation;
     }
 
-    .roster-row-btn:active {
+    .roster-row-btn:active,
+    .roster-row-btn.is-pressed {
       background: rgba(31, 32, 36, 0.06);
     }
 
@@ -1296,7 +1323,8 @@
       color: #e11d48;
     }
 
-    .roster-row-btn.danger:active {
+    .roster-row-btn.danger:active,
+    .roster-row-btn.danger.is-pressed {
       background: rgba(225, 29, 72, 0.08);
     }
 
@@ -1317,9 +1345,11 @@
       background: transparent;
       width: 100%;
       font: inherit;
+      touch-action: manipulation;
     }
 
-    .roster-add-row:active {
+    .roster-add-row:active,
+    .roster-add-row.is-pressed {
       color: #166534;
       border-color: #166534;
     }

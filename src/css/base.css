@@ -88,10 +88,13 @@
       padding: 0;
       cursor: pointer;
       transition: background-color 0.15s ease, opacity 0.15s ease;
+      touch-action: manipulation;
     }
 
     .nav-button:active,
-    .icon-button:active {
+    .icon-button:active,
+    .nav-button.is-pressed,
+    .icon-button.is-pressed {
       background-color: rgba(31, 32, 36, 0.06);
       opacity: 0.8;
     }
@@ -139,9 +142,11 @@
       overflow: hidden;
       cursor: pointer;
       user-select: none;
+      touch-action: manipulation;
     }
 
-    .title-wrap:active {
+    .title-wrap:active,
+    .title-wrap.is-pressed {
       opacity: 0.65;
     }
 

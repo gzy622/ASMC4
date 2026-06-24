@@ -71,11 +71,6 @@ export function invertCurrentAssignmentSubmission() {
     }
 
     student.status = STATUS.REGISTERED;
-
-    if (!student.badge) {
-      student.badge = "已交";
-      student.badgeType = "submit";
-    }
   });
 
   saveAppState();
