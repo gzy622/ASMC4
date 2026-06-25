@@ -1,82 +1,71 @@
 # CodeGraph — ASMC4
 
-## 启动链
+纯前端作业管理应用。数据：`localStorage["asmc4_assignments_v1"]`。
 
-```text
-index.html
-  └─ src/js/app.js
-       ├─ bindEvents()
-       ├─ gestures/*（副作用模块）
-       └─ render()
+## 运行
+
+```bash
+.\start-lan-preview.cmd
+node build.mjs
+npm run preview
 ```
 
-## 模块边界
+## 入口
 
-| 路径 | 职责 | 允许依赖 |
-|---|---|---|
-| `state.js` | 持久状态、当前作业、统计、localStorage | constants / data / utils |
-| `runtime.js` | 确认框、打分、长按等临时状态 | 无 |
-| `business/` | 修改作业或学生数据并触发保存、渲染 | state / render / ui |
-| `events/` | 绑定 DOM 事件并调用业务或 UI API | dom-refs / business / ui |
-| `render/` | 根据状态重建界面 | state / dom-refs / utils |
-| `ui/` | 抽屉、面板、确认框、备份 | dom-refs / state |
-| `score-sheet/` | 打分面板和长按行为 | state / runtime / render |
-| `gestures/` | 抽屉与打分面板滑动手势 | dom-refs / ui |
-| `utils/` | 转义、规整、显示、ID、深拷贝 | constants（按需） |
+```text
+index.html -> src/js/app.js -> bindEvents() + render()
+```
+
+- `src/js/app.js`: 启动
+- `src/js/state.js`: 状态
+- `src/js/dom-refs.js`: DOM 引用
+- `src/js/events/`: 事件
+- `src/js/business/`: 数据修改
+- `src/js/render/`: 渲染
+- `src/js/ui/`: 面板、抽屉
+- `src/js/score-sheet/`: 打分
+- `src/js/gestures/`: 手势
+- `src/js/utils/`: 工具
+
+## 分层
+
+- `state.js`: localStorage、当前作业、统计、默认回退
+- `runtime.js`: 确认框、打分、长按、overlay 锁
+- `events/`: DOM 事件绑定
+- `business/`: 作业、学生、花名册修改
+- `render/`: 全量界面重建
+- `ui/`: 抽屉、面板、确认框、overlay
+- `score-sheet/`: 打分面板
+- `gestures/`: 抽屉、打分、拖拽手势
+- `utils/`: 转义、显示、ID、深拷贝、规整
 
 ## 事件域
 
-| 文件 | 负责交互 |
-|---|---|
-| `events/navigation.js` | 抽屉、中心面板、Esc 优先级 |
-| `events/assignments.js` | 新建、切换、重命名、删除、反选 |
-| `events/students.js` | 学生点击、姓名开关、打分模式、长按 |
-| `events/score.js` | 数字键盘、备注、确认/取消打分 |
-| `events/backup.js` | 导入、导出 |
+- `navigation.js`: 抽屉、中心面板、Esc
+- `assignments.js`: 新建、切换、重命名、删除、反选
+- `students.js`: 点击、姓名开关、打分模式、长按
+- `score.js`: 数字键盘、备注、确认/取消
+- `backup.js`: 导入、导出
+- `settings.js`: 设置页、×10、花名册跳转
+- `roster.js`: 花名册编辑
 
-## 核心数据流
-
-```text
-用户事件
-  → events/*
-  → business/* 或 ui/*
-  → state.js 中的对象修改
-  → saveAppState()
-  → render()
-```
-
-## 持久化模型
+## 数据
 
 ```js
 {
-  hideNames: boolean,
-  scoringMode: boolean,
-  currentAssignmentId: string,
-  assignments: [{
-    id: string,
-    title: string,
-    createdAt: string,
-    students: [{
-      id: number,
-      serial: string,
-      name: string,
-      status: "normal" | "registered" | "none",
-      badge: string,
-      badgeType: string,
-      note: string,
-      updatedAt: string
-    }]
-  }]
+  hideNames,
+  scoringMode,
+  scoreTensMode,
+  currentAssignmentId,
+  assignments: [{ id, title, createdAt, subject, students: [{ id, serial, name, status, badge, badgeType, note, updatedAt }] }],
+  roster: [{ id, serial, name, nonEnglish }]
 }
 ```
 
-存储键为 `asmc4_assignments_v1`。读取和导入都会经过
-`normalizeAssignment()` / `normalizeStudent()` 兼容旧数据。
+## 规则
 
-## 维护约束
-
-- DOM 查询只放在 `dom-refs.js`。
-- 用户可控文本进入 `innerHTML` 前必须调用 `escapeHTML()`。
-- 学生 ID 与 `dataset.id` 比较时统一转字符串。
-- `state.js` 不依赖 `render/`，避免形成循环。
-- 新交互优先加入对应的 `events/*.js`，不要重新堆回入口文件。
+- DOM 查询只放在 `dom-refs.js`
+- 用户文本进 `innerHTML` 前先 `escapeHTML()`
+- 学生 id 比较统一转字符串
+- `state.js` 不依赖 `render/`
+- 新交互优先放进对应的 `events/*.js`
