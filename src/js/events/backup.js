@@ -3,15 +3,19 @@ import {
   importBackupBtn,
   importBackupInput
 } from "../dom-refs.js";
-import { exportBackup, importBackup } from "../ui/backup.js";
 
 export function bindBackupEvents() {
-  exportBackupBtn.addEventListener("click", exportBackup);
+  exportBackupBtn.addEventListener("click", async () => {
+    const { exportBackup } = await import("../ui/backup.js");
+    exportBackup();
+  });
+
   importBackupBtn.addEventListener("click", () => importBackupInput.click());
 
-  importBackupInput.addEventListener("change", event => {
+  importBackupInput.addEventListener("change", async event => {
     const file = event.target.files[0];
     if (!file) return;
+    const { importBackup } = await import("../ui/backup.js");
     importBackup(file);
     importBackupInput.value = "";
   });

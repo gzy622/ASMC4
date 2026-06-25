@@ -13,7 +13,6 @@ import {
 import { getState, saveAppState } from "../state.js";
 import { setScoreTensMode } from "../runtime.js";
 import { toggleScoringMode } from "../business/student.js";
-import { exportBackup } from "../ui/backup.js";
 import { openSettings, closeSettings } from "../ui/settings.js";
 import { renderRosterRows } from "../ui/roster.js";
 import { swapOverlay } from "../ui/overlay.js";
@@ -35,7 +34,10 @@ export function bindSettingsEvents() {
     announce(state.scoreTensMode ? "已开启×10模式" : "已关闭×10模式");
   });
 
-  settingsExportBtn.addEventListener("click", exportBackup);
+  settingsExportBtn.addEventListener("click", async () => {
+    const { exportBackup } = await import("../ui/backup.js");
+    exportBackup();
+  });
 
   settingsImportBtn.addEventListener("click", () => importBackupInput.click());
 

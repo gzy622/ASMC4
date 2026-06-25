@@ -39,6 +39,7 @@ npm run cap:run
 - `src/js/score-sheet/`: 打分
 - `src/js/gestures/`: 手势
 - `src/js/utils/`: 工具
+- `PlanHandoffGuide.md`: 计划交接
 
 ## 数据流
 
@@ -58,3 +59,4 @@ npm run cap:run
 10. 花名册改动只影响新用户。
 11. 全部 JS 使用 ESM。
 12. 全量渲染优先，差量更新只在明确需要时做。
+13. 处于 plan 模式，或需要输出方案、计划、交接计划时，先读 `PlanHandoffGuide.md`。

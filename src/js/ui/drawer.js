@@ -3,7 +3,7 @@ import { drawer, drawerScrim } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { overlayTransitionBusy, setOverlayTransitionBusy } from "../runtime.js";
+import { overlayTransitionBusy, setOverlayTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
 
 const DRAWER_TRANSITION_MS = 320;
 
@@ -19,6 +19,7 @@ export function openDrawer() {
 
 export function closeDrawer() {
   if (overlayTransitionBusy) return;
+  setSuppressNextCardClick(false);
   drawer.classList.remove("is-open");
   drawerScrim.classList.remove("is-open");
   drawer.setAttribute("aria-hidden", "true");
@@ -36,6 +37,7 @@ export function contractDrawer() {
 }
 
 export function snapResetDrawer() {
+  setSuppressNextCardClick(false);
   drawer.classList.add("no-anim");
   drawer.classList.remove("is-expanding");
   drawer.classList.remove("is-open");
