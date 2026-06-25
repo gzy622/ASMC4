@@ -1,6 +1,6 @@
 # ASMC4
 
-纯前端作业管理应用。数据存 `localStorage["asmc4_assignments_v1"]`。
+纯前端作业管理应用。数据：`localStorage["asmc4_assignments_v1"]`。
 
 ## 运行
 
@@ -10,13 +10,13 @@ node build.mjs
 npm run preview
 ```
 
-## 先看
+## 入口
 
 - `src/js/app.js`: 启动
 - `src/js/state.js`: 状态
-- `src/js/dom-refs.js`: DOM 引用
+- `src/js/dom-refs.js`: DOM
 - `src/js/events/`: 事件
-- `src/js/business/`: 数据修改
+- `src/js/business/`: 修改
 
 ## 约束
 
@@ -25,4 +25,4 @@ npm run preview
 - `state.js` 不依赖 `render/`
 - 状态变更后通常是 `saveAppState()` 再 `render()`
 
-更细的模块地图见 [CodeGraph.md](CodeGraph.md)。
+细图：[CodeGraph.md](CodeGraph.md)。硬约束：[AGENTS.md](AGENTS.md)。
