@@ -1,6 +1,3 @@
-import { Capacitor } from "@capacitor/core";
-import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
 import { saveAppState, getState } from "../state.js";
 import { render } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
@@ -8,6 +5,7 @@ import { closeDrawer } from "./drawer.js";
 import { normalizeAssignment, normalizeRosterEntry } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
 import { importBackupInput } from "../dom-refs.js";
+import { isNativePlatform } from "../utils/native.js";
 
 function timestampName() {
   const now = new Date();
@@ -26,7 +24,9 @@ export async function exportBackup() {
     const json = JSON.stringify(state, null, 2);
     const fileName = timestampName();
 
-    if (Capacitor.isNativePlatform()) {
+    if (isNativePlatform()) {
+      const { Filesystem, Directory, Encoding } = await import("@capacitor/filesystem");
+      const { Share } = await import("@capacitor/share");
       const result = await Filesystem.writeFile({
         path: fileName,
         data: json,

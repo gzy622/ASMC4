@@ -1,7 +1,3 @@
-import { Capacitor } from "@capacitor/core";
-import { App } from "@capacitor/app";
-import { StatusBar, Style } from "@capacitor/status-bar";
-import { KeepAwake } from "@capacitor-community/keep-awake";
 import {
   confirmScrim,
   scoreSheet,
@@ -18,8 +14,15 @@ import { closeSettings } from "./ui/settings.js";
 import { closeAllCenterPanels } from "./ui/panels.js";
 import { closeDrawer } from "./ui/drawer.js";
 import { overlayTransitionBusy } from "./runtime.js";
+import { isNativePlatform } from "./utils/native.js";
 
-if (Capacitor.isNativePlatform()) {
+(async () => {
+  if (!isNativePlatform()) return;
+
+  const { App } = await import("@capacitor/app");
+  const { StatusBar, Style } = await import("@capacitor/status-bar");
+  const { KeepAwake } = await import("@capacitor-community/keep-awake");
+
   document.body.classList.add("is-native");
   StatusBar.setStyle({ style: Style.Light });
   StatusBar.setBackgroundColor({ color: "#f4f4f4" });
@@ -61,4 +64,4 @@ if (Capacitor.isNativePlatform()) {
 
     App.exitApp();
   });
-}
+})();

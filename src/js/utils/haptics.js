@@ -1,7 +1,7 @@
-import { Capacitor } from "@capacitor/core";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { isNativePlatform } from "./native.js";
 
-export function hapticLight() {
-  if (!Capacitor.isNativePlatform()) return;
+export async function hapticLight() {
+  if (!isNativePlatform()) return;
+  const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
   Haptics.impact({ style: ImpactStyle.Light });
 }
