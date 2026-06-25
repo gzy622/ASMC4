@@ -28,7 +28,13 @@ phoneEl.addEventListener("touchstart", (event) => {
 
 phoneEl.addEventListener("touchmove", (event) => {
   if (phoneStartX === null) return;
-  if (drawer.classList.contains("is-open")) return;
+  if (drawer.classList.contains("is-open")) {
+    phoneStartX = null;
+    phoneStartY = null;
+    phoneDragging = false;
+    cachedClosedPx = null;
+    return;
+  }
   const touch = event.touches[0];
   const dx = touch.clientX - phoneStartX;
   const dy = touch.clientY - phoneStartY;
@@ -61,7 +67,13 @@ phoneEl.addEventListener("touchmove", (event) => {
 
 phoneEl.addEventListener("touchend", (event) => {
   if (phoneStartX === null) return;
-  if (drawer.classList.contains("is-open")) return;
+  if (drawer.classList.contains("is-open")) {
+    phoneStartX = null;
+    phoneStartY = null;
+    phoneDragging = false;
+    cachedClosedPx = null;
+    return;
+  }
   const touch = event.changedTouches[0];
   const dx = touch.clientX - phoneStartX;
   const wasDragging = phoneDragging;

@@ -49,3 +49,4 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - 学生 id 比较统一转字符串
 - `state.js` 不依赖 `render/`
 - 新交互优先放进对应的 `events/*.js`
+- 输出方案、计划、交接计划时先读 `PlanHandoffGuide.md`

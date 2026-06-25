@@ -24,5 +24,6 @@ npm run preview
 - 用户输入进 `innerHTML` 前先 `escapeHTML()`
 - `state.js` 不依赖 `render/`
 - 状态变更后通常是 `saveAppState()` 再 `render()`
+- 输出方案、计划、交接计划时先读 `PlanHandoffGuide.md`
 
 细图：[CodeGraph.md](CodeGraph.md)。硬约束：[AGENTS.md](AGENTS.md)。

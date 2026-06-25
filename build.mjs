@@ -16,9 +16,12 @@ async function build() {
     entryPoints: [join(src, "js", "app.js")],
     bundle: true,
     minify: true,
-    outfile: join(dist, "js", "app.min.js"),
+    outdir: join(dist, "js"),
     format: "esm",
     target: "es2020",
+    splitting: true,
+    chunkNames: "chunks/[name]-[hash]",
+    entryNames: "[name]",
     sourcemap: false,
   });
 
@@ -60,7 +63,7 @@ async function build() {
 
   html = html.replace(
     '<script type="module" src="src/js/app.js"></script>',
-    '<script type="module" src="js/app.min.js"></script>'
+    '<script type="module" src="js/app.js"></script>'
   );
 
   writeFileSync(join(dist, "index.html"), html);
