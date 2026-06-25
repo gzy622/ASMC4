@@ -58,10 +58,12 @@ if !errorlevel! equ 0 (
 rem --- Set title ---
 title ASMC4 -- Port %PORT%
 
+set "TARGET_URL=http://localhost:%PORT%/"
+
 echo.
 echo   ^>^>^>  ASMC4 -- Dev Server
 echo.
-echo   Local     http://localhost:%PORT%/
+echo   Local     %TARGET_URL%
 if "%LAN_MODE%"=="1" (
     set BIND=0.0.0.0
     echo   LAN       http://YOUR-IP:%PORT%/
@@ -73,10 +75,6 @@ if "%LAN_MODE%"=="1" (
 echo.
 echo   Press Ctrl+C to stop the server
 echo.
-
-if "%NO_OPEN%"=="0" (
-    start "" "http://localhost:%PORT%/"
-)
 
 python -m http.server %PORT% --bind %BIND% --directory dist
 if %errorlevel% neq 0 (

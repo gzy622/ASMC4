@@ -87,10 +87,11 @@ if ($Lan) {
 
 # ── 启动 ────────────────────────────────────
 $Host.UI.RawUI.WindowTitle = "ASMC4 — 端口 $Port"
+$localUrl = "http://localhost:$Port/"
 Write-Host ''
 Write-Host ' >>>  ASMC4 — 开发服务器' -ForegroundColor Green
 Write-Host ''
-Write-Host " 本地地址    http://localhost:$Port/"
+Write-Host " 本地地址    $localUrl"
 if ($Lan) {
     $lanMsg = if ($lanAddress) { "$lanAddress" } else { '无法检测局域网 IP，请用 ipconfig 查看' }
     Write-Host " 局域网地址  http://${lanMsg}:$Port/" -ForegroundColor Cyan
@@ -100,10 +101,6 @@ if ($Lan) {
 Write-Host ''
 Write-Host ' 按 Ctrl+C 停止服务器' -ForegroundColor DarkGray
 Write-Host ''
-
-if (-not $NoOpen) {
-    Start-Process "http://localhost:$Port/"
-}
 
 try {
     # ── 构建 ────────────────────────────
