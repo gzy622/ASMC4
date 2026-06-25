@@ -11,7 +11,7 @@ export function render() {
   const state = getState();
   const assignment = getCurrentAssignment();
   titleNode.textContent = assignment.title;
-  document.title = `${assignment.title} UI`;
+  document.title = "ASMC4";
   renderStudents(state, assignment);
   if (drawer.classList.contains("is-open")) {
     renderAssignmentList(state);
