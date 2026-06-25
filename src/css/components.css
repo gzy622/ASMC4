@@ -13,6 +13,9 @@
       cursor: pointer;
       transition: transform 0.1s ease, opacity 0.15s ease;
       touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
 
       border: 0;
       width: 100%;
@@ -21,6 +24,12 @@
       text-align: center;
       appearance: none;
       -webkit-appearance: none;
+    }
+
+    .student-card * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .student-card:active,
@@ -931,6 +940,10 @@
       transform: translateY(0);
     }
 
+    .score-sheet.is-open.is-pointer-guarded .score-sheet-body {
+      pointer-events: none;
+    }
+
     .score-sheet.is-open::after {
       opacity: 1;
     }
@@ -989,6 +1002,20 @@
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+    }
+
+    .score-sheet-handle,
+    .score-student-info,
+    .score-student-serial,
+    .score-student-name,
+    .score-display,
+    .score-numpad,
+    .numpad-btn,
+    .score-action-btn,
+    .score-note-clear {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .score-display-row {

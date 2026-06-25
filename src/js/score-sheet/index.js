@@ -7,6 +7,9 @@ import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 
+let scoreSheetPointerGuardTimer = null;
+let releaseScoreSheetPointerGuard = null;
+
 export function openScoreSheet(student) {
   setScoreSheetStudent(student);
 
@@ -38,9 +41,11 @@ export function openScoreSheet(student) {
   scoreSheetScrim.classList.add("is-open");
   scoreSheet.classList.add("is-open");
   scoreSheet.setAttribute("aria-hidden", "false");
+  armScoreSheetPointerGuard();
 }
 
 export function closeScoreSheet() {
+  clearScoreSheetPointerGuard();
   setScoreSheetStudent(null);
   setScoreInputValue("0");
   setNoteInputValue("");
@@ -103,4 +108,33 @@ function updateNumpadLabels() {
       btn.textContent = digit;
     }
   });
+}
+
+function armScoreSheetPointerGuard() {
+  clearScoreSheetPointerGuard();
+  scoreSheet.classList.add("is-pointer-guarded");
+
+  const releaseGuard = () => {
+    clearScoreSheetPointerGuard();
+  };
+
+  releaseScoreSheetPointerGuard = releaseGuard;
+  window.addEventListener("pointerup", releaseGuard, true);
+  window.addEventListener("pointercancel", releaseGuard, true);
+  scoreSheetPointerGuardTimer = setTimeout(releaseGuard, 450);
+}
+
+function clearScoreSheetPointerGuard() {
+  if (scoreSheetPointerGuardTimer) {
+    clearTimeout(scoreSheetPointerGuardTimer);
+    scoreSheetPointerGuardTimer = null;
+  }
+
+  if (releaseScoreSheetPointerGuard) {
+    window.removeEventListener("pointerup", releaseScoreSheetPointerGuard, true);
+    window.removeEventListener("pointercancel", releaseScoreSheetPointerGuard, true);
+    releaseScoreSheetPointerGuard = null;
+  }
+
+  scoreSheet.classList.remove("is-pointer-guarded");
 }

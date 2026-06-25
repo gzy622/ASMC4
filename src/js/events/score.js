@@ -4,6 +4,7 @@ import {
   scoreNoteClear,
   scoreNoteInput,
   scoreNumpad,
+  scoreSheet,
   scoreSheetScrim
 } from "../dom-refs.js";
 import {
@@ -25,6 +26,11 @@ export function bindScoreEvents() {
   scoreCancel.addEventListener("click", closeScoreSheet);
   scoreConfirm.addEventListener("click", confirmScore);
   scoreSheetScrim.addEventListener("click", closeScoreSheet);
+  scoreSheet.addEventListener("selectstart", event => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (target === scoreNoteInput || target?.closest("#scoreNoteInput")) return;
+    event.preventDefault();
+  });
 
   scoreNoteInput.addEventListener("input", () => {
     setNoteInputValue(scoreNoteInput.value);
