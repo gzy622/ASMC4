@@ -58,6 +58,9 @@ export function bindStudentEvents() {
   grid.addEventListener("pointerup", handleLongPressEnd);
   grid.addEventListener("pointercancel", handleLongPressEnd);
   grid.addEventListener("pointerleave", handleLongPressEnd);
+  grid.addEventListener("selectstart", event => {
+    if (event.target.closest(".student-card")) event.preventDefault();
+  });
   grid.addEventListener("contextmenu", event => {
     if (longPressTimers.size > 0 || longPressTriggered) event.preventDefault();
   });

@@ -18,7 +18,6 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/score-sheet/`: 打分
 - `src/js/gestures/`: 手势
 - `src/js/utils/`: 工具
-- `PlanHandoffGuide.md`: 计划交接
 
 ## 事件域
 

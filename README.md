@@ -17,7 +17,6 @@ npm run preview
 - `src/js/dom-refs.js`: DOM
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
-- `PlanHandoffGuide.md`: 计划交接
 
 ## 约束
 
