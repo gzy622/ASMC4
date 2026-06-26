@@ -20,6 +20,7 @@ createHorizontalDragGesture(phoneEl, {
     return true;
   },
   shouldContinueMove: () => !drawer.classList.contains("is-open"),
+  getReleaseTargetPx: ({ dx, closedPx }) => dx >= DRAG_CLOSE_THRESHOLD ? 0 : closedPx,
   onTrackMove: (dx, dy) => {
     if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
       clearAllLongPressTimers();
@@ -40,6 +41,7 @@ createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy,
+  getReleaseTargetPx: ({ dx, closedPx }) => dx <= -DRAG_CLOSE_THRESHOLD ? closedPx : 0,
   onRelease: (dx) => {
     if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
   },
@@ -51,6 +53,7 @@ createHorizontalDragGesture(drawerScrim, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy && drawer.classList.contains("is-open"),
+  getReleaseTargetPx: ({ dx, closedPx }) => dx <= -DRAG_CLOSE_THRESHOLD ? closedPx : 0,
   onRelease: (dx) => {
     if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
   },

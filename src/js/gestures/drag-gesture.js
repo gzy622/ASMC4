@@ -1,4 +1,5 @@
 import { DRAG_START_THRESHOLD, VERTICAL_CLOSE_THRESHOLD } from "./constants.js";
+import { animateRelease } from "./release-animation.js";
 
 export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = VERTICAL_CLOSE_THRESHOLD, slope = 1.5 }) {
   let startY = null;
@@ -6,6 +7,9 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   let dragging = false;
   let currentDelta = 0;
   let activePointerId = null;
+  let lastMoveAt = 0;
+  let lastVelocity = 0;
+  let releaseAnimating = false;
   let pendingTransform = null;
   let rafId = null;
 
@@ -28,6 +32,14 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       rafId = null;
     }
     pendingTransform = null;
+  }
+
+  function clearDragStyles() {
+    el.style.transition = "none";
+    el.style.transform = "";
+    el.style.willChange = "";
+    void el.offsetWidth;
+    el.style.transition = "";
   }
 
   function isPrimaryMouseButton(event) {
@@ -53,9 +65,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   function resetDragState({ restoreTarget = false } = {}) {
     flushTransform();
     if (restoreTarget && dragging) {
-      el.style.transition = "";
-      el.style.transform = "";
-      el.style.willChange = "";
+      clearDragStyles();
     }
     releasePointer();
     startY = null;
@@ -63,9 +73,24 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     dragging = false;
     currentDelta = 0;
     activePointerId = null;
+    lastMoveAt = 0;
+    lastVelocity = 0;
+  }
+
+  function trackVelocity(nextDelta) {
+    const now = performance.now();
+    if (lastMoveAt > 0) {
+      const elapsed = now - lastMoveAt;
+      if (elapsed > 0) {
+        lastVelocity = (nextDelta - currentDelta) / elapsed;
+      }
+    }
+    currentDelta = nextDelta;
+    lastMoveAt = now;
   }
 
   function handlePointerDown(event) {
+    if (releaseAnimating) return;
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     activePointerId = event.pointerId;
@@ -90,6 +115,9 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       capturePointer(event);
       el.style.transition = "none";
       el.style.willChange = "transform";
+      currentDelta = 0;
+      lastMoveAt = performance.now();
+      lastVelocity = 0;
       startY = event.clientY;
       startX = event.clientX;
       return;
@@ -102,16 +130,19 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       clamped = Math.max(0, dy);
     }
 
-    currentDelta = clamped;
+    trackVelocity(clamped);
     scheduleTransform(`translateY(${clamped}px)`);
     event.preventDefault();
   }
 
-  function handlePointerUp(event) {
+  async function handlePointerUp(event) {
     if (event.pointerId !== activePointerId) return;
     if (startY === null) return;
     const wasDragging = dragging;
     const delta = currentDelta;
+    const velocity = lastVelocity;
+    const shouldClose = Math.abs(delta) >= threshold;
+    const targetDelta = shouldClose ? closeDirection * el.offsetHeight : 0;
 
     flushTransform();
     releasePointer();
@@ -123,12 +154,16 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
 
     if (!wasDragging) return;
 
-    el.style.transition = "";
-    el.style.transform = "";
-    el.style.willChange = "";
-
-    if (Math.abs(delta) >= threshold) {
-      onClose();
+    releaseAnimating = true;
+    el.style.transform = `translateY(${delta}px)`;
+    try {
+      await animateRelease(el, "y", delta, targetDelta, velocity);
+      if (shouldClose) {
+        onClose();
+      }
+    } finally {
+      clearDragStyles();
+      releaseAnimating = false;
     }
   }
 

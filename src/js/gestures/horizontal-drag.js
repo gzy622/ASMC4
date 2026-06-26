@@ -1,4 +1,5 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
+import { animateRelease } from "./release-animation.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -7,12 +8,17 @@ export function createHorizontalDragGesture(bindEl, {
   shouldStart = () => true,
   onTrackMove,
   shouldContinueMove = () => true,
+  getReleaseTargetPx = ({ basePx }) => basePx,
   onRelease,
 }) {
   let startX = null;
   let startY = null;
   let dragging = false;
   let activePointerId = null;
+  let currentPx = 0;
+  let lastMoveAt = 0;
+  let lastVelocity = 0;
+  let releaseAnimating = false;
   let pendingTransform = null;
   let rafId = null;
 
@@ -35,6 +41,14 @@ export function createHorizontalDragGesture(bindEl, {
       rafId = null;
     }
     pendingTransform = null;
+  }
+
+  function clearDragStyles() {
+    targetEl.style.transition = "none";
+    targetEl.style.transform = "";
+    targetEl.style.willChange = "";
+    void targetEl.offsetWidth;
+    targetEl.style.transition = "";
   }
 
   function isPrimaryMouseButton(event) {
@@ -60,9 +74,7 @@ export function createHorizontalDragGesture(bindEl, {
   function resetDragState({ restoreTarget = false } = {}) {
     flushTransform();
     if (restoreTarget && dragging) {
-      targetEl.style.transition = "";
-      targetEl.style.transform = "";
-      targetEl.style.willChange = "";
+      clearDragStyles();
     } else if (dragging) {
       targetEl.style.willChange = "";
     }
@@ -71,9 +83,25 @@ export function createHorizontalDragGesture(bindEl, {
     startY = null;
     dragging = false;
     activePointerId = null;
+    currentPx = 0;
+    lastMoveAt = 0;
+    lastVelocity = 0;
+  }
+
+  function trackVelocity(nextPx) {
+    const now = performance.now();
+    if (lastMoveAt > 0) {
+      const elapsed = now - lastMoveAt;
+      if (elapsed > 0) {
+        lastVelocity = (nextPx - currentPx) / elapsed;
+      }
+    }
+    currentPx = nextPx;
+    lastMoveAt = now;
   }
 
   bindEl.addEventListener("pointerdown", (event) => {
+    if (releaseAnimating) return;
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
@@ -105,6 +133,9 @@ export function createHorizontalDragGesture(bindEl, {
         capturePointer(event);
         targetEl.style.transition = "none";
         targetEl.style.willChange = "transform";
+        currentPx = getBasePx();
+        lastMoveAt = performance.now();
+        lastVelocity = 0;
         startX = event.clientX;
         startY = event.clientY;
       }
@@ -114,11 +145,12 @@ export function createHorizontalDragGesture(bindEl, {
     const closedPx = getClosedPx();
     const basePx = getBasePx();
     const clamped = Math.max(closedPx, Math.min(0, basePx + dx));
+    trackVelocity(clamped);
     scheduleTransform(`translateX(${clamped}px)`);
     event.preventDefault();
   }, { passive: false });
 
-  bindEl.addEventListener("pointerup", (event) => {
+  bindEl.addEventListener("pointerup", async (event) => {
     if (event.pointerId !== activePointerId) return;
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
@@ -127,6 +159,11 @@ export function createHorizontalDragGesture(bindEl, {
     }
     const dx = event.clientX - startX;
     const wasDragging = dragging;
+    const releasedPx = currentPx;
+    const velocity = lastVelocity;
+    const closedPx = getClosedPx();
+    const basePx = getBasePx();
+    const targetPx = getReleaseTargetPx({ dx, closedPx, basePx, currentPx: releasedPx });
 
     flushTransform();
     releasePointer();
@@ -136,10 +173,15 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
 
     if (wasDragging) {
-      targetEl.style.transition = "";
-      targetEl.style.transform = "";
-      targetEl.style.willChange = "";
-      if (onRelease) onRelease(dx, wasDragging);
+      releaseAnimating = true;
+      targetEl.style.transform = `translateX(${releasedPx}px)`;
+      try {
+        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity);
+        if (onRelease) onRelease(dx, wasDragging);
+      } finally {
+        clearDragStyles();
+        releaseAnimating = false;
+      }
     }
   });
 
