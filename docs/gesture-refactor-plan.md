@@ -111,6 +111,7 @@
 3. `requestAnimationFrame` 合帧 + `will-change` 合成层。
 4. `armScoreSheetPointerGuard` 450ms 延时改为事件时序判定。
 5. D4：`drawerClosedPx` 在 resize 时失效问题。
+6. 抽屉打开中/已打开时，在 drawer/scrim 上往右滑 ≥50px 会触发关闭。根因：① drawer/scrim 段 `onRelease` 用 `Math.abs(dx)` 判定（右滑也满足）；② `openDrawer()` 不设 `overlayTransitionBusy` 窗口，打开动画期间仍可起拖。属原码既有行为，重构期保持不变。后续可改为方向判定（仅 `dx <= -DRAG_CLOSE_THRESHOLD` 关）+ 给 `openDrawer` 加 320ms busy 窗口。
 
 ---
 
