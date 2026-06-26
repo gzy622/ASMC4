@@ -30,7 +30,9 @@ createHorizontalDragGesture(phoneEl, {
     if (dx >= DRAG_CLOSE_THRESHOLD) {
       setSuppressNextCardClick(true);
       openDrawer();
+      return true;
     }
+    return false;
   },
 });
 
@@ -41,7 +43,11 @@ createHorizontalDragGesture(drawer, {
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy,
   onRelease: (dx) => {
-    if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
+    if (dx <= -DRAG_CLOSE_THRESHOLD) {
+      closeDrawer();
+      return true;
+    }
+    return false;
   },
 });
 
@@ -52,6 +58,10 @@ createHorizontalDragGesture(drawerScrim, {
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy && drawer.classList.contains("is-open"),
   onRelease: (dx) => {
-    if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
+    if (dx <= -DRAG_CLOSE_THRESHOLD) {
+      closeDrawer();
+      return true;
+    }
+    return false;
   },
 });

@@ -1,5 +1,10 @@
 import { DRAG_START_THRESHOLD, VERTICAL_CLOSE_THRESHOLD } from "./constants.js";
 
+const MOTION = "cubic-bezier(.2, .8, .2, 1)";
+const MIN_DURATION = 120;
+const MAX_DURATION = 320;
+const VELOCITY_REF = 1.5;
+
 export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = VERTICAL_CLOSE_THRESHOLD, slope = 1.5 }) {
   let startY = null;
   let startX = null;
@@ -7,6 +12,9 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   let currentDelta = 0;
   let pendingTransform = null;
   let rafId = null;
+  let lastMoveY = 0;
+  let lastMoveT = 0;
+  let velocity = 0;
 
   function scheduleTransform(value) {
     pendingTransform = value;
@@ -29,10 +37,33 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     pendingTransform = null;
   }
 
+  function releaseAnimation(fromPx, toPx) {
+    const speed = Math.abs(velocity);
+    let duration = MAX_DURATION;
+    if (speed > 0) {
+      duration = Math.round(MAX_DURATION * VELOCITY_REF / speed);
+      duration = Math.max(MIN_DURATION, Math.min(MAX_DURATION, duration));
+    }
+    const anim = el.animate(
+      [
+        { transform: `translateY(${fromPx}px)` },
+        { transform: `translateY(${toPx}px)` },
+      ],
+      { duration, easing: MOTION, fill: "none" }
+    );
+    anim.onfinish = () => {
+      el.style.transition = "";
+      el.style.transform = "";
+      el.style.willChange = "";
+    };
+    return anim;
+  }
+
   function handleTouchStart(event) {
     const touch = event.touches[0];
     startY = touch.clientY;
     startX = touch.clientX;
+    velocity = 0;
   }
 
   function handleTouchMove(event) {
@@ -53,6 +84,8 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       el.style.willChange = "transform";
       startY = touch.clientY;
       startX = touch.clientX;
+      lastMoveY = touch.clientY;
+      lastMoveT = event.timeStamp;
       return;
     }
 
@@ -65,6 +98,15 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
 
     currentDelta = clamped;
     scheduleTransform(`translateY(${clamped}px)`);
+
+    const now = event.timeStamp;
+    const dt = now - lastMoveT;
+    if (dt > 0) {
+      velocity = (touch.clientY - lastMoveY) / dt;
+    }
+    lastMoveY = touch.clientY;
+    lastMoveT = now;
+
     event.preventDefault();
   }
 
@@ -81,12 +123,13 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
 
     if (!wasDragging) return;
 
-    el.style.transition = "";
-    el.style.transform = "";
-    el.style.willChange = "";
-
-    if (Math.abs(delta) >= threshold) {
+    const triggered = Math.abs(delta) >= threshold;
+    if (triggered) {
+      const toPx = closeDirection < 0 ? delta * 2 : delta * 2;
+      releaseAnimation(delta, toPx);
       onClose();
+    } else {
+      releaseAnimation(delta, 0);
     }
   }
 
