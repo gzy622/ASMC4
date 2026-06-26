@@ -12,8 +12,6 @@ export function createHorizontalDragGesture(bindEl, {
   let startX = null;
   let startY = null;
   let dragging = false;
-  let closedPx = 0;
-  let basePx = 0;
 
   bindEl.addEventListener("touchstart", (event) => {
     if (!shouldStart(event)) return;
@@ -47,12 +45,12 @@ export function createHorizontalDragGesture(bindEl, {
         targetEl.style.transition = "none";
         startX = touch.clientX;
         startY = touch.clientY;
-        closedPx = getClosedPx();
-        basePx = getBasePx();
       }
       return;
     }
 
+    const closedPx = getClosedPx();
+    const basePx = getBasePx();
     const clamped = Math.max(closedPx, Math.min(0, basePx + dx));
     targetEl.style.transform = `translateX(${clamped}px)`;
     event.preventDefault();
