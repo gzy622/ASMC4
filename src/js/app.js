@@ -5,6 +5,7 @@ import "./gestures/drawer-gestures.js";
 import "./gestures/panel-swipe.js";
 import "./gestures/press-feedback.js";
 import "./native-shim.js";
+import "./utils/back-guard.js";
 
 document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
 

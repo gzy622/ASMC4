@@ -19,6 +19,8 @@
 .\start-lan-preview.cmd
 .\start-lan-preview.cmd --lan
 .\start-lan-preview.cmd 3000
+.\start-usb-preview.cmd
+.\start-usb-preview.cmd 3000
 node build.mjs
 node build.mjs --watch
 npm run preview
@@ -26,6 +28,11 @@ npm run cap:sync
 npm run cap:open
 npm run cap:run
 ```
+
+预览方式：
+
+- `start-lan-preview.cmd`：同 Wi-Fi，手机访问 PC 局域网 IP
+- `start-usb-preview.cmd`：USB 直连，`adb reverse` 转发，手机访问 `localhost`，无需 Wi-Fi
 
 ## 索引
 
