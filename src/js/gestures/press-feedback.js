@@ -23,6 +23,7 @@ const ASSIGNMENT_ITEM_INNER =
   ".assignment-item-action,.assignment-edit-input,.assignment-edit-subject";
 
 const pressed = new Map();
+const releaseTimers = new Map();
 
 function resolve(target) {
   const el = target.closest(PRESSABLE);
@@ -41,16 +42,49 @@ function clear(pointerId) {
     el.classList.remove("is-pressed");
     pressed.delete(pointerId);
   }
+
+  const timer = releaseTimers.get(pointerId);
+  if (timer) {
+    clearTimeout(timer);
+    releaseTimers.delete(pointerId);
+  }
+}
+
+function clearAll() {
+  Array.from(pressed.keys()).forEach(clear);
+}
+
+function clearElement(el) {
+  Array.from(pressed.entries()).forEach(([pointerId, pressedEl]) => {
+    if (pressedEl === el) clear(pointerId);
+  });
+}
+
+function armAutoRelease(pointerId) {
+  const timer = releaseTimers.get(pointerId);
+  if (timer) clearTimeout(timer);
+
+  releaseTimers.set(pointerId, setTimeout(() => {
+    clear(pointerId);
+  }, 600));
 }
 
 phoneEl.addEventListener("pointerdown", (e) => {
   if (e.button && e.button !== 0) return;
   const el = resolve(e.target);
   if (!el || el.disabled) return;
+  clear(e.pointerId);
+  clearElement(el);
   el.classList.add("is-pressed");
   pressed.set(e.pointerId, el);
+  armAutoRelease(e.pointerId);
 });
 
 phoneEl.addEventListener("pointerleave", (e) => clear(e.pointerId));
-window.addEventListener("pointerup", (e) => clear(e.pointerId));
-window.addEventListener("pointercancel", (e) => clear(e.pointerId));
+window.addEventListener("pointerup", (e) => clear(e.pointerId), true);
+window.addEventListener("pointercancel", (e) => clear(e.pointerId), true);
+window.addEventListener("lostpointercapture", (e) => clear(e.pointerId), true);
+window.addEventListener("blur", clearAll);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clearAll();
+});

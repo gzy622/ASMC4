@@ -7,7 +7,7 @@ import { overlayTransitionBusy, setOverlayTransitionBusy, setSuppressNextCardCli
 
 const DRAWER_TRANSITION_MS = 320;
 
-export function openDrawer() {
+export function openDrawer({ withTransitionLock = true } = {}) {
   if (overlayTransitionBusy) return;
   closeScoreSheet();
   renderAssignmentList(getState());
@@ -15,19 +15,23 @@ export function openDrawer() {
   drawerScrim.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
-  setOverlayTransitionBusy(true);
-  setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+  if (withTransitionLock) {
+    setOverlayTransitionBusy(true);
+    setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+  }
 }
 
-export function closeDrawer() {
+export function closeDrawer({ withTransitionLock = true } = {}) {
   if (overlayTransitionBusy) return;
   setSuppressNextCardClick(false);
   drawer.classList.remove("is-open");
   drawerScrim.classList.remove("is-open");
   drawer.setAttribute("aria-hidden", "true");
   setThemeColor("#f4f4f4");
-  setOverlayTransitionBusy(true);
-  setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+  if (withTransitionLock) {
+    setOverlayTransitionBusy(true);
+    setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+  }
 }
 
 export function expandDrawer() {

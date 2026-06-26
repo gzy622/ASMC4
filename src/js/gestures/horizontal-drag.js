@@ -9,6 +9,8 @@ export function createHorizontalDragGesture(bindEl, {
   onTrackMove,
   shouldContinueMove = () => true,
   getReleaseTargetPx = ({ basePx }) => basePx,
+  onProgress,
+  getReleaseSecondary,
   onRelease,
 }) {
   let startX = null;
@@ -109,6 +111,9 @@ export function createHorizontalDragGesture(bindEl, {
     startX = event.clientX;
     startY = event.clientY;
     dragging = false;
+    currentPx = getBasePx();
+    lastMoveAt = performance.now();
+    lastVelocity = 0;
   });
 
   bindEl.addEventListener("pointermove", (event) => {
@@ -134,12 +139,10 @@ export function createHorizontalDragGesture(bindEl, {
         targetEl.style.transition = "none";
         targetEl.style.willChange = "transform";
         currentPx = getBasePx();
-        lastMoveAt = performance.now();
         lastVelocity = 0;
-        startX = event.clientX;
-        startY = event.clientY;
+      } else {
+        return;
       }
-      return;
     }
 
     const closedPx = getClosedPx();
@@ -147,6 +150,10 @@ export function createHorizontalDragGesture(bindEl, {
     const clamped = Math.max(closedPx, Math.min(0, basePx + dx));
     trackVelocity(clamped);
     scheduleTransform(`translateX(${clamped}px)`);
+    if (onProgress) {
+      const range = -closedPx;
+      onProgress(range > 0 ? (clamped - closedPx) / range : 0);
+    }
     event.preventDefault();
   }, { passive: false });
 
@@ -163,7 +170,7 @@ export function createHorizontalDragGesture(bindEl, {
     const velocity = lastVelocity;
     const closedPx = getClosedPx();
     const basePx = getBasePx();
-    const targetPx = getReleaseTargetPx({ dx, closedPx, basePx, currentPx: releasedPx });
+    const targetPx = getReleaseTargetPx({ dx, closedPx, basePx, currentPx: releasedPx, velocity });
 
     flushTransform();
     releasePointer();
@@ -175,11 +182,17 @@ export function createHorizontalDragGesture(bindEl, {
     if (wasDragging) {
       releaseAnimating = true;
       targetEl.style.transform = `translateX(${releasedPx}px)`;
+      const secondaryTarget = getReleaseSecondary
+        ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
+        : null;
       try {
-        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity);
-        if (onRelease) onRelease(dx, wasDragging);
+        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
+        if (onRelease) onRelease(dx, wasDragging, velocity);
       } finally {
         clearDragStyles();
+        if (secondaryTarget) {
+          secondaryTarget.el.style[secondaryTarget.prop] = "";
+        }
         releaseAnimating = false;
       }
     }

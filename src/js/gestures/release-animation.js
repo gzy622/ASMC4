@@ -18,28 +18,48 @@ function releaseDuration(distancePx, velocityPxPerMs) {
   );
 }
 
-export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0) {
+export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, secondaryTarget = null) {
   if (!el.animate) {
     el.style.transform = axis === "x" ? `translateX(${toPx}px)` : `translateY(${toPx}px)`;
+    if (secondaryTarget) {
+      secondaryTarget.el.style[secondaryTarget.prop] = secondaryTarget.toValue;
+    }
     return Promise.resolve();
   }
 
   const distance = Math.abs(toPx - fromPx);
   const duration = releaseDuration(distance, velocityPxPerMs);
   const property = axis === "x" ? "translateX" : "translateY";
-  const animation = el.animate([
+
+  const animations = [];
+
+  animations.push(el.animate([
     { transform: `${property}(${fromPx}px)` },
     { transform: `${property}(${toPx}px)` },
   ], {
     duration,
     easing: RELEASE_EASING,
     fill: "forwards",
-  });
+  }));
 
-  return animation.finished
-    .catch(() => undefined)
+  if (secondaryTarget) {
+    const fromFrame = {};
+    const toFrame = {};
+    fromFrame[secondaryTarget.prop] = secondaryTarget.fromValue;
+    toFrame[secondaryTarget.prop] = secondaryTarget.toValue;
+    animations.push(secondaryTarget.el.animate([fromFrame, toFrame], {
+      duration,
+      easing: RELEASE_EASING,
+      fill: "forwards",
+    }));
+  }
+
+  return Promise.all(animations.map(a => a.finished.catch(() => undefined)))
     .then(() => {
       el.style.transform = `${property}(${toPx}px)`;
-      animation.cancel();
+      if (secondaryTarget) {
+        secondaryTarget.el.style[secondaryTarget.prop] = secondaryTarget.toValue;
+      }
+      animations.forEach(a => a.cancel());
     });
 }

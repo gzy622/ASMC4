@@ -1,4 +1,5 @@
 export const grid = document.querySelector("#studentGrid");
+export const scrollContainer = document.querySelector(".scroll-container");
 export const titleNode = document.querySelector("#assignmentTitle");
 export const liveStatus = document.querySelector("#liveStatus");
 export const progressBar = document.querySelector("#progressBar");

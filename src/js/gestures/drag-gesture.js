@@ -1,7 +1,21 @@
-import { DRAG_START_THRESHOLD, VERTICAL_CLOSE_THRESHOLD } from "./constants.js";
+import {
+  DRAG_START_THRESHOLD,
+  FLING_VELOCITY_THRESHOLD,
+  MIN_FLING_DISTANCE,
+  VERTICAL_CLOSE_THRESHOLD
+} from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 
-export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = VERTICAL_CLOSE_THRESHOLD, slope = 1.5 }) {
+export function createVerticalDragGesture(el, {
+  closeDirection,
+  onClose,
+  threshold = VERTICAL_CLOSE_THRESHOLD,
+  slope = 1.5,
+  targetEl = el,
+  shouldStart = () => true,
+  onProgress,
+  getReleaseSecondary
+}) {
   let startY = null;
   let startX = null;
   let dragging = false;
@@ -19,7 +33,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       rafId = requestAnimationFrame(() => {
         rafId = null;
         if (pendingTransform !== null) {
-          el.style.transform = pendingTransform;
+          targetEl.style.transform = pendingTransform;
           pendingTransform = null;
         }
       });
@@ -35,11 +49,11 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   }
 
   function clearDragStyles() {
-    el.style.transition = "none";
-    el.style.transform = "";
-    el.style.willChange = "";
-    void el.offsetWidth;
-    el.style.transition = "";
+    targetEl.style.transition = "none";
+    targetEl.style.transform = "";
+    targetEl.style.willChange = "";
+    void targetEl.offsetWidth;
+    targetEl.style.transition = "";
   }
 
   function isPrimaryMouseButton(event) {
@@ -93,9 +107,13 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
+    if (!shouldStart(event)) return;
     activePointerId = event.pointerId;
     startY = event.clientY;
     startX = event.clientX;
+    currentDelta = 0;
+    lastMoveAt = performance.now();
+    lastVelocity = 0;
   }
 
   function handlePointerMove(event) {
@@ -113,13 +131,11 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
       dragging = true;
       capturePointer(event);
-      el.style.transition = "none";
-      el.style.willChange = "transform";
+      targetEl.style.transition = "none";
+      targetEl.style.willChange = "transform";
       currentDelta = 0;
-      lastMoveAt = performance.now();
       lastVelocity = 0;
-      startY = event.clientY;
-      startX = event.clientX;
+    } else {
       return;
     }
 
@@ -132,6 +148,10 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
 
     trackVelocity(clamped);
     scheduleTransform(`translateY(${clamped}px)`);
+    if (onProgress) {
+      const range = targetEl.offsetHeight;
+      onProgress(range > 0 ? 1 - Math.abs(clamped) / range : 0);
+    }
     event.preventDefault();
   }
 
@@ -141,8 +161,11 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     const wasDragging = dragging;
     const delta = currentDelta;
     const velocity = lastVelocity;
-    const shouldClose = Math.abs(delta) >= threshold;
-    const targetDelta = shouldClose ? closeDirection * el.offsetHeight : 0;
+    const shouldClose = (
+      Math.abs(delta) >= threshold
+      || (Math.abs(delta) >= MIN_FLING_DISTANCE && velocity * closeDirection >= FLING_VELOCITY_THRESHOLD)
+    );
+    const targetDelta = shouldClose ? closeDirection * targetEl.offsetHeight : 0;
 
     flushTransform();
     releasePointer();
@@ -155,14 +178,20 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     if (!wasDragging) return;
 
     releaseAnimating = true;
-    el.style.transform = `translateY(${delta}px)`;
+    targetEl.style.transform = `translateY(${delta}px)`;
+    const secondaryTarget = getReleaseSecondary
+      ? getReleaseSecondary({ delta, targetDelta })
+      : null;
     try {
-      await animateRelease(el, "y", delta, targetDelta, velocity);
+      await animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
       if (shouldClose) {
         onClose();
       }
     } finally {
       clearDragStyles();
+      if (secondaryTarget) {
+        secondaryTarget.el.style[secondaryTarget.prop] = "";
+      }
       releaseAnimating = false;
     }
   }
@@ -176,4 +205,232 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   el.addEventListener("pointermove", handlePointerMove, { passive: false });
   el.addEventListener("pointerup", handlePointerUp);
   el.addEventListener("pointercancel", handlePointerCancel);
+}
+
+export function createTopSheetOpenGesture(bindEl, {
+  sheetEl,
+  canStart = () => true,
+  canPull = () => true,
+  onPrepare,
+  onOpen,
+  onCancel,
+  threshold = VERTICAL_CLOSE_THRESHOLD,
+  slope = 1.5,
+  onProgress,
+  getReleaseSecondary,
+  keepSecondaryOnOpen = false,
+}) {
+  let startY = null;
+  let startX = null;
+  let dragging = false;
+  let activePointerId = null;
+  let currentDelta = 0;
+  let lastMoveAt = 0;
+  let lastVelocity = 0;
+  let releaseAnimating = false;
+  let pendingTransform = null;
+  let rafId = null;
+
+  function closedDelta() {
+    return -sheetEl.offsetHeight;
+  }
+
+  function scheduleTransform(value) {
+    pendingTransform = value;
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (pendingTransform !== null) {
+          sheetEl.style.transform = pendingTransform;
+          pendingTransform = null;
+        }
+      });
+    }
+  }
+
+  function flushTransform() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    pendingTransform = null;
+  }
+
+  function clearDragStyles() {
+    sheetEl.style.transition = "none";
+    sheetEl.style.transform = "";
+    sheetEl.style.willChange = "";
+    void sheetEl.offsetWidth;
+    sheetEl.style.transition = "";
+  }
+
+  function isPrimaryMouseButton(event) {
+    return event.pointerType !== "mouse" || event.button === 0;
+  }
+
+  function capturePointer(event) {
+    if (bindEl.setPointerCapture && !bindEl.hasPointerCapture(event.pointerId)) {
+      bindEl.setPointerCapture(event.pointerId);
+    }
+  }
+
+  function releasePointer() {
+    if (
+      activePointerId !== null
+      && bindEl.releasePointerCapture
+      && bindEl.hasPointerCapture(activePointerId)
+    ) {
+      bindEl.releasePointerCapture(activePointerId);
+    }
+  }
+
+  function resetDragState({ restoreTarget = false } = {}) {
+    flushTransform();
+    if (restoreTarget && dragging) {
+      clearDragStyles();
+    } else if (dragging) {
+      sheetEl.style.willChange = "";
+    }
+    releasePointer();
+    startY = null;
+    startX = null;
+    dragging = false;
+    activePointerId = null;
+    currentDelta = 0;
+    lastMoveAt = 0;
+    lastVelocity = 0;
+  }
+
+  function trackVelocity(nextDelta) {
+    const now = performance.now();
+    if (lastMoveAt > 0) {
+      const elapsed = now - lastMoveAt;
+      if (elapsed > 0) {
+        lastVelocity = (nextDelta - currentDelta) / elapsed;
+      }
+    }
+    currentDelta = nextDelta;
+    lastMoveAt = now;
+  }
+
+  function handlePointerDown(event) {
+    if (releaseAnimating) return;
+    if (activePointerId !== null) return;
+    if (!isPrimaryMouseButton(event)) return;
+    if (!canStart(event)) return;
+    activePointerId = event.pointerId;
+    startY = event.clientY;
+    startX = event.clientX;
+    dragging = false;
+    currentDelta = closedDelta();
+    lastMoveAt = performance.now();
+    lastVelocity = 0;
+  }
+
+  function handlePointerMove(event) {
+    if (event.pointerId !== activePointerId) return;
+    if (startY === null) return;
+
+    const dy = event.clientY - startY;
+    const dx = event.clientX - startX;
+
+    if (!dragging) {
+      if (dy <= 0) {
+        resetDragState();
+        return;
+      }
+      if (Math.abs(dy) < DRAG_START_THRESHOLD) return;
+      if (Math.abs(dy) < Math.abs(dx) * slope) {
+        resetDragState();
+        return;
+      }
+      if (!canPull(event)) {
+        resetDragState();
+        return;
+      }
+
+      dragging = true;
+      capturePointer(event);
+      if (onPrepare) onPrepare();
+      sheetEl.style.transition = "none";
+      sheetEl.style.willChange = "transform";
+      currentDelta = closedDelta();
+      lastVelocity = 0;
+      event.preventDefault();
+    } else {
+      return;
+    }
+
+    const minDelta = closedDelta();
+    const clamped = Math.min(0, Math.max(minDelta, minDelta + dy));
+    trackVelocity(clamped);
+    scheduleTransform(`translateY(${clamped}px)`);
+    if (onProgress) {
+      const range = sheetEl.offsetHeight;
+      onProgress(range > 0 ? (clamped - minDelta) / range : 0);
+    }
+    event.preventDefault();
+  }
+
+  async function handlePointerUp(event) {
+    if (event.pointerId !== activePointerId) return;
+    if (startY === null) return;
+
+    const wasDragging = dragging;
+    const delta = currentDelta;
+    const velocity = lastVelocity;
+    const minDelta = closedDelta();
+    const openedDistance = delta - minDelta;
+    const shouldOpen = (
+      openedDistance >= threshold
+      || (openedDistance >= MIN_FLING_DISTANCE && velocity >= FLING_VELOCITY_THRESHOLD)
+    );
+    const targetDelta = shouldOpen ? 0 : minDelta;
+
+    flushTransform();
+    releasePointer();
+    startY = null;
+    startX = null;
+    dragging = false;
+    activePointerId = null;
+    currentDelta = 0;
+    lastMoveAt = 0;
+    lastVelocity = 0;
+
+    if (!wasDragging) return;
+
+    releaseAnimating = true;
+    sheetEl.style.transform = `translateY(${delta}px)`;
+    const secondaryTarget = getReleaseSecondary
+      ? getReleaseSecondary({ delta, minDelta, targetDelta })
+      : null;
+    try {
+      await animateRelease(sheetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      if (shouldOpen && onOpen) {
+        onOpen();
+      } else if (!shouldOpen && onCancel) {
+        onCancel();
+      }
+    } finally {
+      clearDragStyles();
+      if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
+        secondaryTarget.el.style[secondaryTarget.prop] = "";
+      }
+      releaseAnimating = false;
+    }
+  }
+
+  function handlePointerCancel(event) {
+    if (event.pointerId !== activePointerId) return;
+    const wasDragging = dragging;
+    resetDragState({ restoreTarget: true });
+    if (wasDragging && onCancel) {
+      onCancel();
+    }
+  }
+
+  bindEl.addEventListener("pointerdown", handlePointerDown);
+  bindEl.addEventListener("pointermove", handlePointerMove, { passive: false });
+  bindEl.addEventListener("pointerup", handlePointerUp);
+  bindEl.addEventListener("pointercancel", handlePointerCancel);
 }

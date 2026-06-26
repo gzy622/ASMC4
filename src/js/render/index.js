@@ -1,5 +1,5 @@
 import { getState, getCurrentAssignment } from "../state.js";
-import { titleNode, drawer, quickPanel } from "../dom-refs.js";
+import { titleNode, drawer, quickPanel, assignmentList } from "../dom-refs.js";
 import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
@@ -13,7 +13,7 @@ export function render() {
   titleNode.textContent = assignment.title;
   document.title = "ASMC4";
   renderStudents(state, assignment);
-  if (drawer.classList.contains("is-open")) {
+  if (drawer.classList.contains("is-open") || assignmentList.children.length === 0) {
     renderAssignmentList(state);
   }
   if (quickPanel.classList.contains("is-open")) {

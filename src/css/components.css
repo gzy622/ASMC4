@@ -154,7 +154,7 @@
       opacity: 0;
       pointer-events: none;
       transition:
-        opacity 260ms var(--motion);
+        opacity 320ms var(--motion);
     }
 
     .drawer-scrim {
@@ -171,6 +171,7 @@
     .modal-scrim {
       z-index: 50;
       background: rgba(244, 244, 244, 0.34);
+      touch-action: pan-x;
     }
 
     .modal-scrim::after {
@@ -554,7 +555,8 @@
     #newAssignmentPanel.is-open {
       transform: translateY(0);
     }
-    #quickPanel.is-open {
+    #quickPanel.is-open,
+    #quickPanel.is-dragging {
       box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
 
@@ -907,7 +909,7 @@
       background: rgba(31, 32, 36, 0.08);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 260ms var(--motion);
+      transition: opacity 320ms var(--motion);
     }
 
     .score-sheet-scrim.is-open {
@@ -1087,7 +1089,6 @@
       -webkit-appearance: none;
     }
 
-    .numpad-btn:active,
     .numpad-btn.is-pressed {
       transform: scale(0.95);
       background-color: #f0f1f3;
@@ -1102,7 +1103,6 @@
         0 3px 10px rgba(31, 32, 36, 0.06);
     }
 
-    .numpad-btn-function:active,
     .numpad-btn-function.is-pressed {
       background: #e9ebed;
       box-shadow: inset 0 1px 3px rgba(31, 32, 36, 0.08);
@@ -1123,7 +1123,6 @@
       transition: transform 0.12s ease;
     }
 
-    .numpad-btn-backspace:active svg,
     .numpad-btn-backspace.is-pressed svg {
       transform: translateX(-1px);
     }
@@ -1142,7 +1141,6 @@
         0 4px 12px rgba(22, 101, 52, 0.22);
     }
 
-    .score-tens-btn.is-on:active,
     .score-tens-btn.is-on.is-pressed {
       background: #145a2f;
     }

@@ -27,6 +27,7 @@ export function openNewAssignmentPanel() {
 export function closeAllCenterPanels() {
   closeScoreSheet();
   modalScrim.classList.remove("is-open");
+  modalScrim.style.opacity = "";
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -46,4 +47,10 @@ export function openQuickPanel() {
   modalScrim.classList.add("is-open");
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
+}
+
+export function commitQuickPanelOpen() {
+  quickPanel.classList.add("is-open");
+  quickPanel.setAttribute("aria-hidden", "false");
+  modalScrim.classList.add("is-open");
 }
