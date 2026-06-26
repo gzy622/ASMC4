@@ -41,7 +41,7 @@ createHorizontalDragGesture(drawer, {
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy,
   onRelease: (dx) => {
-    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) closeDrawer();
+    if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
   },
 });
 
@@ -52,6 +52,6 @@ createHorizontalDragGesture(drawerScrim, {
   getClosedPx: drawerClosedPx,
   shouldStart: () => !overlayTransitionBusy && drawer.classList.contains("is-open"),
   onRelease: (dx) => {
-    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) closeDrawer();
+    if (dx <= -DRAG_CLOSE_THRESHOLD) closeDrawer();
   },
 });

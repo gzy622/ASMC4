@@ -15,6 +15,8 @@ export function openDrawer() {
   drawerScrim.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
+  setOverlayTransitionBusy(true);
+  setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
 }
 
 export function closeDrawer() {
