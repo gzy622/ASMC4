@@ -10,8 +10,6 @@ function drawerClosedPx() {
 
 /* ── Phone swipe → open drawer ── */
 
-let cachedClosedPx = null;
-
 createHorizontalDragGesture(phoneEl, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
