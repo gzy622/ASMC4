@@ -105,75 +105,13 @@ phoneEl.addEventListener("touchcancel", () => {
 
 /* ── Drawer swipe → close drawer ── */
 
-let drawerStartX = null;
-let drawerStartY = null;
-let drawerDragging = false;
-
-drawer.addEventListener("touchstart", (event) => {
-  if (overlayTransitionBusy) return;
-  const touch = event.touches[0];
-  drawerStartX = touch.clientX;
-  drawerStartY = touch.clientY;
-  drawerDragging = false;
-}, { passive: true });
-
-drawer.addEventListener("touchmove", (event) => {
-  if (drawerStartX === null) return;
-  const touch = event.touches[0];
-  const dx = touch.clientX - drawerStartX;
-  const dy = touch.clientY - drawerStartY;
-
-  if (Math.abs(dx) > 2 && Math.abs(dx) > Math.abs(dy)) {
-    event.preventDefault();
-  }
-
-  if (!drawerDragging) {
-    if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
-      drawerDragging = true;
-      drawer.style.transition = "none";
-      drawerStartX = touch.clientX;
-      drawerStartY = touch.clientY;
-      cachedClosedPx = drawerClosedPx();
-    }
-    return;
-  }
-
-  const closedPx = cachedClosedPx;
-  const clamped = Math.max(closedPx, Math.min(0, dx));
-  drawer.style.transform = `translateX(${clamped}px)`;
-  event.preventDefault();
-}, { passive: false });
-
-drawer.addEventListener("touchend", (event) => {
-  if (drawerStartX === null) return;
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - drawerStartX;
-  const wasDragging = drawerDragging;
-
-  drawerStartX = null;
-  drawerStartY = null;
-  drawerDragging = false;
-  cachedClosedPx = null;
-
-  if (wasDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-
-    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) {
-      closeDrawer();
-    }
-  }
-});
-
-drawer.addEventListener("touchcancel", () => {
-  if (drawerDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-  }
-  drawerStartX = null;
-  drawerStartY = null;
-  drawerDragging = false;
-  cachedClosedPx = null;
+createHorizontalDragGesture(drawer, {
+  targetEl: drawer,
+  getClosedPx: drawerClosedPx,
+  shouldStart: () => !overlayTransitionBusy,
+  onRelease: (dx) => {
+    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) closeDrawer();
+  },
 });
 
 /* ── Scrim swipe → close drawer ── */
