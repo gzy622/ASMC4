@@ -2,6 +2,7 @@ import { phoneEl, drawer, drawerScrim } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
 import { DRAG_START_THRESHOLD, DRAG_CLOSE_THRESHOLD, DRAG_SLOPE } from "./constants.js";
+import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
 function drawerClosedPx() {
   return -1.2 * drawer.offsetWidth;
@@ -177,74 +178,11 @@ drawer.addEventListener("touchcancel", () => {
 
 /* ── Scrim swipe → close drawer ── */
 
-let scrimStartX = null;
-let scrimStartY = null;
-let scrimDragging = false;
-
-drawerScrim.addEventListener("touchstart", (event) => {
-  if (overlayTransitionBusy) return;
-  if (!drawer.classList.contains("is-open")) return;
-  const touch = event.touches[0];
-  scrimStartX = touch.clientX;
-  scrimStartY = touch.clientY;
-  scrimDragging = false;
-}, { passive: true });
-
-drawerScrim.addEventListener("touchmove", (event) => {
-  if (scrimStartX === null) return;
-  const touch = event.touches[0];
-  const dx = touch.clientX - scrimStartX;
-  const dy = touch.clientY - scrimStartY;
-
-  if (Math.abs(dx) > 2 && Math.abs(dx) > Math.abs(dy)) {
-    event.preventDefault();
-  }
-
-  if (!scrimDragging) {
-    if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
-      scrimDragging = true;
-      drawer.style.transition = "none";
-      scrimStartX = touch.clientX;
-      scrimStartY = touch.clientY;
-      cachedClosedPx = drawerClosedPx();
-    }
-    return;
-  }
-
-  const closedPx = cachedClosedPx;
-  const clamped = Math.max(closedPx, Math.min(0, dx));
-  drawer.style.transform = `translateX(${clamped}px)`;
-  event.preventDefault();
-}, { passive: false });
-
-drawerScrim.addEventListener("touchend", (event) => {
-  if (scrimStartX === null) return;
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - scrimStartX;
-  const wasDragging = scrimDragging;
-
-  scrimStartX = null;
-  scrimStartY = null;
-  scrimDragging = false;
-  cachedClosedPx = null;
-
-  if (wasDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-
-    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) {
-      closeDrawer();
-    }
-  }
-});
-
-drawerScrim.addEventListener("touchcancel", () => {
-  if (scrimDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-  }
-  scrimStartX = null;
-  scrimStartY = null;
-  scrimDragging = false;
-  cachedClosedPx = null;
+createHorizontalDragGesture(drawerScrim, {
+  targetEl: drawer,
+  getClosedPx: drawerClosedPx,
+  shouldStart: () => !overlayTransitionBusy && drawer.classList.contains("is-open"),
+  onRelease: (dx) => {
+    if (Math.abs(dx) >= DRAG_CLOSE_THRESHOLD) closeDrawer();
+  },
 });
