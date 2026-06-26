@@ -60,6 +60,12 @@ export function createHorizontalDragGesture(bindEl, {
 
   bindEl.addEventListener("touchend", (event) => {
     if (startX === null) return;
+    if (!shouldContinueMove(event)) {
+      startX = null;
+      startY = null;
+      dragging = false;
+      return;
+    }
     const touch = event.changedTouches[0];
     const dx = touch.clientX - startX;
     const wasDragging = dragging;

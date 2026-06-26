@@ -1,7 +1,7 @@
 import { phoneEl, drawer, drawerScrim } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
-import { DRAG_START_THRESHOLD, DRAG_CLOSE_THRESHOLD, DRAG_SLOPE } from "./constants.js";
+import { DRAG_CLOSE_THRESHOLD } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
 function drawerClosedPx() {
@@ -10,97 +10,30 @@ function drawerClosedPx() {
 
 /* ── Phone swipe → open drawer ── */
 
-let phoneStartX = null;
-let phoneStartY = null;
-let phoneDragging = false;
 let cachedClosedPx = null;
 
-phoneEl.addEventListener("touchstart", (event) => {
-  if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return;
-  if (overlayTransitionBusy) return;
-  const touch = event.touches[0];
-  phoneStartX = touch.clientX;
-  phoneStartY = touch.clientY;
-  phoneDragging = false;
-}, { passive: true });
-
-phoneEl.addEventListener("touchmove", (event) => {
-  if (phoneStartX === null) return;
-  if (drawer.classList.contains("is-open")) {
-    phoneStartX = null;
-    phoneStartY = null;
-    phoneDragging = false;
-    cachedClosedPx = null;
-    return;
-  }
-  const touch = event.touches[0];
-  const dx = touch.clientX - phoneStartX;
-  const dy = touch.clientY - phoneStartY;
-
-  if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-    clearAllLongPressTimers();
-    setLongPressTriggered(false);
-  }
-
-  if (Math.abs(dx) > 2 && Math.abs(dx) > Math.abs(dy)) {
-    event.preventDefault();
-  }
-
-  if (!phoneDragging) {
-    if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
-      phoneDragging = true;
-      drawer.style.transition = "none";
-      phoneStartX = touch.clientX;
-      phoneStartY = touch.clientY;
-      cachedClosedPx = drawerClosedPx();
+createHorizontalDragGesture(phoneEl, {
+  targetEl: drawer,
+  getClosedPx: drawerClosedPx,
+  getBasePx: drawerClosedPx,
+  shouldStart: (event) => {
+    if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return false;
+    if (overlayTransitionBusy) return false;
+    return true;
+  },
+  shouldContinueMove: () => !drawer.classList.contains("is-open"),
+  onTrackMove: (dx, dy) => {
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      clearAllLongPressTimers();
+      setLongPressTriggered(false);
     }
-    return;
-  }
-
-  const closedPx = cachedClosedPx;
-  const clamped = Math.max(closedPx, Math.min(0, closedPx + dx));
-  drawer.style.transform = `translateX(${clamped}px)`;
-  event.preventDefault();
-}, { passive: false });
-
-phoneEl.addEventListener("touchend", (event) => {
-  if (phoneStartX === null) return;
-  if (drawer.classList.contains("is-open")) {
-    phoneStartX = null;
-    phoneStartY = null;
-    phoneDragging = false;
-    cachedClosedPx = null;
-    return;
-  }
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - phoneStartX;
-  const wasDragging = phoneDragging;
-
-  phoneStartX = null;
-  phoneStartY = null;
-  phoneDragging = false;
-  cachedClosedPx = null;
-
-  if (wasDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-
+  },
+  onRelease: (dx) => {
     if (dx >= DRAG_CLOSE_THRESHOLD) {
       setSuppressNextCardClick(true);
       openDrawer();
     }
-  }
-});
-
-phoneEl.addEventListener("touchcancel", () => {
-  if (phoneDragging) {
-    drawer.style.transition = "";
-    drawer.style.transform = "";
-  }
-  phoneStartX = null;
-  phoneStartY = null;
-  phoneDragging = false;
-  cachedClosedPx = null;
+  },
 });
 
 /* ── Drawer swipe → close drawer ── */
