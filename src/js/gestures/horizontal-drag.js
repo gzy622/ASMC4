@@ -12,6 +12,29 @@ export function createHorizontalDragGesture(bindEl, {
   let startX = null;
   let startY = null;
   let dragging = false;
+  let pendingTransform = null;
+  let rafId = null;
+
+  function scheduleTransform(value) {
+    pendingTransform = value;
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (pendingTransform !== null) {
+          targetEl.style.transform = pendingTransform;
+          pendingTransform = null;
+        }
+      });
+    }
+  }
+
+  function flushTransform() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    pendingTransform = null;
+  }
 
   bindEl.addEventListener("touchstart", (event) => {
     if (!shouldStart(event)) return;
@@ -24,6 +47,10 @@ export function createHorizontalDragGesture(bindEl, {
   bindEl.addEventListener("touchmove", (event) => {
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
+      flushTransform();
+      if (dragging) {
+        targetEl.style.willChange = "";
+      }
       startX = null;
       startY = null;
       dragging = false;
@@ -43,6 +70,7 @@ export function createHorizontalDragGesture(bindEl, {
       if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
         dragging = true;
         targetEl.style.transition = "none";
+        targetEl.style.willChange = "transform";
         startX = touch.clientX;
         startY = touch.clientY;
       }
@@ -52,13 +80,17 @@ export function createHorizontalDragGesture(bindEl, {
     const closedPx = getClosedPx();
     const basePx = getBasePx();
     const clamped = Math.max(closedPx, Math.min(0, basePx + dx));
-    targetEl.style.transform = `translateX(${clamped}px)`;
+    scheduleTransform(`translateX(${clamped}px)`);
     event.preventDefault();
   }, { passive: false });
 
   bindEl.addEventListener("touchend", (event) => {
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
+      flushTransform();
+      if (dragging) {
+        targetEl.style.willChange = "";
+      }
       startX = null;
       startY = null;
       dragging = false;
@@ -68,6 +100,7 @@ export function createHorizontalDragGesture(bindEl, {
     const dx = touch.clientX - startX;
     const wasDragging = dragging;
 
+    flushTransform();
     startX = null;
     startY = null;
     dragging = false;
@@ -75,14 +108,17 @@ export function createHorizontalDragGesture(bindEl, {
     if (wasDragging) {
       targetEl.style.transition = "";
       targetEl.style.transform = "";
+      targetEl.style.willChange = "";
       if (onRelease) onRelease(dx, wasDragging);
     }
   });
 
   bindEl.addEventListener("touchcancel", () => {
+    flushTransform();
     if (dragging) {
       targetEl.style.transition = "";
       targetEl.style.transform = "";
+      targetEl.style.willChange = "";
     }
     startX = null;
     startY = null;

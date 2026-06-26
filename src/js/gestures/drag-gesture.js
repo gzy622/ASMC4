@@ -5,6 +5,29 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   let startX = null;
   let dragging = false;
   let currentDelta = 0;
+  let pendingTransform = null;
+  let rafId = null;
+
+  function scheduleTransform(value) {
+    pendingTransform = value;
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (pendingTransform !== null) {
+          el.style.transform = pendingTransform;
+          pendingTransform = null;
+        }
+      });
+    }
+  }
+
+  function flushTransform() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    pendingTransform = null;
+  }
 
   function handleTouchStart(event) {
     const touch = event.touches[0];
@@ -27,6 +50,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
       dragging = true;
       el.style.transition = "none";
+      el.style.willChange = "transform";
       startY = touch.clientY;
       startX = touch.clientX;
       return;
@@ -40,7 +64,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     }
 
     currentDelta = clamped;
-    el.style.transform = `translateY(${clamped}px)`;
+    scheduleTransform(`translateY(${clamped}px)`);
     event.preventDefault();
   }
 
@@ -49,6 +73,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     const wasDragging = dragging;
     const delta = currentDelta;
 
+    flushTransform();
     startY = null;
     startX = null;
     dragging = false;
@@ -58,6 +83,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
 
     el.style.transition = "";
     el.style.transform = "";
+    el.style.willChange = "";
 
     if (Math.abs(delta) >= threshold) {
       onClose();
@@ -65,9 +91,11 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   }
 
   function handleTouchCancel() {
+    flushTransform();
     if (dragging) {
       el.style.transition = "";
       el.style.transform = "";
+      el.style.willChange = "";
     }
     startY = null;
     startX = null;
