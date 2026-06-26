@@ -12,6 +12,7 @@ export function createHorizontalDragGesture(bindEl, {
   let startX = null;
   let startY = null;
   let dragging = false;
+  let activePointerId = null;
   let pendingTransform = null;
   let rafId = null;
 
@@ -36,29 +37,61 @@ export function createHorizontalDragGesture(bindEl, {
     pendingTransform = null;
   }
 
-  bindEl.addEventListener("touchstart", (event) => {
-    if (!shouldStart(event)) return;
-    const touch = event.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    dragging = false;
-  }, { passive: true });
+  function isPrimaryMouseButton(event) {
+    return event.pointerType !== "mouse" || event.button === 0;
+  }
 
-  bindEl.addEventListener("touchmove", (event) => {
+  function capturePointer(event) {
+    if (bindEl.setPointerCapture && !bindEl.hasPointerCapture(event.pointerId)) {
+      bindEl.setPointerCapture(event.pointerId);
+    }
+  }
+
+  function releasePointer() {
+    if (
+      activePointerId !== null
+      && bindEl.releasePointerCapture
+      && bindEl.hasPointerCapture(activePointerId)
+    ) {
+      bindEl.releasePointerCapture(activePointerId);
+    }
+  }
+
+  function resetDragState({ restoreTarget = false } = {}) {
+    flushTransform();
+    if (restoreTarget && dragging) {
+      targetEl.style.transition = "";
+      targetEl.style.transform = "";
+      targetEl.style.willChange = "";
+    } else if (dragging) {
+      targetEl.style.willChange = "";
+    }
+    releasePointer();
+    startX = null;
+    startY = null;
+    dragging = false;
+    activePointerId = null;
+  }
+
+  bindEl.addEventListener("pointerdown", (event) => {
+    if (activePointerId !== null) return;
+    if (!isPrimaryMouseButton(event)) return;
+    if (!shouldStart(event)) return;
+    activePointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    dragging = false;
+  });
+
+  bindEl.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== activePointerId) return;
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
-      flushTransform();
-      if (dragging) {
-        targetEl.style.willChange = "";
-      }
-      startX = null;
-      startY = null;
-      dragging = false;
+      resetDragState();
       return;
     }
-    const touch = event.touches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
 
     if (onTrackMove) onTrackMove(dx, dy);
 
@@ -69,10 +102,11 @@ export function createHorizontalDragGesture(bindEl, {
     if (!dragging) {
       if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
         dragging = true;
+        capturePointer(event);
         targetEl.style.transition = "none";
         targetEl.style.willChange = "transform";
-        startX = touch.clientX;
-        startY = touch.clientY;
+        startX = event.clientX;
+        startY = event.clientY;
       }
       return;
     }
@@ -84,26 +118,22 @@ export function createHorizontalDragGesture(bindEl, {
     event.preventDefault();
   }, { passive: false });
 
-  bindEl.addEventListener("touchend", (event) => {
+  bindEl.addEventListener("pointerup", (event) => {
+    if (event.pointerId !== activePointerId) return;
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
-      flushTransform();
-      if (dragging) {
-        targetEl.style.willChange = "";
-      }
-      startX = null;
-      startY = null;
-      dragging = false;
+      resetDragState();
       return;
     }
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - startX;
+    const dx = event.clientX - startX;
     const wasDragging = dragging;
 
     flushTransform();
+    releasePointer();
     startX = null;
     startY = null;
     dragging = false;
+    activePointerId = null;
 
     if (wasDragging) {
       targetEl.style.transition = "";
@@ -113,15 +143,8 @@ export function createHorizontalDragGesture(bindEl, {
     }
   });
 
-  bindEl.addEventListener("touchcancel", () => {
-    flushTransform();
-    if (dragging) {
-      targetEl.style.transition = "";
-      targetEl.style.transform = "";
-      targetEl.style.willChange = "";
-    }
-    startX = null;
-    startY = null;
-    dragging = false;
+  bindEl.addEventListener("pointercancel", (event) => {
+    if (event.pointerId !== activePointerId) return;
+    resetDragState({ restoreTarget: true });
   });
 }

@@ -28,6 +28,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      touch-action: pan-y;
     }
 
     .is-native .phone {

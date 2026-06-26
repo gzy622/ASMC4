@@ -5,6 +5,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
   let startX = null;
   let dragging = false;
   let currentDelta = 0;
+  let activePointerId = null;
   let pendingTransform = null;
   let rafId = null;
 
@@ -29,17 +30,54 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     pendingTransform = null;
   }
 
-  function handleTouchStart(event) {
-    const touch = event.touches[0];
-    startY = touch.clientY;
-    startX = touch.clientX;
+  function isPrimaryMouseButton(event) {
+    return event.pointerType !== "mouse" || event.button === 0;
   }
 
-  function handleTouchMove(event) {
+  function capturePointer(event) {
+    if (el.setPointerCapture && !el.hasPointerCapture(event.pointerId)) {
+      el.setPointerCapture(event.pointerId);
+    }
+  }
+
+  function releasePointer() {
+    if (
+      activePointerId !== null
+      && el.releasePointerCapture
+      && el.hasPointerCapture(activePointerId)
+    ) {
+      el.releasePointerCapture(activePointerId);
+    }
+  }
+
+  function resetDragState({ restoreTarget = false } = {}) {
+    flushTransform();
+    if (restoreTarget && dragging) {
+      el.style.transition = "";
+      el.style.transform = "";
+      el.style.willChange = "";
+    }
+    releasePointer();
+    startY = null;
+    startX = null;
+    dragging = false;
+    currentDelta = 0;
+    activePointerId = null;
+  }
+
+  function handlePointerDown(event) {
+    if (activePointerId !== null) return;
+    if (!isPrimaryMouseButton(event)) return;
+    activePointerId = event.pointerId;
+    startY = event.clientY;
+    startX = event.clientX;
+  }
+
+  function handlePointerMove(event) {
+    if (event.pointerId !== activePointerId) return;
     if (startY === null) return;
-    const touch = event.touches[0];
-    const dy = touch.clientY - startY;
-    const dx = touch.clientX - startX;
+    const dy = event.clientY - startY;
+    const dx = event.clientX - startX;
 
     if (Math.abs(dy) > 2 && Math.abs(dy) > Math.abs(dx)) {
       event.preventDefault();
@@ -49,10 +87,11 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       if (Math.abs(dy) < DRAG_START_THRESHOLD) return;
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
       dragging = true;
+      capturePointer(event);
       el.style.transition = "none";
       el.style.willChange = "transform";
-      startY = touch.clientY;
-      startX = touch.clientX;
+      startY = event.clientY;
+      startX = event.clientX;
       return;
     }
 
@@ -68,16 +107,19 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     event.preventDefault();
   }
 
-  function handleTouchEnd() {
+  function handlePointerUp(event) {
+    if (event.pointerId !== activePointerId) return;
     if (startY === null) return;
     const wasDragging = dragging;
     const delta = currentDelta;
 
     flushTransform();
+    releasePointer();
     startY = null;
     startX = null;
     dragging = false;
     currentDelta = 0;
+    activePointerId = null;
 
     if (!wasDragging) return;
 
@@ -90,21 +132,13 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
     }
   }
 
-  function handleTouchCancel() {
-    flushTransform();
-    if (dragging) {
-      el.style.transition = "";
-      el.style.transform = "";
-      el.style.willChange = "";
-    }
-    startY = null;
-    startX = null;
-    dragging = false;
-    currentDelta = 0;
+  function handlePointerCancel(event) {
+    if (event.pointerId !== activePointerId) return;
+    resetDragState({ restoreTarget: true });
   }
 
-  el.addEventListener("touchstart", handleTouchStart, { passive: true });
-  el.addEventListener("touchmove", handleTouchMove, { passive: false });
-  el.addEventListener("touchend", handleTouchEnd);
-  el.addEventListener("touchcancel", handleTouchCancel);
+  el.addEventListener("pointerdown", handlePointerDown);
+  el.addEventListener("pointermove", handlePointerMove, { passive: false });
+  el.addEventListener("pointerup", handlePointerUp);
+  el.addEventListener("pointercancel", handlePointerCancel);
 }
