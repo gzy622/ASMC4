@@ -1,6 +1,6 @@
-const DRAG_START_THRESHOLD = 8;
+import { DRAG_START_THRESHOLD, VERTICAL_CLOSE_THRESHOLD } from "./constants.js";
 
-export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = 80, slope = 1.5 }) {
+export function createVerticalDragGesture(el, { closeDirection, onClose, threshold = VERTICAL_CLOSE_THRESHOLD, slope = 1.5 }) {
   let startY = null;
   let startX = null;
   let dragging = false;

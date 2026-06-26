@@ -1,10 +1,7 @@
 import { phoneEl, drawer, drawerScrim } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
-
-const DRAG_START_THRESHOLD = 8;
-const DRAG_CLOSE_THRESHOLD = 50;
-const DRAG_SLOPE = 1.5;
+import { DRAG_START_THRESHOLD, DRAG_CLOSE_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 
 function drawerClosedPx() {
   return -1.2 * drawer.offsetWidth;
