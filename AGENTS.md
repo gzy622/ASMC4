@@ -16,9 +16,8 @@
 ## 命令
 
 ```bash
-.\start-lan-preview.cmd
-.\start-lan-preview.cmd --lan
-.\start-lan-preview.cmd 3000
+.\start-lan.cmd              # 右键管理员(首次)，同 Wi-Fi 手机访问
+.\start-lan.cmd 3000         # 指定端口
 .\start-usb-preview.cmd
 .\start-usb-preview.cmd 3000
 node build.mjs
@@ -31,7 +30,7 @@ npm run cap:run
 
 预览方式：
 
-- `start-lan-preview.cmd`：同 Wi-Fi，手机访问 PC 局域网 IP
+- `start-lan.cmd`：同 Wi-Fi，手机访问 PC 局域网 IP（首次需右键管理员运行以添加防火墙规则）
 - `start-usb-preview.cmd`：USB 直连，`adb reverse` 转发，手机访问 `localhost`，无需 Wi-Fi
 
 ## 索引
