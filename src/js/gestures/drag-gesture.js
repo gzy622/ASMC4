@@ -44,6 +44,7 @@ export function createVerticalDragGesture(el, { closeDirection, onClose, thresho
       duration = Math.round(MAX_DURATION * VELOCITY_REF / speed);
       duration = Math.max(MIN_DURATION, Math.min(MAX_DURATION, duration));
     }
+    el.style.transition = "none";
     const anim = el.animate(
       [
         { transform: `translateY(${fromPx}px)` },

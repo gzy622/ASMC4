@@ -51,6 +51,7 @@ export function createHorizontalDragGesture(bindEl, {
       duration = Math.round(MAX_DURATION * VELOCITY_REF / speed);
       duration = Math.max(MIN_DURATION, Math.min(MAX_DURATION, duration));
     }
+    targetEl.style.transition = "none";
     const anim = targetEl.animate(
       [
         { transform: `translateX(${fromPx}px)` },
