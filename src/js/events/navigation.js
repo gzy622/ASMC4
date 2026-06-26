@@ -26,6 +26,7 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
+import { overlayTransitionBusy } from "../runtime.js";
 
 export function bindNavigationEvents() {
   menuButton.addEventListener("click", openDrawer);
@@ -52,6 +53,8 @@ export function bindNavigationEvents() {
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
+    if (overlayTransitionBusy) return;
+    event.preventDefault();
 
     if (confirmPanel.classList.contains("is-open")) {
       closeConfirm();
