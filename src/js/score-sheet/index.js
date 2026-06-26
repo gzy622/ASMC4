@@ -7,8 +7,8 @@ import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 
-let scoreSheetPointerGuardTimer = null;
 let releaseScoreSheetPointerGuard = null;
+let scoreSheetPointerGuardTransitionHandler = null;
 
 export function openScoreSheet(student) {
   setScoreSheetStudent(student);
@@ -121,19 +121,23 @@ function armScoreSheetPointerGuard() {
   releaseScoreSheetPointerGuard = releaseGuard;
   window.addEventListener("pointerup", releaseGuard, true);
   window.addEventListener("pointercancel", releaseGuard, true);
-  scoreSheetPointerGuardTimer = setTimeout(releaseGuard, 450);
+
+  scoreSheetPointerGuardTransitionHandler = (event) => {
+    if (event.propertyName === "transform") releaseGuard();
+  };
+  scoreSheet.addEventListener("transitionend", scoreSheetPointerGuardTransitionHandler);
 }
 
 function clearScoreSheetPointerGuard() {
-  if (scoreSheetPointerGuardTimer) {
-    clearTimeout(scoreSheetPointerGuardTimer);
-    scoreSheetPointerGuardTimer = null;
-  }
-
   if (releaseScoreSheetPointerGuard) {
     window.removeEventListener("pointerup", releaseScoreSheetPointerGuard, true);
     window.removeEventListener("pointercancel", releaseScoreSheetPointerGuard, true);
     releaseScoreSheetPointerGuard = null;
+  }
+
+  if (scoreSheetPointerGuardTransitionHandler) {
+    scoreSheet.removeEventListener("transitionend", scoreSheetPointerGuardTransitionHandler);
+    scoreSheetPointerGuardTransitionHandler = null;
   }
 
   scoreSheet.classList.remove("is-pointer-guarded");
