@@ -152,7 +152,7 @@ shouldCommit =
 - `distanceThreshold: 50`
 - `progressThreshold: 0.38`
 - `onCommit: openDrawer`
-- `secondary: drawerScrim.opacity`
+- 无半透明遮罩联动
 
 抽屉左滑关闭：
 
@@ -163,7 +163,7 @@ shouldCommit =
 - `commitDirection: -1`
 - `distanceThreshold: 50`
 - `onCommit: closeDrawer`
-- `secondary: drawerScrim.opacity`
+- 无半透明遮罩联动
 
 顶部面板下拉打开：
 
@@ -173,7 +173,7 @@ shouldCommit =
 - `bounds: [-height, 0]`
 - `commitDirection: +1`
 - `canDrag: scrollContainer.scrollTop <= 0`
-- `onPrepare: renderQuickAssignmentList + show scrim`
+- `onPrepare: renderQuickAssignmentList`
 - `onCommit: commitQuickPanelOpen`
 - `onCancel: cancelTopSheetOpen`
 
@@ -194,7 +194,7 @@ shouldCommit =
 - `bounds: [0, height]`
 - `commitDirection: +1`
 - `onCommit: closeScoreSheet`
-- `secondary: scoreSheetScrim.opacity`
+- 无半透明遮罩联动
 
 ## 6. 性能规则
 
@@ -318,4 +318,3 @@ rg "touch-action" src/css
 - 阶段 4 出问题：只恢复文档或删除清理提交，不影响运行代码。
 
 全部改动均为 UI 手势层，不触碰 `localStorage["asmc4_assignments_v1"]`，无数据迁移。
-

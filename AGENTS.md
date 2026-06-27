@@ -64,3 +64,26 @@ npm run cap:run
 10. 花名册改动只影响新用户。
 11. 全部 JS 使用 ESM。
 12. 全量渲染优先，差量更新只在明确需要时做。
+
+## RTK 使用规则
+
+本机安装了 rtk-ai/rtk，但不启用自动 hook、插件接管或透明命令改写。
+
+只有在命令输出可能很长、会消耗大量上下文时，才显式使用 `rtk` 前缀，例如：
+
+```powershell
+rtk git status
+rtk git diff
+rtk git log --oneline -50
+rtk rg "keyword"
+rtk npm test
+rtk pnpm test
+rtk pytest
+rtk cargo test
+```
+
+短命令、需要完整原始输出的命令、交互式命令、安装命令、会修改系统或项目状态的命令，不要默认加 `rtk`。
+
+需要完整错误堆栈、完整日志、完整 JSON、完整 diff、完整测试输出时，直接运行原命令，不要使用 `rtk` 过滤。
+
+如果 `rtk <command>` 的输出看起来缺失关键信息，立即改用原命令重新运行。
