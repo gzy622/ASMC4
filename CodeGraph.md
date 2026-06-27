@@ -8,12 +8,16 @@
 index.html -> src/js/app.js -> bindEvents() + render()
 ```
 
-- `src/js/app.js`: 启动
-- `src/js/state.js`: 状态
-- `src/js/dom-refs.js`: DOM
+- `src/js/app.js`: 启动 + 遮罩动画
+- `src/js/state.js`: 持久状态（localStorage）
+- `src/js/runtime.js`: 运行时可变状态（不持久化）
+- `src/js/dom-refs.js`: DOM 引用快照
+- `src/js/data/defaults.js`: 默认值
+- `src/js/constants.js`: 全局常量
+- `src/js/native-shim.js`: Android 原生桥接垫片
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
-- `src/js/render/`: 渲染
+- `src/js/render/`: 渲染（含 7 个模块）
 - `src/js/ui/`: 面板
 - `src/js/score-sheet/`: 打分
 - `src/js/gestures/`: 手势
@@ -31,6 +35,8 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 ## 数据
 
+### 持久化（`localStorage["asmc4_assignments_v1"]` → `state.js`）
+
 ```js
 {
   hideNames,
@@ -42,11 +48,18 @@ index.html -> src/js/app.js -> bindEvents() + render()
 }
 ```
 
+### 运行时（`runtime.js`，不持久化）
+
+- `pendingConfirmAction`, `scoreSheetStudent`, `scoreInputValue`, `scoreTensMode`
+- `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
+- `overlayTransitionBusy`, `pointerDirectionLock`
+
 ## 约束
 
 - DOM 查询只放在 `dom-refs.js`
 - 用户文本进 `innerHTML` 前先 `escapeHTML()`
 - 学生 id 比较统一转字符串
-- `state.js` 不依赖 `render/`
+- `state.js` 不依赖 `render/`；`runtime.js` 不依赖 `state.js`
+- 持久状态进 `state.js`，运行时可变状态进 `runtime.js`
 - 新交互优先放进对应的 `events/*.js`
 - 输出方案、计划、交接计划时先读 `PlanHandoffGuide.md`

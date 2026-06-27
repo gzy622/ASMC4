@@ -5,25 +5,30 @@
 ## 运行
 
 ```bash
-.\start-lan-preview.cmd
-node build.mjs
-npm run preview
+.\start-lan.cmd              # 同 Wi-Fi 手机访问（首次右键管理员）
+.\start-usb-preview.cmd      # USB 直连，adb reverse
+node build.mjs               # 构建
+npm run preview              # 预览构建产物
 ```
 
 ## 入口
 
 - `src/js/app.js`: 启动
-- `src/js/state.js`: 状态
-- `src/js/dom-refs.js`: DOM
+- `src/js/state.js`: 持久状态
+- `src/js/runtime.js`: 运行时可变状态
+- `src/js/dom-refs.js`: DOM 引用
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
+- `src/js/render/`: 渲染
+- `src/js/ui/`: 面板
+- `src/js/gestures/`: 手势
+- `src/js/utils/`: 工具
 
 ## 约束
 
-- 改 DOM id 时同步 HTML 和 `src/js/dom-refs.js`
+- 改 DOM id 时同步 HTML 和 `dom-refs.js`
 - 用户输入进 `innerHTML` 前先 `escapeHTML()`
 - `state.js` 不依赖 `render/`
-- 状态变更后通常是 `saveAppState()` 再 `render()`
-- 输出方案、计划、交接计划时先读 `PlanHandoffGuide.md`
+- 新交互优先放进 `events/*.js`
 
-细图：[CodeGraph.md](CodeGraph.md)。硬约束：[AGENTS.md](AGENTS.md)。
+详细结构：[CodeGraph.md](CodeGraph.md)。硬约束：[AGENTS.md](AGENTS.md)。
