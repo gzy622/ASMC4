@@ -1,9 +1,6 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeAllCenterPanels } from "./panels.js";
-import {
-  drawer,
-  drawerScrim
-} from "../dom-refs.js";
+import { drawer } from "../dom-refs.js";
 import {
   expandDrawer,
   contractDrawer,
@@ -35,7 +32,6 @@ export async function openOverlay(panel, renderFn) {
   renderFn();
 
   drawer.classList.add("is-open");
-  drawerScrim.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
 
   expandDrawer();
@@ -83,7 +79,6 @@ export async function closeOverlay(panel) {
   panel.classList.remove("is-closing");
 
   snapPrepareDrawer();
-  drawerScrim.classList.add("is-open");
 
   renderAssignmentList(getState());
 

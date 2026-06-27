@@ -1,4 +1,4 @@
-import { confirmPanel, confirmScrim, confirmTitle, confirmMessage, confirmOkButton, modalScrim, newAssignmentPanel, quickPanel } from "../dom-refs.js";
+import { confirmPanel, confirmScrim, confirmTitle, confirmMessage, confirmOkButton } from "../dom-refs.js";
 import { setPendingConfirmAction } from "../runtime.js";
 
 export function openConfirm(options) {
@@ -11,7 +11,6 @@ export function openConfirm(options) {
   confirmOkButton.classList.toggle("primary", !options.danger);
 
   confirmScrim.classList.add("is-open");
-  modalScrim.classList.add("is-open");
   confirmPanel.classList.add("is-open");
   confirmPanel.setAttribute("aria-hidden", "false");
 }
@@ -29,8 +28,4 @@ export function closeConfirm() {
   confirmScrim.classList.remove("is-open");
   confirmPanel.classList.remove("is-open");
   confirmPanel.setAttribute("aria-hidden", "true");
-
-  if (!newAssignmentPanel.classList.contains("is-open") && !quickPanel.classList.contains("is-open")) {
-    modalScrim.classList.remove("is-open");
-  }
 }

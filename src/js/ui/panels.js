@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { modalScrim, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel } from "../dom-refs.js";
+import { newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
@@ -15,7 +15,6 @@ export function openNewAssignmentPanel() {
 
   newAssignmentInput.value = "";
   if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "";
-  modalScrim.classList.add("is-open");
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");
 
@@ -26,8 +25,6 @@ export function openNewAssignmentPanel() {
 
 export function closeAllCenterPanels() {
   closeScoreSheet();
-  modalScrim.classList.remove("is-open");
-  modalScrim.style.opacity = "";
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -44,7 +41,6 @@ export function openQuickPanel() {
   closeAllCenterPanels();
   renderQuickAssignmentList(getState());
 
-  modalScrim.classList.add("is-open");
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
 }
@@ -52,5 +48,4 @@ export function openQuickPanel() {
 export function commitQuickPanelOpen() {
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
-  modalScrim.classList.add("is-open");
 }
