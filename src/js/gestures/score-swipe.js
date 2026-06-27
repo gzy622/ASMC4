@@ -1,21 +1,21 @@
-import { scoreSheet, scoreSheetScrim } from "../dom-refs.js";
+import { confirmPanel, phoneEl, scoreSheet } from "../dom-refs.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { createVerticalDragGesture } from "./drag-gesture.js";
-
-function scoreScrimProgress(delta, height) {
-  return height > 0 ? 1 - Math.abs(delta) / height : 0;
-}
+import { overlayTransitionBusy } from "../runtime.js";
 
 createVerticalDragGesture(scoreSheet, {
   closeDirection: +1,
   onClose: closeScoreSheet,
-  onProgress: (progress) => {
-    scoreSheetScrim.style.opacity = progress;
+});
+
+createVerticalDragGesture(phoneEl, {
+  closeDirection: +1,
+  targetEl: scoreSheet,
+  shouldStart: (event) => {
+    if (overlayTransitionBusy) return false;
+    if (confirmPanel.classList.contains("is-open")) return false;
+    if (!scoreSheet.classList.contains("is-open")) return false;
+    return !event.target.closest(".score-sheet, .center-panel, .drawer, .nav-button, .icon-button, .title-wrap");
   },
-  getReleaseSecondary: ({ delta, targetDelta }) => ({
-    el: scoreSheetScrim,
-    prop: "opacity",
-    fromValue: scoreScrimProgress(delta, scoreSheet.offsetHeight),
-    toValue: scoreScrimProgress(targetDelta, scoreSheet.offsetHeight),
-  }),
+  onClose: closeScoreSheet,
 });
