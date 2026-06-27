@@ -9,6 +9,7 @@ function drawerClosedPx() {
 }
 
 function shouldReleaseBySwipe(dx, velocity, direction) {
+  if (velocity * direction <= -FLING_VELOCITY_THRESHOLD) return false;
   return (
     dx * direction >= DRAG_CLOSE_THRESHOLD
     || (dx * direction >= MIN_FLING_DISTANCE && velocity * direction >= FLING_VELOCITY_THRESHOLD)
