@@ -21,7 +21,11 @@ function timestampName() {
 export async function exportBackup() {
   try {
     const state = getState();
-    const json = JSON.stringify(state, null, 2);
+    const nonEnglishStudents = state.roster
+      .filter(function(e) { return e.nonEnglish; })
+      .map(function(e) { return { id: e.id, serial: e.serial, name: e.name }; });
+    const backupData = Object.assign({}, state, { nonEnglishStudents: nonEnglishStudents });
+    const json = JSON.stringify(backupData, null, 2);
     const fileName = timestampName();
 
     if (isNativePlatform()) {

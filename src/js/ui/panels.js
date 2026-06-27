@@ -14,7 +14,7 @@ export function openNewAssignmentPanel() {
   quickPanel.setAttribute("aria-hidden", "true");
 
   newAssignmentInput.value = "";
-  if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "";
+  if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");
 
