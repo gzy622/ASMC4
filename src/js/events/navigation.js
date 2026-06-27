@@ -3,9 +3,7 @@ import {
   confirmPanel,
   drawer,
   drawerCloseButton,
-  drawerScrim,
   menuButton,
-  modalScrim,
   newAssignmentCancelButton,
   newAssignmentCloseButton,
   newAssignmentPanel,
@@ -14,6 +12,7 @@ import {
   rosterEditorPanel,
   scoreSheet,
   settingsPanel,
+  phoneEl,
   titleButton
 } from "../dom-refs.js";
 import { closeDrawer, openDrawer } from "../ui/drawer.js";
@@ -28,10 +27,73 @@ import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
 import { overlayTransitionBusy } from "../runtime.js";
 
+function consumeOverlayEmptyClick(event) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}
+
+function hasOpenOverlay() {
+  return (
+    confirmPanel.classList.contains("is-open")
+    || scoreSheet.classList.contains("is-open")
+    || rosterEditorPanel.classList.contains("is-open")
+    || settingsPanel.classList.contains("is-open")
+    || newAssignmentPanel.classList.contains("is-open")
+    || quickPanel.classList.contains("is-open")
+    || drawer.classList.contains("is-open")
+  );
+}
+
+function bindEmptyAreaClose() {
+  phoneEl.addEventListener("click", event => {
+    if (!(event.target instanceof Element)) return;
+    if (overlayTransitionBusy) {
+      if (hasOpenOverlay()) consumeOverlayEmptyClick(event);
+      return;
+    }
+    if (confirmPanel.classList.contains("is-open")) return;
+
+    if (scoreSheet.classList.contains("is-open")) {
+      if (event.target.closest(".score-sheet")) return;
+      consumeOverlayEmptyClick(event);
+      closeScoreSheet();
+      return;
+    }
+
+    if (rosterEditorPanel.classList.contains("is-open")) {
+      if (event.target.closest("#rosterEditorPanel")) return;
+      consumeOverlayEmptyClick(event);
+      closeRosterEditor();
+      return;
+    }
+
+    if (settingsPanel.classList.contains("is-open")) {
+      if (event.target.closest("#settingsPanel")) return;
+      consumeOverlayEmptyClick(event);
+      closeSettings();
+      return;
+    }
+
+    if (newAssignmentPanel.classList.contains("is-open") || quickPanel.classList.contains("is-open")) {
+      if (event.target.closest("#newAssignmentPanel, #quickPanel")) return;
+      consumeOverlayEmptyClick(event);
+      closeAllCenterPanels();
+      return;
+    }
+
+    if (drawer.classList.contains("is-open")) {
+      if (event.target.closest(".drawer")) return;
+      consumeOverlayEmptyClick(event);
+      closeDrawer();
+    }
+  }, true);
+}
+
 export function bindNavigationEvents() {
+  bindEmptyAreaClose();
+
   menuButton.addEventListener("click", openDrawer);
   drawerCloseButton.addEventListener("click", closeDrawer);
-  drawerScrim.addEventListener("click", closeDrawer);
 
   addButton.addEventListener("click", openNewAssignmentPanel);
   newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
@@ -45,11 +107,6 @@ export function bindNavigationEvents() {
     }
   });
   quickPanelCloseButton.addEventListener("click", closeAllCenterPanels);
-
-  modalScrim.addEventListener("click", () => {
-    if (confirmPanel.classList.contains("is-open")) return;
-    closeAllCenterPanels();
-  });
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
