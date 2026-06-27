@@ -24,6 +24,8 @@ const ASSIGNMENT_ITEM_INNER =
 
 const pressed = new Map();
 const releaseTimers = new Map();
+const pressStarts = new Map();
+const MOVE_CANCEL_DISTANCE = 8;
 
 function resolve(target) {
   const el = target.closest(PRESSABLE);
@@ -42,6 +44,7 @@ function clear(pointerId) {
     el.classList.remove("is-pressed");
     pressed.delete(pointerId);
   }
+  pressStarts.delete(pointerId);
 
   const timer = releaseTimers.get(pointerId);
   if (timer) {
@@ -77,7 +80,18 @@ phoneEl.addEventListener("pointerdown", (e) => {
   clearElement(el);
   el.classList.add("is-pressed");
   pressed.set(e.pointerId, el);
+  pressStarts.set(e.pointerId, { x: e.clientX, y: e.clientY });
   armAutoRelease(e.pointerId);
+});
+
+phoneEl.addEventListener("pointermove", (e) => {
+  const start = pressStarts.get(e.pointerId);
+  if (!start) return;
+  const dx = e.clientX - start.x;
+  const dy = e.clientY - start.y;
+  if (Math.hypot(dx, dy) >= MOVE_CANCEL_DISTANCE) {
+    clear(e.pointerId);
+  }
 });
 
 phoneEl.addEventListener("pointerleave", (e) => clear(e.pointerId));

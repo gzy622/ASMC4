@@ -334,6 +334,7 @@ export function createTopSheetOpenGesture(bindEl, {
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!canStart(event)) return;
+    if (!canPull(event)) return;
     activePointerId = event.pointerId;
     releaseDirection(event.pointerId);
     startY = event.clientY;

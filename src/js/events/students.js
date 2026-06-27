@@ -10,7 +10,7 @@ import {
 } from "../runtime.js";
 import { toggleScoringMode, toggleStudent } from "../business/student.js";
 import { openScoreSheet } from "../score-sheet/index.js";
-import { handleLongPressEnd, handleLongPressStart } from "../score-sheet/longpress.js";
+import { handleLongPressEnd, handleLongPressMove, handleLongPressStart } from "../score-sheet/longpress.js";
 import { isStudentForceNone } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
@@ -55,6 +55,7 @@ export function bindStudentEvents() {
   });
 
   grid.addEventListener("pointerdown", handleLongPressStart);
+  grid.addEventListener("pointermove", handleLongPressMove);
   grid.addEventListener("pointerup", handleLongPressEnd);
   grid.addEventListener("pointercancel", handleLongPressEnd);
   grid.addEventListener("pointerleave", handleLongPressEnd);
