@@ -2,6 +2,7 @@
 
 > 承接 `gesture-refactor-plan.md` 第 4 节「本期不做的后续清单」。
 > 前提：手势层结构重构（phase0~5）已完成，三组水平手势走统一原语 `horizontal-drag.js`，共享状态隔离完毕。
+> 状态：F1 ✓（已修复），F5/F6 △（推进中），其余待启动。
 > 本文只做方向规划与排序，**每条启动前需单独 think 评估**，不在此预先做详细设计。
 
 ---
@@ -35,17 +36,12 @@
 
 ## 2. 各项详情
 
-### F1 · 抽屉打开中/已打开时右滑≥50px 触发关闭
+### F1 · 抽屉打开中/已打开时右滑≥50px 触发关闭 ✓
 
-- **现状**：抽屉 `is-open` 或正在打开时，在 drawer/scrim 上往右滑 ≥50px 会调 `closeDrawer()`。
-- **根因**（已核对，原码既有，非重构回归）：
-  1. drawer/scrim 段 `onRelease` 用 `Math.abs(dx) >= DRAG_CLOSE_THRESHOLD`，右滑也满足。
-  2. `openDrawer()` 不设 `overlayTransitionBusy` 窗口（仅 `closeDrawer()` 设 320ms），打开动画期间 `shouldStart` 不被拦截。
-- **改动思路**：
-  - drawer/scrim 的 `onRelease` 改方向判定：仅 `dx <= -DRAG_CLOSE_THRESHOLD` 触发关闭（左滑单向）。
-  - 给 `openDrawer()` 加 320ms `overlayTransitionBusy` 窗口，与 `closeDrawer()` 对称。
+- **状态**：`9058b87` 已修复。
+- **改动**：drawer/scrim 的 `onRelease` 改方向判定（仅 `dx <= -DRAG_CLOSE_THRESHOLD` 触发关闭）；`openDrawer()` 加 320ms `overlayTransitionBusy` 窗口。
 - **验收**：抽屉打开中/已打开时右滑不关闭；左滑≥50px 关闭行为不变；打开动画期间不可二次起拖。
-- **回滚**：单 commit。
+- **回滚**：`git revert 9058b87`。
 
 ### F2 · `drawerClosedPx` 在 resize 时失效
 
@@ -132,7 +128,16 @@ F6 (Pointer Events) 基础层替换，建议最后，可能影响 F4/F5 实现
 
 ---
 
+## 附录 A · 已完成的后重构改进
+
+以下为重构计划之外完成的手势改善项：
+
+| 编号 | 项 | 提交 | 说明 |
+|---|---|---|---|
+| A1 | 中层面板打开时阻止抽屉手势误触 | 本次 | `drawer-gestures.js` `shouldStart` 加 `quickPanel`/`newAssignmentPanel` 的 `.is-open` 检查，防止面板打开时横向拖拽误触 |
+| A2 | 关闭中层面板时主动 blur | 本次 | `panels.js` `closeAllCenterPanels` 调用 `blurCenterPanelFocus()`，避免关闭后键盘/焦点残留 |
+
 ## 6. 撤回方法
 
 - 单项撤回：`git revert <该项 commit hash>`。
-- 全量回退：按 F6→F1 倒序 revert，或重置到本计划起点（无生产数据受影响）。
+- 全量回退：按 A→F6→F1 倒序 revert，或重置到本计划起点（无生产数据受影响）。

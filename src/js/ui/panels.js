@@ -23,7 +23,15 @@ export function openNewAssignmentPanel() {
   });
 }
 
+function blurCenterPanelFocus() {
+  const active = document.activeElement;
+  if (active && (newAssignmentPanel.contains(active) || quickPanel.contains(active))) {
+    active.blur();
+  }
+}
+
 export function closeAllCenterPanels() {
+  blurCenterPanelFocus();
   closeScoreSheet();
 
   quickPanel.classList.remove("is-open");

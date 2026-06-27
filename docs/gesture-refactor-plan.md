@@ -1,5 +1,6 @@
 # 手势层重构行动计划
 
+> 状态：**已完成**（phase 0~5 全部落地，水平手势统一走 `horizontal-drag.js`，共享状态隔离完毕）。
 > 目标：提升 `src/js/gestures/` 的健壮性与可维护性，**不引入复杂度**。
 > 适用范围：垂直/水平拖拽手势（A~D）。**roster 行排序(E)、long-press、press-feedback、pointer-guard 本期不动。**
 
@@ -38,67 +39,43 @@
 
 ---
 
-## 2. 现状缺陷清单（已核对代码）
+## 2. 重构前缺陷清单（历史记录，已全部解决）
 
-| # | 缺陷 | 出处 | 风险 |
-|---|---|---|---|
-| D1 | `DRAG_START_THRESHOLD / DRAG_SLOPE` 在两文件各定义一份 | `drag-gesture.js:1`、`drawer-gestures.js:5-7` | 改一处忘另一处 |
-| D2 | 水平起拖判定（`|dx|>阈值 且 |dx|>|dy|*坡度`）三处复制粘贴 | `drawer-gestures.js:52,133,207` | 语义易漂移 |
-| D3 | `cachedClosedPx` 为模块级变量，phone/drawer/scrim 共写 | `drawer-gestures.js:18,57,138,212` | 多指/中断时串扰潜在风险 |
-| D4 | `closedPx = -1.2 * drawer.offsetWidth` 每次拖拽重算且依赖布局时刻 | `drawer-gestures.js:9-11` | 窗口 resize 中拖拽可能算到旧值（低频，记录不修） |
-| D5 | `transition="none"` → 松手 `transition=""` 硬切换，依赖 CSS 默认值还原 | 两文件多处 | 行为耦合 CSS，但本期不改 |
-
-> D4/D5 仅记录，不在本期修。
+| # | 缺陷 | 解决方式 |
+|---|---|---|
+| D1 | `DRAG_START_THRESHOLD / DRAG_SLOPE` 在两文件各定义一份 | phase 1：统一到 `constants.js` |
+| D2 | 水平起拖判定三处复制粘贴 | phase 2~4：统一原语消除重复 |
+| D3 | `cachedClosedPx` 为模块级变量，phone/drawer/scrim 共写 | phase 5：移入实例闭包 |
+| D4 | `closedPx` 依赖布局时刻（低频，记录未修） | 当前状态：仍缓存在实例闭包，未改 |
+| D5 | `transition` 硬切换耦合 CSS | 当前状态：仍维持原始方式，未改 |
 
 ---
 
-## 3. 阶段划分（每阶段独立可合并、可回滚）
+## 3. 阶段划分（全部已完成）
 
 > 每阶段结束必须满足：**验收清单全绿 + 可 `git revert` 精确回滚且不留副作用**。
 
-### 阶段 0 · 基线验收清单（纯文档，不写代码）
-- 新建 `docs/gesture-refactor-checklist.md`，列出 4 组手势（垂直×3：quick/new/score；水平×3：phone开/drawer关/scrim关）的标准操作步骤与通过/失败判定。
-- **完成判定**：清单可按步骤执行，每条有可观察信号（如「抽屉位移随手指」「<50px 自动归位」「≥50px 触发关闭并 scrim 淡出」）。
-- **回滚**：删文档即可。
-- **为何先做**：没有基线则后续无法判断「行为未变」。
+### ✓ 阶段 0 · 基线验收清单
+- 新建 `docs/gesture-refactor-checklist.md`，列出全部 6 组手势验收步骤。
+- **完成判定**：清单可按步骤执行，每条有可观察信号。
 
-### 阶段 1 · 抽常量为单一模块（机械重构，零行为变化）
-- 新建 `src/js/gestures/constants.js`：
-  ```js
-  export const DRAG_START_THRESHOLD = 8;
-  export const DRAG_CLOSE_THRESHOLD = 50;
-  export const DRAG_SLOPE = 1.5;
-  export const VERTICAL_CLOSE_THRESHOLD = 80;
-  ```
-- `drag-gesture.js`：删除 L1 常量，import 自 constants；`threshold=80` 默认值改用 `VERTICAL_CLOSE_THRESHOLD`。
-- `drawer-gestures.js`：删除 L5-7。
-- **验收**：跑阶段 0 清单全绿；`rg "THRESHOLD = 8|SLOPE = 1.5"` 无重复字面量。
-- **回滚**：单 commit，还原两文件 import 即可。
+### ✓ 阶段 1 · 抽常量为单一模块
+- 新建 `src/js/gestures/constants.js`，两文件常量收敛至单一来源。
+- **验收**：无重复字面量。
 
-### 阶段 2 · 抽取水平 drag 原语 + 迁移 scrim（绞杀者启动）
-- 新建 `src/js/gestures/horizontal-drag.js`，导出 `createHorizontalDragGesture(bindEl, { targetEl, getClosedPx, getIsActive, onStartCheck, onShouldPrevent, onRelease })`，内部沿用现有 touch 事件、transform 直写、transition 切换语义，**不改动画**。
-- 仅迁移 `drawer-gestures.js` 的 scrim 段（L181-253）到调用该原语；phone/drawer 段保持原样。
-- 设计：原语负责 start/move/end/cancel 的位移与起拖判定；调用方通过钩子注入「是否激活（`drawer.is-open`）」「release 时是否关闭」等差异化逻辑。
-- **验收**：scrim 左滑关与基线一致；phone/drawer 行为不变；新模块被 scrim 实际调用。
-- **回滚**：还原 scrim 段、删 `horizontal-drag.js`（建议合并为单 commit）。
+### ✓ 阶段 2 · 抽取水平 drag 原语 + 迁移 scrim
+- 新建 `src/js/gestures/horizontal-drag.js`，scrim 段迁移至统一原语。
 
-### 阶段 3 · 迁移 drawer 自身左滑关
-- `drawer-gestures.js` drawer 段（L108-179）改用 `createHorizontalDragGesture`。
-- **验收**：drawer 左滑关与基线一致；其余手势不变。
-- **回滚**：单 commit。
+### ✓ 阶段 3 · 迁移 drawer 自身左滑关
+- drawer 段改用 `createHorizontalDragGesture`。
 
-### 阶段 4 · 迁移 phone 右滑开
-- phone 段（L13-106）有特殊性：hit-test 排除区、`clearAllLongPressTimers`、`setSuppressNextCardClick`、release 调 `openDrawer` 而非 close。原语须支持这些钩子（`onStartCheck` 返回 false 时跳过、`onMoveStart` 清长按、`onRelease(dx)` 由调用方判定方向）。
-- **验收**：phone 右滑开与基线一致；点 nav/icon/drawer 区不误触；滑动时卡片不触发长按。
-- **回滚**：单 commit。
+### ✓ 阶段 4 · 迁移 phone 右滑开
+- phone 段改用统一原语，hit-test 排除区、长按联动、方向判定均正常。
 
-### 阶段 5 · 消除共享 `cachedClosedPx`（隔离风险点）
-- 将 `cachedClosedPx` 从模块级变量移入 `horizontal-drag.js` 每个实例闭包；`getClosedPx` 由调用方提供（phone/drawer/scrim 各自算 `drawerClosedPx()`）。
-- 这是上次「越改越乱」高危点，**单独提交**，不与任何迁移合并。
-- **验收**：跑全清单；代码 grep `cachedClosedPx` 在 `drawer-gestures.js` 中消失。
-- **回滚**：单 commit。
+### ✓ 阶段 5 · 消除共享 `cachedClosedPx`
+- `cachedClosedPx` 从模块级变量移入实例闭包，`drawer-gestures.js` 中已消除。
 
-> 至此结构稳定、所有水平手勢走统一原语、共享状态隔离完毕。本计划结束。
+> 结构稳定、所有水平手势走统一原语、共享状态隔离完毕。本计划结束。
 
 ---
 

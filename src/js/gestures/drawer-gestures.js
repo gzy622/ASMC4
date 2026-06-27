@@ -1,4 +1,4 @@
-import { phoneEl, drawer } from "../dom-refs.js";
+import { phoneEl, drawer, quickPanel, newAssignmentPanel } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
@@ -25,6 +25,8 @@ createHorizontalDragGesture(phoneEl, {
   shouldStart: (event) => {
     if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return false;
     if (overlayTransitionBusy) return false;
+    if (quickPanel.classList.contains("is-open")) return false;
+    if (newAssignmentPanel.classList.contains("is-open")) return false;
     return true;
   },
   shouldContinueMove: () => !drawer.classList.contains("is-open"),
