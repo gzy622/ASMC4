@@ -1,6 +1,6 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { setOverlayTransitionBusy } from "../runtime.js";
+import { claimDirection, releaseDirection, setOverlayTransitionBusy } from "../runtime.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -82,6 +82,7 @@ export function createHorizontalDragGesture(bindEl, {
       targetEl.style.willChange = "";
     }
     releasePointer();
+    releaseDirection(activePointerId);
     startX = null;
     startY = null;
     dragging = false;
@@ -109,6 +110,7 @@ export function createHorizontalDragGesture(bindEl, {
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
     activePointerId = event.pointerId;
+    releaseDirection(event.pointerId);
     startX = event.clientX;
     startY = event.clientY;
     dragging = false;
@@ -135,6 +137,11 @@ export function createHorizontalDragGesture(bindEl, {
 
     if (!dragging) {
       if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * DRAG_SLOPE) {
+        const lock = claimDirection(event.pointerId, "h");
+        if (lock !== "h") {
+          resetDragState();
+          return;
+        }
         dragging = true;
         capturePointer(event);
         targetEl.style.transition = "none";
@@ -175,6 +182,7 @@ export function createHorizontalDragGesture(bindEl, {
 
     flushTransform();
     releasePointer();
+    releaseDirection(event.pointerId);
     startX = null;
     startY = null;
     dragging = false;

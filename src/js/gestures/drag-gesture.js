@@ -5,7 +5,7 @@ import {
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { setOverlayTransitionBusy } from "../runtime.js";
+import { claimDirection, releaseDirection, setOverlayTransitionBusy } from "../runtime.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -83,6 +83,7 @@ export function createVerticalDragGesture(el, {
       clearDragStyles();
     }
     releasePointer();
+    releaseDirection(activePointerId);
     startY = null;
     startX = null;
     dragging = false;
@@ -110,6 +111,7 @@ export function createVerticalDragGesture(el, {
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
     activePointerId = event.pointerId;
+    releaseDirection(event.pointerId);
     startY = event.clientY;
     startX = event.clientX;
     currentDelta = 0;
@@ -134,6 +136,11 @@ export function createVerticalDragGesture(el, {
         return;
       }
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
+      const lock = claimDirection(event.pointerId, "v");
+      if (lock !== "v") {
+        resetDragState();
+        return;
+      }
       dragging = true;
       capturePointer(event);
       targetEl.style.transition = "none";
@@ -164,7 +171,8 @@ export function createVerticalDragGesture(el, {
     const wasDragging = dragging;
     const delta = currentDelta;
     const velocity = lastVelocity;
-    const shouldClose = (
+    const flingingOpen = velocity * closeDirection <= -FLING_VELOCITY_THRESHOLD;
+    const shouldClose = !flingingOpen && (
       Math.abs(delta) >= threshold
       || (Math.abs(delta) >= MIN_FLING_DISTANCE && velocity * closeDirection >= FLING_VELOCITY_THRESHOLD)
     );
@@ -172,6 +180,7 @@ export function createVerticalDragGesture(el, {
 
     flushTransform();
     releasePointer();
+    releaseDirection(event.pointerId);
     startY = null;
     startX = null;
     dragging = false;
@@ -298,6 +307,7 @@ export function createTopSheetOpenGesture(bindEl, {
       sheetEl.style.willChange = "";
     }
     releasePointer();
+    releaseDirection(activePointerId);
     startY = null;
     startX = null;
     dragging = false;
@@ -325,6 +335,7 @@ export function createTopSheetOpenGesture(bindEl, {
     if (!isPrimaryMouseButton(event)) return;
     if (!canStart(event)) return;
     activePointerId = event.pointerId;
+    releaseDirection(event.pointerId);
     startY = event.clientY;
     startX = event.clientX;
     dragging = false;
@@ -359,6 +370,12 @@ export function createTopSheetOpenGesture(bindEl, {
         return;
       }
 
+      const lock = claimDirection(event.pointerId, "v");
+      if (lock !== "v") {
+        resetDragState();
+        return;
+      }
+
       dragging = true;
       capturePointer(event);
       if (onPrepare) onPrepare();
@@ -389,7 +406,8 @@ export function createTopSheetOpenGesture(bindEl, {
     const velocity = lastVelocity;
     const minDelta = closedDelta();
     const openedDistance = delta - minDelta;
-    const shouldOpen = (
+    const flingingClose = velocity <= -FLING_VELOCITY_THRESHOLD;
+    const shouldOpen = !flingingClose && (
       openedDistance >= threshold
       || (openedDistance >= MIN_FLING_DISTANCE && velocity >= FLING_VELOCITY_THRESHOLD)
     );
@@ -397,6 +415,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
     flushTransform();
     releasePointer();
+    releaseDirection(event.pointerId);
     startY = null;
     startX = null;
     dragging = false;

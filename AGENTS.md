@@ -65,6 +65,20 @@ npm run cap:run
 11. 全部 JS 使用 ESM。
 12. 全量渲染优先，差量更新只在明确需要时做。
 
+## 提交约定
+
+标题（英文标签 + 简体中文摘要）：
+
+```text
+feat: xxx
+fix: xxx
+refactor: xxx
+docs: xxx
+chore: xxx
+```
+
+正文用简体中文；空一行分隔标题和正文；无需维护 changelog 文件。
+
 ## RTK 使用规则
 
 本机安装了 rtk-ai/rtk，但不启用自动 hook、插件接管或透明命令改写。

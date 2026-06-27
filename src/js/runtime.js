@@ -8,6 +8,8 @@ let longPressTriggered = false;
 let suppressNextCardClick = false;
 
 let overlayTransitionBusy = false;
+let pointerDirectionLock = null;
+let pointerDirectionLockId = null;
 
 export {
   pendingConfirmAction,
@@ -42,3 +44,19 @@ export function clearAllLongPressTimers() {
 export function setLongPressTriggered(val) { longPressTriggered = val; }
 export function setSuppressNextCardClick(val) { suppressNextCardClick = val; }
 export function setOverlayTransitionBusy(val) { overlayTransitionBusy = val; }
+export function claimDirection(pointerId, dir) {
+  if (pointerDirectionLockId !== null && pointerDirectionLockId !== pointerId) {
+    return null;
+  }
+  if (pointerDirectionLock === null) {
+    pointerDirectionLock = dir;
+    pointerDirectionLockId = pointerId;
+  }
+  return pointerDirectionLock;
+}
+export function releaseDirection(pointerId) {
+  if (pointerDirectionLockId === pointerId) {
+    pointerDirectionLock = null;
+    pointerDirectionLockId = null;
+  }
+}
