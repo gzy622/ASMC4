@@ -22,7 +22,7 @@ export function renderAssignmentList(state) {
       >
         <div class="assignment-item-body">
           <span class="assignment-name" data-assignment-id="${safeId}">${safeTitle}</span>
-          <span class="assignment-meta">${subjectTag}${stats.submitted}/${stats.total} 已交 · ${stats.pending} 未交</span>
+          <span class="assignment-meta">${subjectTag}${stats.submitted}/${stats.total} 已交</span>
         </div>
         <div class="assignment-item-actions">
           <button class="assignment-item-action" data-action="edit" data-assignment-id="${safeId}" type="button" aria-label="编辑 ${safeTitle}"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 20h4l10-10a2.83 2.83 0 1 0-4-4L4 16v4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
