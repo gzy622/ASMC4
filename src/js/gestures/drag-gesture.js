@@ -5,6 +5,7 @@ import {
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
+import { setOverlayTransitionBusy } from "../runtime.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -128,6 +129,10 @@ export function createVerticalDragGesture(el, {
 
     if (!dragging) {
       if (Math.abs(dy) < DRAG_START_THRESHOLD) return;
+      if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * slope) {
+        resetDragState();
+        return;
+      }
       if (Math.abs(dy) < Math.abs(dx) * slope) return;
       dragging = true;
       capturePointer(event);
@@ -135,8 +140,6 @@ export function createVerticalDragGesture(el, {
       targetEl.style.willChange = "transform";
       currentDelta = 0;
       lastVelocity = 0;
-    } else {
-      return;
     }
 
     let clamped;
@@ -178,12 +181,14 @@ export function createVerticalDragGesture(el, {
     if (!wasDragging) return;
 
     releaseAnimating = true;
+    setOverlayTransitionBusy(true);
     targetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
     try {
       await animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      setOverlayTransitionBusy(false);
       if (shouldClose) {
         onClose();
       }
@@ -192,6 +197,7 @@ export function createVerticalDragGesture(el, {
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
+      setOverlayTransitionBusy(false);
       releaseAnimating = false;
     }
   }
@@ -339,6 +345,10 @@ export function createTopSheetOpenGesture(bindEl, {
         resetDragState();
         return;
       }
+      if (Math.abs(dx) > DRAG_START_THRESHOLD && Math.abs(dx) > Math.abs(dy) * slope) {
+        resetDragState();
+        return;
+      }
       if (Math.abs(dy) < DRAG_START_THRESHOLD) return;
       if (Math.abs(dy) < Math.abs(dx) * slope) {
         resetDragState();
@@ -357,8 +367,6 @@ export function createTopSheetOpenGesture(bindEl, {
       currentDelta = closedDelta();
       lastVelocity = 0;
       event.preventDefault();
-    } else {
-      return;
     }
 
     const minDelta = closedDelta();
@@ -400,6 +408,7 @@ export function createTopSheetOpenGesture(bindEl, {
     if (!wasDragging) return;
 
     releaseAnimating = true;
+    setOverlayTransitionBusy(true);
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
@@ -416,6 +425,7 @@ export function createTopSheetOpenGesture(bindEl, {
       if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
+      setOverlayTransitionBusy(false);
       releaseAnimating = false;
     }
   }
