@@ -7,6 +7,9 @@
 # Reasonix desktop topic cache
 .reasonix/
 
+# Reasonix project config (machine-local permissions)
+reasonix.toml
+
 # Build output
 dist/
 
