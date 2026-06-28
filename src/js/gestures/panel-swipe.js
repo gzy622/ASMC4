@@ -62,7 +62,7 @@ createTopSheetOpenGesture(scrollContainer, {
     if (hasOpenOverlay()) return false;
     return !event.target.closest("button:not(.student-card), input, select, textarea");
   },
-  canPull: () => scrollContainer.scrollTop <= 0,
+  canPull: () => !hasOpenOverlay() && scrollContainer.scrollTop <= 0,
   onPrepare: () => {
     renderQuickAssignmentList(getState());
     quickPanel.classList.add("is-dragging");
