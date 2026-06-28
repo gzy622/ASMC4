@@ -214,4 +214,14 @@ export function createHorizontalDragGesture(bindEl, {
     if (event.pointerId !== activePointerId) return;
     resetDragState({ restoreTarget: true });
   });
+
+  // Android WebView: prevent native scroll when horizontal gesture is detected
+  bindEl.addEventListener("touchmove", (event) => {
+    if (activePointerId === null || startX === null) return;
+    const dx = Math.abs(event.touches[0].clientX - startX);
+    const dy = Math.abs(event.touches[0].clientY - startY);
+    if (dx > DRAG_START_THRESHOLD && dx > dy * DRAG_SLOPE) {
+      event.preventDefault();
+    }
+  }, { passive: false });
 }

@@ -1,5 +1,6 @@
 import {
   DRAG_START_THRESHOLD,
+  DRAG_SLOPE,
   FLING_VELOCITY_THRESHOLD,
   MIN_FLING_DISTANCE,
   VERTICAL_CLOSE_THRESHOLD
@@ -11,7 +12,7 @@ export function createVerticalDragGesture(el, {
   closeDirection,
   onClose,
   threshold = VERTICAL_CLOSE_THRESHOLD,
-  slope = 1.5,
+  slope = DRAG_SLOPE,
   targetEl = el,
   shouldStart = () => true,
   onProgress,
@@ -220,6 +221,14 @@ export function createVerticalDragGesture(el, {
   el.addEventListener("pointermove", handlePointerMove, { passive: false });
   el.addEventListener("pointerup", handlePointerUp);
   el.addEventListener("pointercancel", handlePointerCancel);
+
+  // Android WebView: prevent native scroll when vertical gesture is detected
+  el.addEventListener("touchmove", (event) => {
+    if (activePointerId === null || startY === null) return;
+    if (Math.abs(event.touches[0].clientY - startY) > DRAG_START_THRESHOLD) {
+      event.preventDefault();
+    }
+  }, { passive: false });
 }
 
 export function createTopSheetOpenGesture(bindEl, {
@@ -230,7 +239,7 @@ export function createTopSheetOpenGesture(bindEl, {
   onOpen,
   onCancel,
   threshold = VERTICAL_CLOSE_THRESHOLD,
-  slope = 1.5,
+  slope = DRAG_SLOPE,
   onProgress,
   getReleaseSecondary,
   keepSecondaryOnOpen = false,
@@ -463,4 +472,12 @@ export function createTopSheetOpenGesture(bindEl, {
   bindEl.addEventListener("pointermove", handlePointerMove, { passive: false });
   bindEl.addEventListener("pointerup", handlePointerUp);
   bindEl.addEventListener("pointercancel", handlePointerCancel);
+
+  // Android WebView: prevent native scroll when pull-down gesture is detected
+  bindEl.addEventListener("touchmove", (event) => {
+    if (activePointerId === null || startY === null) return;
+    if (event.touches[0].clientY - startY > DRAG_START_THRESHOLD && canPull(event)) {
+      event.preventDefault();
+    }
+  }, { passive: false });
 }

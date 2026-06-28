@@ -1,0 +1,32 @@
+{
+  "name": "asmc4",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ASMC4 — 打分系统",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:watch": "node build.mjs --watch",
+    "preview": "node scripts/serve.mjs",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "cap:run": "npx cap run android",
+    "cap:update": "npx cap update android"
+  },
+  "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1",
+    "esbuild": "^0.24.0",
+    "sharp": "^0.35.2"
+  }
+}

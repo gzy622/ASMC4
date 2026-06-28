@@ -187,7 +187,7 @@
         width 280ms var(--motion),
         border-color 280ms var(--motion),
         box-shadow 280ms var(--motion);
-      touch-action: pan-y;
+      touch-action: none;
     }
 
     .drawer.is-open {
@@ -242,6 +242,7 @@
       padding: 8px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .drawer-list::-webkit-scrollbar {
@@ -494,7 +495,7 @@
       will-change: transform;
       transition: transform 320ms var(--motion);
       transform: translateY(-100%);
-      touch-action: pan-x;
+      touch-action: none;
     }
 
     #quickPanel {
@@ -874,7 +875,7 @@
       transform: translateY(100%);
       transition: transform 320ms var(--motion);
       will-change: transform;
-      touch-action: pan-x;
+      touch-action: none;
     }
 
     .score-sheet::after {
