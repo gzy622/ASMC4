@@ -8,9 +8,8 @@ import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 
 let releaseScoreSheetPointerGuard = null;
-let scoreSheetPointerGuardTransitionHandler = null;
 
-export function openScoreSheet(student) {
+export function openScoreSheet(student, guardPointer = false) {
   setScoreSheetStudent(student);
 
   const assignment = getCurrentAssignment();
@@ -40,7 +39,7 @@ export function openScoreSheet(student) {
   hapticLight();
   scoreSheet.classList.add("is-open");
   scoreSheet.setAttribute("aria-hidden", "false");
-  armScoreSheetPointerGuard();
+  if (guardPointer) armScoreSheetPointerGuard();
 }
 
 export function closeScoreSheet() {
@@ -113,17 +112,15 @@ function armScoreSheetPointerGuard() {
   scoreSheet.classList.add("is-pointer-guarded");
 
   const releaseGuard = () => {
-    clearScoreSheetPointerGuard();
+    window.removeEventListener("pointerup", releaseGuard, true);
+    window.removeEventListener("pointercancel", releaseGuard, true);
+    releaseScoreSheetPointerGuard = null;
+    setTimeout(clearScoreSheetPointerGuard, 180);
   };
 
   releaseScoreSheetPointerGuard = releaseGuard;
   window.addEventListener("pointerup", releaseGuard, true);
   window.addEventListener("pointercancel", releaseGuard, true);
-
-  scoreSheetPointerGuardTransitionHandler = (event) => {
-    if (event.propertyName === "transform") releaseGuard();
-  };
-  scoreSheet.addEventListener("transitionend", scoreSheetPointerGuardTransitionHandler);
 }
 
 function clearScoreSheetPointerGuard() {
@@ -131,11 +128,6 @@ function clearScoreSheetPointerGuard() {
     window.removeEventListener("pointerup", releaseScoreSheetPointerGuard, true);
     window.removeEventListener("pointercancel", releaseScoreSheetPointerGuard, true);
     releaseScoreSheetPointerGuard = null;
-  }
-
-  if (scoreSheetPointerGuardTransitionHandler) {
-    scoreSheet.removeEventListener("transitionend", scoreSheetPointerGuardTransitionHandler);
-    scoreSheetPointerGuardTransitionHandler = null;
   }
 
   scoreSheet.classList.remove("is-pointer-guarded");

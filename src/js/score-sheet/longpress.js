@@ -38,7 +38,7 @@ export function handleLongPressStart(event) {
       setLongPressTriggered(false);
       longPressResetTimer = null;
     }, 800);
-    openScoreSheet(student);
+    openScoreSheet(student, true);
   }, LONG_PRESS_MS));
 }
 
