@@ -18,9 +18,9 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
 - `src/js/render/`: 渲染（含 7 个模块）
-- `src/js/ui/`: 面板
+- `src/js/ui/`: 面板（含 7 个模块）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势
+- `src/js/gestures/`: 手势（含 7 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
@@ -62,4 +62,3 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `state.js` 不依赖 `render/`；`runtime.js` 不依赖 `state.js`
 - 持久状态进 `state.js`，运行时可变状态进 `runtime.js`
 - 新交互优先放进对应的 `events/*.js`
-- 输出方案、计划、交接计划时先读 `PlanHandoffGuide.md`

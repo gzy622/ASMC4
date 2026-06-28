@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash(where rtk 2>nul || which rtk 2>/dev/null; echo \"---\"; rtk --version 2>&1 || echo \"rtk not found\")"]
