@@ -1,4 +1,10 @@
-import { grid, hideNameSwitch, quickHideNameSwitch, scoringToggle } from "../dom-refs.js";
+import {
+  grid,
+  hideNameSwitch,
+  quickHideNameSwitch,
+  quickScoringModeSwitch,
+  scoringToggle
+} from "../dom-refs.js";
 import { STATUS } from "../constants.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import {
@@ -54,8 +60,25 @@ export function bindStudentEvents() {
     announce(state.hideNames ? "已隐藏真实姓名" : "已显示真实姓名");
   }
 
+  function bindQuickSettingRow(rowEl, switchEl, toggleFn) {
+    rowEl?.addEventListener("click", toggleFn);
+    switchEl?.addEventListener("click", event => {
+      event.stopPropagation();
+      toggleFn();
+    });
+  }
+
   hideNameSwitch?.addEventListener("click", toggleHideNames);
-  quickHideNameSwitch?.addEventListener("click", toggleHideNames);
+  bindQuickSettingRow(
+    quickHideNameSwitch?.closest(".quick-setting-row"),
+    quickHideNameSwitch,
+    toggleHideNames
+  );
+  bindQuickSettingRow(
+    quickScoringModeSwitch?.closest(".quick-setting-row"),
+    quickScoringModeSwitch,
+    toggleScoringMode
+  );
 
   grid.addEventListener("pointerdown", handleLongPressStart);
   grid.addEventListener("pointermove", handleLongPressMove);

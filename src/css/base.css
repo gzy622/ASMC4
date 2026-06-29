@@ -115,6 +115,11 @@
       touch-action: manipulation;
     }
 
+    .nav-button[hidden],
+    .icon-button[hidden] {
+      display: none !important;
+    }
+
     .nav-button:active,
     .icon-button:active,
     .nav-button.is-pressed,
@@ -153,6 +158,10 @@
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
       pointer-events: none;
+    }
+
+    .bar-stats[hidden] {
+      display: none !important;
     }
 
     .title-wrap {

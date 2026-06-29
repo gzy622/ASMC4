@@ -3,6 +3,8 @@ import {
   settingsCloseButton,
   scoringModeSwitch,
   scoreTensModeSwitch,
+  showBarScoringToggleSwitch,
+  showBarStatsSwitch,
   settingsExportBtn,
   settingsImportBtn,
   settingsRosterBtn,
@@ -24,6 +26,22 @@ export function bindSettingsEvents() {
   settingsCloseButton.addEventListener("click", closeSettings);
 
   scoringModeSwitch.addEventListener("click", toggleScoringMode);
+
+  showBarScoringToggleSwitch?.addEventListener("click", () => {
+    const state = getState();
+    state.showBarScoringToggle = !(state.showBarScoringToggle !== false);
+    saveAppState();
+    render();
+    announce(state.showBarScoringToggle ? "已显示顶栏打分按钮" : "已隐藏顶栏打分按钮");
+  });
+
+  showBarStatsSwitch?.addEventListener("click", () => {
+    const state = getState();
+    state.showBarStats = !(state.showBarStats !== false);
+    saveAppState();
+    render();
+    announce(state.showBarStats !== false ? "已显示顶栏已交人数" : "已隐藏顶栏已交人数");
+  });
 
   scoreTensModeSwitch.addEventListener("click", () => {
     const state = getState();

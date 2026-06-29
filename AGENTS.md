@@ -136,6 +136,13 @@ rtk cargo test
 
 - 对话触达压缩说明总量偏高；压缩是补救，不能替代上面几条。
 
+**顶栏 / 当前作业（可复用）**
+
+- **当前作业快捷开关**：`#quickPanel` 用 `quick-settings-card` 纵向两行（显示真实姓名、打分模式）；行容器可点，`switch` 上 `stopPropagation` 防双触发；说明文字放设置页，面板保持紧凑。
+- **顶栏显示类设置**：状态字段 `showBarXxx`（默认 `true`，读写用 `!== false` 兼容旧 localStorage）→ 设置页 `switch` → 对应 `render/*` 设 DOM `hidden`；备份导入同步 `backup.js`。
+- **`[hidden]` 陷阱**：本项 `.icon-button { display: grid }`、`.bar-stats { position: absolute }` 会盖过 UA 的 `[hidden]`，顶栏隐藏须配 `.icon-button[hidden]` / `.bar-stats[hidden] { display: none !important; }`（同 `#quickPanel .assignment-subject-tag[hidden]` 模式）。
+- **渲染落点**：顶栏打分按钮 → `render/scoringMode.js`；顶栏已交人数 → `render/progress.js`（`#barStats`）；打分模式逻辑仍共用 `toggleScoringMode` / `state.scoringMode`。
+
 ## 多 Agent 栈
 
 | 层级 | 内容 | Git |

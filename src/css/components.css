@@ -691,18 +691,39 @@
       text-overflow: ellipsis;
     }
 
-    .quick-inline-setting {
+    .quick-settings-card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .quick-setting-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 0 2px 10px;
+      gap: 12px;
+      min-height: 48px;
+      padding: 10px 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .quick-inline-setting-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
+    .quick-setting-row + .quick-setting-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .quick-setting-row:active {
+      background: rgba(31, 32, 36, 0.04);
+    }
+
+    .quick-setting-label {
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.15;
+      color: var(--text);
     }
 
     .quick-edit-card {

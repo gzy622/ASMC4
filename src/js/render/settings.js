@@ -1,4 +1,12 @@
-import { hideNameSwitch, quickHideNameSwitch, scoringModeSwitch, scoreTensModeSwitch } from "../dom-refs.js";
+import {
+  hideNameSwitch,
+  quickHideNameSwitch,
+  quickScoringModeSwitch,
+  scoringModeSwitch,
+  scoreTensModeSwitch,
+  showBarScoringToggleSwitch,
+  showBarStatsSwitch
+} from "../dom-refs.js";
 
 function syncSwitch(el, on, labelOn, labelOff) {
   if (!el) return;
@@ -16,11 +24,33 @@ export function renderSettingsState(state) {
   syncSwitch(hideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
   syncSwitch(quickHideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
 
-  syncSwitch(
-    scoringModeSwitch,
-    state.scoringMode,
+  const scoringLabels = [
     "打分模式已开启，点击关闭",
     "打分模式已关闭，点击开启"
+  ];
+  syncSwitch(scoringModeSwitch, state.scoringMode, scoringLabels[0], scoringLabels[1]);
+  syncSwitch(quickScoringModeSwitch, state.scoringMode, scoringLabels[0], scoringLabels[1]);
+
+  const barScoringLabels = [
+    "顶栏已显示打分按钮，点击隐藏",
+    "顶栏已隐藏打分按钮，点击显示"
+  ];
+  syncSwitch(
+    showBarScoringToggleSwitch,
+    state.showBarScoringToggle !== false,
+    barScoringLabels[0],
+    barScoringLabels[1]
+  );
+
+  const barStatsLabels = [
+    "顶栏已显示已交人数，点击隐藏",
+    "顶栏已隐藏已交人数，点击显示"
+  ];
+  syncSwitch(
+    showBarStatsSwitch,
+    state.showBarStats !== false,
+    barStatsLabels[0],
+    barStatsLabels[1]
   );
 
   syncSwitch(

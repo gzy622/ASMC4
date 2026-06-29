@@ -80,6 +80,8 @@ function loadAppState() {
     hideNames: false,
     scoringMode: false,
     scoreTensMode: false,
+    showBarScoringToggle: true,
+    showBarStats: true,
     currentAssignmentId: defaultAssignment.id,
     assignments: [clone(defaultAssignment)],
     roster: rosterFromDefault()
@@ -115,6 +117,8 @@ function loadAppState() {
       hideNames: Boolean(parsed.hideNames),
       scoringMode: Boolean(parsed.scoringMode),
       scoreTensMode: Boolean(parsed.scoreTensMode),
+      showBarScoringToggle: parsed.showBarScoringToggle !== false,
+      showBarStats: parsed.showBarStats !== false,
       currentAssignmentId,
       assignments,
       roster

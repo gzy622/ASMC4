@@ -93,6 +93,8 @@ export function importBackup(file) {
             const state = getState();
             state.hideNames = Boolean(data.hideNames);
             state.scoringMode = Boolean(data.scoringMode);
+            state.showBarScoringToggle = data.showBarScoringToggle !== false;
+            state.showBarStats = data.showBarStats !== false;
             state.currentAssignmentId = currentAssignmentId;
             state.assignments = assignments;
             state.roster = Array.isArray(data.roster)

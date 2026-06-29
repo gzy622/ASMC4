@@ -6,5 +6,8 @@ export function renderProgress(state, assignment) {
   const ratio = stats.total > 0 ? stats.submitted / stats.total : 0;
   progressBar.style.setProperty("--progress", String(ratio));
   progressBar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
-  barStats.textContent = `${stats.submitted}/${stats.total}`;
+  if (barStats) {
+    barStats.textContent = `${stats.submitted}/${stats.total}`;
+    barStats.hidden = !(state.showBarStats !== false);
+  }
 }

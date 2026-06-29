@@ -167,11 +167,19 @@
           <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目"></select>
         </div>
 
-        <div class="quick-inline-setting">
-          <span class="quick-inline-setting-label">显示真实姓名</span>
-          <button class="switch" id="quickHideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
-            <span class="switch-knob"></span>
-          </button>
+        <div class="quick-settings-card">
+          <div class="quick-setting-row">
+            <span class="quick-setting-label">显示真实姓名</span>
+            <button class="switch" id="quickHideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <div class="quick-setting-row">
+            <span class="quick-setting-label">打分模式</span>
+            <button class="switch" id="quickScoringModeSwitch" type="button" aria-label="切换打分模式">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
         </div>
 
         <div class="quick-action-grid">
@@ -240,6 +248,24 @@
               <p class="setting-desc">关闭后以天干地支代号显示。</p>
             </div>
             <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">顶栏打分按钮</p>
+              <p class="setting-desc">关闭后仍可在当前作业面板切换打分模式。</p>
+            </div>
+            <button class="switch" id="showBarScoringToggleSwitch" type="button" aria-label="切换顶栏是否显示打分按钮">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">顶栏已交人数</p>
+              <p class="setting-desc">关闭后顶栏不再显示已交/总人数。</p>
+            </div>
+            <button class="switch" id="showBarStatsSwitch" type="button" aria-label="切换顶栏是否显示已交人数">
               <span class="switch-knob"></span>
             </button>
           </div>
