@@ -14,7 +14,7 @@ alwaysApply: true
 | **Cursor** | `AGENTS.md` + `.cursor/rules/` | `ponytail.mdc` | Shell 显式 `rtk`；API 可选 Headroom |
 | **Codex App** | `AGENTS.md` | 全局 ponytail 插件 | 同左 |
 | **OpenCode Desktop** | `AGENTS.md` + 本地 `opencode.json` | `.opencode/plugins/ponytail.mjs` | 同左 |
-| **Reasonix Desktop** | `AGENTS.md` + 本地 `reasonix.toml` | AGENTS 13–16 条 | 同左 |
+| **Reasonix Desktop** | `AGENTS.md` + 本地 `reasonix.toml` | AGENTS 规则 | 同左 |
 
 ## RTK（与 AGENTS.md 一致）
 
@@ -29,4 +29,4 @@ alwaysApply: true
 
 ## 技能路由
 
-小 bug → ponytail；复发 → **hunt**（用户级 `~/.agents/skills/`）；合并前 → **check**；过度设计 → **ponytail-review**（`.cursor/skills/`）。
+小 bug → ponytail；复发 / 难定位 → **hunt**（`~/.agents/skills/`）；合并前 → **check**；过度设计 → **ponytail-review**（`.cursor/skills/`）。见 AGENTS.md 17–18。

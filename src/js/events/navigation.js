@@ -94,6 +94,11 @@ export function bindNavigationEvents() {
 
   menuButton.addEventListener("click", openDrawer);
   drawerCloseButton.addEventListener("click", closeDrawer);
+  drawer.addEventListener("selectstart", event => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (target?.closest(".assignment-edit-input, .assignment-edit-subject")) return;
+    event.preventDefault();
+  });
 
   addButton.addEventListener("click", openNewAssignmentPanel);
   newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);

@@ -68,6 +68,8 @@ npm run cap:run
 14. 不为单个问题新增抽象、状态机或测试框架。
 15. 不做浏览器自动化测试；交互验证给手动步骤。
 16. 代码验证优先跑 `node build.mjs`、`python verify.py` 或现有轻量检查。
+17. 复发或难定位的行为 bug 先读 `~/.agents/skills/hunt/SKILL.md`，说清根因再改。
+18. 改现有文件保持原换行符；逻辑小改却整文件 diff 时 checkout 后重做。
 
 ## 提交约定
 
