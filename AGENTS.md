@@ -107,3 +107,32 @@ rtk cargo test
 - 长技能先判断性价比；简单前端 bug 走 ponytail。
 - 提交同步只做 `git add`、`git commit`、`git push`，除非用户要求 PR。
 - 最终回复优先短结论。
+
+## 多 Agent 本地栈（不进 Git）
+
+同一仓库可能被 **Cursor、Codex App、OpenCode Desktop、Reasonix Desktop** 同时打开。约定如下，避免规则打架、也不污染 GitHub。
+
+| 层级 | 内容 | 是否提交 Git |
+|------|------|----------------|
+| 项目真理 | 本文件 `AGENTS.md` | 是 |
+| 模板 | `agent-templates/` | 是 |
+| 本机覆盖 | `.cursor/`、`.cursorrules`、`opencode.json`、`.opencode/`、`reasonix.toml` | **否**（已 gitignore） |
+| 用户全局 | Codex ponytail 插件、`~/.agents/skills/`、RTK/Headroom PATH | 否 |
+
+**克隆或换机后执行一次：**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-agent-local.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify-tooling.ps1
+```
+
+| Agent | 读什么 | ponytail / 省钱 |
+|-------|--------|-----------------|
+| Cursor | `AGENTS.md` + 本机 `.cursor/rules/` | `ponytail.mdc`；RTK 见上节；Headroom 可选 |
+| Codex App | `AGENTS.md` + 全局 ponytail 插件 | `@ponytail` / 插件钩子；RTK 同上 |
+| OpenCode Desktop | `AGENTS.md` + 本机 `opencode.json` | `.opencode/plugins/ponytail.mjs` |
+| Reasonix Desktop | `AGENTS.md` + 本机 `reasonix.toml` | 遵循本节与规则 13–16 |
+
+冲突时：**本文件 > 本机 tooling-stack > 各工具全局注入**。禁止采纳 Headroom 写入的「所有命令 always rtk」。
+
+Waza skills（hunt/check 等）仅在用户级 `~/.agents/skills/`，不写入仓库。

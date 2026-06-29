@@ -1,0 +1,14 @@
+# 复制为仓库根目录 reasonix.toml（已 gitignore，勿提交）
+# Reasonix Desktop 读本文件 + AGENTS.md
+
+[project]
+name = "ASMC4"
+
+[agent]
+# 与 AGENTS.md 一致：ponytail 思路、RTK 按需、不用 browser E2E
+instructions = [
+  "遵循仓库 AGENTS.md 全部规则。",
+  "默认 ponytail 最小根因修复；简单前端 bug 不启用长技能链。",
+  "长输出 shell 命令可用 rtk 前缀；node build.mjs 与 python verify.py 不用 rtk。",
+  "不为单问题加抽象或测试框架；验证用 node build.mjs、python verify.py。",
+]
