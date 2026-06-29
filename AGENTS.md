@@ -110,6 +110,32 @@ rtk cargo test
 - 提交同步只做 `git add`、`git commit`、`git push`，除非用户要求 PR。
 - 最终回复优先短结论。
 
+### Session 经验（可复用）
+
+**硬开关（已验证有效）**
+
+- 不用 browser MCP、不派 Task/explore 子 agent（双份上下文）。
+- ponytail 小 diff：少抽象、少测试框架；探索类回复短结论，长表格仅用户明确要求时写。
+
+**该用却常漏**
+
+- 多文件 `git diff` / 长 `git log`：显式 `rtk`（见上节）；短 `--stat` 可不用。
+- 同一 bug **第 2 次复发**：先读 `~/.agents/skills/hunt/SKILL.md` 定根因，勿多轮「读文件 → 试 fix」。
+- 架构/域知识：写进 [CodeGraph.md](CodeGraph.md)（如「手势」），对话里只给结论与路径，避免每 session 重探索。
+
+**读代码**
+
+- 先 `CodeGraph.md` 索引 + `Grep`，再带 `offset/limit` 的 `Read`。
+- 本 session 已读过的文件：优先 grep 变更行，避免整文件反复 Read（上下文压缩后会再读一遍，浪费更大）。
+
+**任务分工**
+
+- 大 feature 可由低成本 agent 先实现；本 agent 负责验收、根因 fix、文档与提交。
+
+**上下文**
+
+- 对话触达压缩说明总量偏高；压缩是补救，不能替代上面几条。
+
 ## 多 Agent 栈
 
 | 层级 | 内容 | Git |
