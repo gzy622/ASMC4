@@ -56,7 +56,7 @@
 
       <span id="barStats" class="bar-stats" aria-hidden="true">0/0</span>
 
-      <section class="title-wrap" id="titleButton" role="button" tabindex="0" aria-label="打开快捷面板">
+      <section class="title-wrap" id="titleButton" role="button" tabindex="0" aria-label="打开当前作业">
         <div class="title-line">
           <span id="assignmentTitle">作业</span>
           <span class="chevron" aria-hidden="true"></span>
@@ -116,7 +116,6 @@
           <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
           <button class="drawer-action-btn" id="importBackupBtn" type="button">导入备份</button>
         </div>
-        <button class="drawer-action-btn full" id="editRosterBtn" type="button">编辑名单</button>
         <button class="drawer-action-btn full" id="settingsBtn" type="button">设置</button>
       </div>
       <input type="file" id="importBackupInput" accept=".json" style="display:none" />
@@ -134,31 +133,28 @@
 
       <div class="panel-body">
         <input class="field" id="newAssignmentInput" type="text" placeholder="例如：0620作业" maxlength="24" />
-        <select class="field" id="newAssignmentSubjectInput" aria-label="作业科目">
-          <option value="">不指定科目</option>
-          <option value="英语">英语</option>
-          <option value="数学">数学</option>
-          <option value="语文">语文</option>
-          <option value="物理">物理</option>
-          <option value="化学">化学</option>
-          <option value="生物">生物</option>
-          <option value="历史">历史</option>
-          <option value="地理">地理</option>
-          <option value="政治">政治</option>
-        </select>
+        <select class="field" id="newAssignmentSubjectInput" aria-label="作业科目"></select>
 
         <div class="dialog-actions">
           <button class="dialog-button" id="newAssignmentCancelButton" type="button">取消</button>
           <button class="dialog-button primary" id="newAssignmentCreateButton" type="button">创建</button>
         </div>
       </div>
-      <div class="top-sheet-handle" aria-hidden="true"></div>
+      <div class="top-sheet-handle-zone" aria-hidden="true">
+        <div class="top-sheet-handle"></div>
+      </div>
     </section>
 
-    <section class="center-panel" id="quickPanel" aria-label="快捷面板" aria-hidden="true">
+    <section class="center-panel" id="quickPanel" aria-label="当前作业" aria-hidden="true">
       <div class="panel-head">
-        <div class="panel-title">快捷面板</div>
-        <button class="panel-close" id="quickPanelCloseButton" type="button" aria-label="关闭快捷面板">
+        <div class="panel-head-main">
+          <div class="panel-title">当前作业</div>
+          <div class="quick-current-summary" id="quickCurrentSummary" aria-live="polite">
+            <span class="assignment-subject-tag" id="quickCurrentSubject" hidden></span>
+            <span class="quick-current-stats" id="quickCurrentStats"></span>
+          </div>
+        </div>
+        <button class="panel-close" id="quickPanelCloseButton" type="button" aria-label="关闭当前作业">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
           </svg>
@@ -166,30 +162,14 @@
       </div>
 
       <div class="panel-body">
-        <div class="quick-assignment-selector" id="quickAssignmentList"></div>
-
         <div class="quick-edit-card">
           <input class="quick-edit-name" id="quickRenameInput" type="text" maxlength="24" placeholder="作业名称" aria-label="修改当前作业名称" />
-          <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目">
-            <option value="">未指定</option>
-          <option value="英语" selected>英语</option>
-            <option value="数学">数学</option>
-            <option value="语文">语文</option>
-            <option value="物理">物理</option>
-            <option value="化学">化学</option>
-            <option value="生物">生物</option>
-            <option value="历史">历史</option>
-            <option value="地理">地理</option>
-            <option value="政治">政治</option>
-          </select>
+          <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目"></select>
         </div>
 
-        <div class="setting-row">
-          <div class="setting-text">
-            <p class="setting-title">显示真实姓名</p>
-            <p class="setting-desc">关闭后以天干地支代号显示。</p>
-          </div>
-          <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+        <div class="quick-inline-setting">
+          <span class="quick-inline-setting-label">显示真实姓名</span>
+          <button class="switch" id="quickHideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
             <span class="switch-knob"></span>
           </button>
         </div>
@@ -197,10 +177,11 @@
         <div class="quick-action-grid">
           <button class="quick-action-btn" id="invertButton" type="button" title="已交与未交状态互相切换">反选提交</button>
           <button class="quick-action-btn danger" id="deleteAssignmentButton" type="button" title="删除当前作业；若只剩一项会自动新建空白作业">删除作业</button>
-          <button class="quick-action-btn" id="quickNewAssignmentButton" type="button" title="新建一份作业">新建作业</button>
         </div>
       </div>
-      <div class="top-sheet-handle" aria-hidden="true"></div>
+      <div class="top-sheet-handle-zone" aria-hidden="true">
+        <div class="top-sheet-handle"></div>
+      </div>
     </section>
 
     <div class="confirm-scrim" id="confirmScrim"></div>
@@ -251,6 +232,19 @@
       </div>
 
       <div class="roster-editor-body" id="settingsBody">
+        <div class="settings-section">
+          <div class="settings-section-title">显示</div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">显示真实姓名</p>
+              <p class="setting-desc">关闭后以天干地支代号显示。</p>
+            </div>
+            <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+        </div>
+
         <div class="settings-section">
           <div class="settings-section-title">打分</div>
           <div class="setting-row">
@@ -326,7 +320,7 @@
         </div>
 
         <div class="score-actions">
-          <button class="score-action-btn" id="scoreCancel" type="button">取消</button>
+          <button class="dialog-button" id="scoreCancel" type="button">取消</button>
           <button class="score-action-btn score-action-primary" id="scoreConfirm" type="button">确认</button>
         </div>
       </div>

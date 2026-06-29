@@ -1,5 +1,5 @@
 import { getState, saveAppState, getCurrentAssignment, defaultStudents } from "../state.js";
-import { STATUS } from "../constants.js";
+import { STATUS, SUBJECT_OPTIONS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
 import { newAssignmentInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { render } from "../render/index.js";
@@ -129,19 +129,6 @@ export function deleteAssignmentFromDrawer(assignmentId) {
     }
   });
 }
-
-const SUBJECT_OPTIONS = [
-  { value: "", label: "不指定" },
-  { value: "英语", label: "英语" },
-  { value: "数学", label: "数学" },
-  { value: "语文", label: "语文" },
-  { value: "物理", label: "物理" },
-  { value: "化学", label: "化学" },
-  { value: "生物", label: "生物" },
-  { value: "历史", label: "历史" },
-  { value: "地理", label: "地理" },
-  { value: "政治", label: "政治" }
-];
 
 export function renameAssignment(assignmentId) {
   const state = getState();

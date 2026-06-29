@@ -196,7 +196,7 @@ export function createHorizontalDragGesture(bindEl, {
         ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
         : null;
       try {
-        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
+        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget).finished;
         setOverlayTransitionBusy(false);
         if (onRelease) onRelease(dx, wasDragging, velocity);
       } finally {

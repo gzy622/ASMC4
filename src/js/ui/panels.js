@@ -1,9 +1,8 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel } from "../dom-refs.js";
-import { getState } from "../state.js";
+import { newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput, titleButton } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
-import { renderQuickAssignmentList } from "../render/quickPanel.js";
+import { renderQuickPanel } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 
 export function openNewAssignmentPanel() {
@@ -48,10 +47,16 @@ export function openQuickPanel() {
   closeScoreSheet();
   closeDrawer();
   closeAllCenterPanels();
-  renderQuickAssignmentList(getState());
+  renderQuickPanel();
 
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    if (document.activeElement === titleButton && quickRenameInput) {
+      quickRenameInput.focus();
+    }
+  });
 }
 
 export function commitQuickPanelOpen() {

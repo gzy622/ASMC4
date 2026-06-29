@@ -97,12 +97,23 @@ function Get-AdbReadyDevices {
     return $ready
 }
 
+function Get-ConfigProp {
+    param($Cfg, [string]$Name)
+
+    if (-not $Cfg) { return $null }
+    $prop = $Cfg.PSObject.Properties[$Name]
+    if (-not $prop -or $null -eq $prop.Value) { return $null }
+    return [string]$prop.Value
+}
+
 function Get-AdbWirelessAddress {
     $wireless = $env:ASMC4_ADB_WIRELESS
     if (-not $wireless) {
         $cfg = Get-DevDeviceConfig
-        if ($cfg -and $cfg.adbWireless) { $wireless = [string]$cfg.adbWireless }
+        $fromCfg = Get-ConfigProp $cfg 'adbWireless'
+        if ($fromCfg) { $wireless = $fromCfg }
     }
+    if (-not $wireless) { return $null }
     $wireless = $wireless.Trim()
     if (-not $wireless) { return $null }
     if ($wireless -eq $script:AdbWirelessPlaceholder) { return $null }

@@ -54,6 +54,36 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
 - `overlayTransitionBusy`, `pointerDirectionLock`
 
+## 手势
+
+模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。
+
+### `#quickPanel`（顶部 sheet）
+
+| 方向 | 绑定元素 | 条件 |
+|------|---------|------|
+| 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `hasOpenOverlay()` 为 false |
+| 上滑关闭（面板内） | `.panel-head`、`.top-sheet-handle-zone`、`.quick-action-grid` | `#quickPanel.is-open` |
+| 上滑关闭（面板外） | `phoneEl`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
+
+面板下方空白与学生列表同在 `.scroll-container` 内。**`phoneEl` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
+
+### overlay 状态（勿混用）
+
+- `blocksPullToOpen()`：侧栏 / 各 center-panel 的 `is-open` → 禁止再下拉打开。
+- `hasOpenOverlay()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）。
+- 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
+
+### 侧栏与触摸
+
+`.drawer:not(.is-open) { pointer-events: none }`（`components.css`）— 侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
+
+### 改手势后手动测
+
+1. 列表顶下拉打开；面板内、**面板下空白**、学生区上滑关闭。
+2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
+3. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
+
 ## 约束
 
 - DOM 查询只放在 `dom-refs.js`

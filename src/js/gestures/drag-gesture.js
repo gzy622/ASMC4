@@ -15,6 +15,7 @@ export function createVerticalDragGesture(el, {
   slope = DRAG_SLOPE,
   targetEl = el,
   shouldStart = () => true,
+  onDragStart,
   onProgress,
   getReleaseSecondary
 }) {
@@ -143,6 +144,7 @@ export function createVerticalDragGesture(el, {
         return;
       }
       dragging = true;
+      if (onDragStart) onDragStart(event);
       capturePointer(event);
       targetEl.style.transition = "none";
       targetEl.style.willChange = "transform";
@@ -197,7 +199,8 @@ export function createVerticalDragGesture(el, {
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
     try {
-      await animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      const release = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      await release.finished;
       setOverlayTransitionBusy(false);
       if (shouldClose) {
         onClose();
@@ -244,6 +247,8 @@ export function createTopSheetOpenGesture(bindEl, {
   getReleaseSecondary,
   keepSecondaryOnOpen = false,
 }) {
+  let releaseGeneration = 0;
+  let activeRelease = null;
   let startY = null;
   let startX = null;
   let dragging = false;
@@ -308,11 +313,12 @@ export function createTopSheetOpenGesture(bindEl, {
     }
   }
 
-  function resetDragState({ restoreTarget = false } = {}) {
+  function resetDragState({ restoreTarget = false, notifyCancel = false } = {}) {
+    const wasDragging = dragging;
     flushTransform();
-    if (restoreTarget && dragging) {
+    if (restoreTarget && wasDragging) {
       clearDragStyles();
-    } else if (dragging) {
+    } else if (wasDragging) {
       sheetEl.style.willChange = "";
     }
     releasePointer();
@@ -324,6 +330,7 @@ export function createTopSheetOpenGesture(bindEl, {
     currentDelta = 0;
     lastMoveAt = 0;
     lastVelocity = 0;
+    if (wasDragging && notifyCancel && onCancel) onCancel();
   }
 
   function trackVelocity(nextDelta) {
@@ -436,36 +443,53 @@ export function createTopSheetOpenGesture(bindEl, {
 
     if (!wasDragging) return;
 
+    const generation = ++releaseGeneration;
     releaseAnimating = true;
     setOverlayTransitionBusy(true);
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
       : null;
+
+    if (shouldOpen && onOpen) {
+      onOpen();
+    }
+
     try {
-      await animateRelease(sheetEl, "y", delta, targetDelta, velocity, secondaryTarget);
-      if (shouldOpen && onOpen) {
-        onOpen();
-      } else if (!shouldOpen && onCancel) {
+      activeRelease = animateRelease(sheetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      await activeRelease.finished;
+      if (generation !== releaseGeneration) return;
+      if (!shouldOpen && onCancel) {
         onCancel();
       }
     } finally {
+      if (generation !== releaseGeneration) return;
       clearDragStyles();
       if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
       setOverlayTransitionBusy(false);
       releaseAnimating = false;
+      activeRelease = null;
     }
+  }
+
+  function abortRelease() {
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    releaseAnimating = false;
+    setOverlayTransitionBusy(false);
+    clearDragStyles();
   }
 
   function handlePointerCancel(event) {
     if (event.pointerId !== activePointerId) return;
-    const wasDragging = dragging;
-    resetDragState({ restoreTarget: true });
-    if (wasDragging && onCancel) {
-      onCancel();
+    if (dragging) {
+      handlePointerUp(event);
+      return;
     }
+    resetDragState({ restoreTarget: true });
   }
 
   bindEl.addEventListener("pointerdown", handlePointerDown);
@@ -476,8 +500,11 @@ export function createTopSheetOpenGesture(bindEl, {
   // Android WebView: prevent native scroll when pull-down gesture is detected
   bindEl.addEventListener("touchmove", (event) => {
     if (activePointerId === null || startY === null) return;
-    if (event.touches[0].clientY - startY > DRAG_START_THRESHOLD && canPull(event)) {
+    const dy = event.touches[0].clientY - startY;
+    if (dragging || (dy > DRAG_START_THRESHOLD && canPull(event))) {
       event.preventDefault();
     }
   }, { passive: false });
+
+  return { abortRelease };
 }

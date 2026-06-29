@@ -9,7 +9,6 @@ const PRESSABLE = [
   ".assignment-item",
   ".assignment-item-add",
   ".panel-close",
-  ".quick-chip",
   ".quick-action-btn",
   ".dialog-button",
   ".numpad-btn",

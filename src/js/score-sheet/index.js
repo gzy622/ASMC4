@@ -1,7 +1,8 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
-import { scoreSheet, scoreDisplay, scoreTensBtn, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreNumpad } from "../dom-refs.js";
-import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setScoreTensMode, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
+import { scoreSheet, scoreDisplay, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
+import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
+import { syncScoreTensUi } from "./tens-ui.js";
 import { getDisplayName } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
@@ -26,10 +27,7 @@ export function openScoreSheet(student, guardPointer = false) {
     setScoreInputValue(existingScore || "0");
   }
 
-  const restoredTens = getState().scoreTensMode;
-  setScoreTensMode(restoredTens);
-  scoreTensBtn.classList.toggle("is-on", restoredTens);
-  updateNumpadLabels();
+  syncScoreTensUi(getState().scoreTensMode);
 
   scoreNoteInput.value = noteInputValue;
   scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
@@ -51,7 +49,6 @@ export function closeScoreSheet() {
   scoreStudentName.textContent = "--";
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
-  updateNumpadLabels();
   scoreSheet.classList.remove("is-open");
   scoreSheet.setAttribute("aria-hidden", "true");
 }
@@ -87,24 +84,10 @@ export function confirmScore() {
 }
 
 export function toggleTensMode() {
-  setScoreTensMode(!scoreTensMode);
-  scoreTensBtn.classList.toggle("is-on", scoreTensMode);
-  getState().scoreTensMode = scoreTensMode;
+  const next = !scoreTensMode;
+  syncScoreTensUi(next);
+  getState().scoreTensMode = next;
   saveAppState();
-  updateNumpadLabels();
-}
-
-function updateNumpadLabels() {
-  const buttons = scoreNumpad.querySelectorAll(".numpad-btn");
-  buttons.forEach(btn => {
-    if (btn.dataset.action) return;
-    const digit = btn.dataset.value;
-    if (scoreTensMode) {
-      btn.textContent = digit === "0" ? "100" : String(parseInt(digit, 10) * 10);
-    } else {
-      btn.textContent = digit;
-    }
-  });
 }
 
 function armScoreSheetPointerGuard() {

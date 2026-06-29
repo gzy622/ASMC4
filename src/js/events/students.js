@@ -1,4 +1,4 @@
-import { grid, hideNameSwitch, scoringToggle } from "../dom-refs.js";
+import { grid, hideNameSwitch, quickHideNameSwitch, scoringToggle } from "../dom-refs.js";
 import { STATUS } from "../constants.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import {
@@ -46,13 +46,16 @@ export function bindStudentEvents() {
     }
   });
 
-  hideNameSwitch.addEventListener("click", () => {
+  function toggleHideNames() {
     const state = getState();
     state.hideNames = !state.hideNames;
     saveAppState();
     render();
     announce(state.hideNames ? "已隐藏真实姓名" : "已显示真实姓名");
-  });
+  }
+
+  hideNameSwitch?.addEventListener("click", toggleHideNames);
+  quickHideNameSwitch?.addEventListener("click", toggleHideNames);
 
   grid.addEventListener("pointerdown", handleLongPressStart);
   grid.addEventListener("pointermove", handleLongPressMove);

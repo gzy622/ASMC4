@@ -47,12 +47,22 @@ function Get-LocalConfig {
     }
 }
 
+function Get-ConfigProp {
+    param($Cfg, [string]$Name)
+
+    if (-not $Cfg) { return $null }
+    $prop = $Cfg.PSObject.Properties[$Name]
+    if (-not $prop -or $null -eq $prop.Value) { return $null }
+    return [string]$prop.Value
+}
+
 function Resolve-ApkSettings {
     $cfg = Get-LocalConfig
 
     $dir = $OutputDir
-    if (-not $dir -and $cfg -and $cfg.apkOutputDir) {
-        $dir = [string]$cfg.apkOutputDir
+    if (-not $dir) {
+        $fromCfg = Get-ConfigProp $cfg 'apkOutputDir'
+        if ($fromCfg) { $dir = $fromCfg }
     }
     if (-not $dir) {
         $dir = [Environment]::GetFolderPath('Desktop')
@@ -60,8 +70,9 @@ function Resolve-ApkSettings {
     $dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($dir)
 
     $variant = $Variant
-    if (-not $variant -and $cfg -and $cfg.apkVariant) {
-        $variant = [string]$cfg.apkVariant
+    if (-not $variant) {
+        $fromCfg = Get-ConfigProp $cfg 'apkVariant'
+        if ($fromCfg) { $variant = $fromCfg }
     }
     if (-not $variant) { $variant = 'debug' }
 

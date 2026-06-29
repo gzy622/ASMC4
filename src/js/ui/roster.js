@@ -13,12 +13,7 @@ import {
   rosterEditorPanel,
   rosterEditorList
 } from "../dom-refs.js";
-import { openOverlay, closeOverlay } from "./overlay.js";
-
-export function openRosterEditor() {
-  const state = getState();
-  openOverlay(rosterEditorPanel, () => renderRosterRows(state.roster));
-}
+import { closeOverlay } from "./overlay.js";
 
 export async function closeRosterEditor() {
   return closeOverlay(rosterEditorPanel);

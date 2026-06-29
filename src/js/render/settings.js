@@ -1,6 +1,7 @@
-import { hideNameSwitch, scoringModeSwitch, scoreTensModeSwitch } from "../dom-refs.js";
+import { hideNameSwitch, quickHideNameSwitch, scoringModeSwitch, scoreTensModeSwitch } from "../dom-refs.js";
 
 function syncSwitch(el, on, labelOn, labelOff) {
+  if (!el) return;
   el.classList.toggle("is-on", on);
   el.setAttribute("aria-pressed", String(on));
   el.setAttribute("aria-label", on ? labelOn : labelOff);
@@ -8,12 +9,12 @@ function syncSwitch(el, on, labelOn, labelOff) {
 
 export function renderSettingsState(state) {
   const showRealNames = !state.hideNames;
-  syncSwitch(
-    hideNameSwitch,
-    showRealNames,
+  const hideNameLabels = [
     "当前显示真实姓名，点击后隐藏",
     "当前隐藏真实姓名，点击后显示"
-  );
+  ];
+  syncSwitch(hideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
+  syncSwitch(quickHideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
 
   syncSwitch(
     scoringModeSwitch,

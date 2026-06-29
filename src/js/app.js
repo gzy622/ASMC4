@@ -6,8 +6,13 @@ import "./gestures/panel-swipe.js";
 import "./gestures/press-feedback.js";
 import "./native-shim.js";
 import "./utils/back-guard.js";
+import { fillSubjectSelect } from "./utils/subject-select.js";
+import { quickSubjectSelect, newAssignmentSubjectInput } from "./dom-refs.js";
 
 document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
+
+fillSubjectSelect(quickSubjectSelect);
+fillSubjectSelect(newAssignmentSubjectInput);
 
 bindEvents();
 render();

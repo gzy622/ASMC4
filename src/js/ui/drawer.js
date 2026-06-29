@@ -21,9 +21,10 @@ export function openDrawer({ withTransitionLock = true } = {}) {
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
-  if (overlayTransitionBusy) return;
   setSuppressNextCardClick(false);
   drawer.classList.remove("is-open");
+  drawer.classList.remove("is-expanding");
+  drawer.style.transform = "";
   drawer.setAttribute("aria-hidden", "true");
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {

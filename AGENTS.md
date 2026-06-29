@@ -68,6 +68,8 @@ npm run cap:sync / cap:open / cap:run
 16. 代码验证优先跑 `node build.mjs`、`python verify.py` 或现有轻量检查。
 17. 复发或难定位的行为 bug 先读 `~/.agents/skills/hunt/SKILL.md`，说清根因再改。
 18. 改现有文件保持原换行符；逻辑小改却整文件 diff 时 checkout 后重做。
+19. 改 `#quickPanel` / `panel-swipe.js` 前先读 [CodeGraph.md](CodeGraph.md)「手势」；`is-open` 关闭路径勿整段排除 `.scroll-container`（面板下空白在此容器内）。
+20. overlay 手势状态分工：`blocksPullToOpen`（各 overlay 的 `is-open`）与 `hasOpenOverlay`（另含 `#quickPanel.is-dragging`）；关闭手势只认 `is-open`。
 
 ## 提交约定
 

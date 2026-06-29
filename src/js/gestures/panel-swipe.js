@@ -9,13 +9,12 @@ import {
   scrollContainer,
   settingsPanel
 } from "../dom-refs.js";
-import { getState } from "../state.js";
-import { renderQuickAssignmentList } from "../render/quickPanel.js";
-import { overlayTransitionBusy } from "../runtime.js";
+import { renderQuickPanel } from "../render/quickPanel.js";
+import { overlayTransitionBusy, setOverlayTransitionBusy } from "../runtime.js";
 import { closeAllCenterPanels, commitQuickPanelOpen } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
-function hasOpenOverlay() {
+function blocksPullToOpen() {
   return (
     drawer.classList.contains("is-open")
     || quickPanel.classList.contains("is-open")
@@ -25,6 +24,18 @@ function hasOpenOverlay() {
     || rosterEditorPanel.classList.contains("is-open")
     || settingsPanel.classList.contains("is-open")
   );
+}
+
+function hasOpenOverlay() {
+  return blocksPullToOpen() || quickPanel.classList.contains("is-dragging");
+}
+
+function gesturesLocked() {
+  return overlayTransitionBusy && hasOpenOverlay();
+}
+
+function canPullQuickPanel() {
+  return !blocksPullToOpen() && scrollContainer.scrollTop <= 1;
 }
 
 function cancelTopSheetOpen() {
@@ -55,21 +66,79 @@ function bindTopSheetCloseGesture(panel) {
   });
 }
 
-createTopSheetOpenGesture(scrollContainer, {
+function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
+  function prepareQuickPanelCloseDrag() {
+    abortQuickPanelOpenRelease();
+    if (!quickPanel.classList.contains("is-open")) {
+      commitQuickPanelOpen();
+    }
+    quickPanel.classList.remove("is-dragging");
+    setOverlayTransitionBusy(false);
+  }
+
+  const closeOpts = {
+    closeDirection: -1,
+    targetEl: quickPanel,
+    onClose: closeAllCenterPanels,
+    onDragStart: prepareQuickPanelCloseDrag,
+  };
+
+  const panelHead = quickPanel.querySelector(".panel-head");
+  const handleZone = quickPanel.querySelector(".top-sheet-handle-zone");
+  const actionGrid = quickPanel.querySelector(".quick-action-grid");
+
+  if (panelHead) {
+    createVerticalDragGesture(panelHead, {
+      ...closeOpts,
+      shouldStart: event => quickPanel.classList.contains("is-open")
+        && !event.target.closest(".panel-close"),
+    });
+  }
+  if (handleZone) {
+    createVerticalDragGesture(handleZone, {
+      ...closeOpts,
+      shouldStart: () => quickPanel.classList.contains("is-open"),
+    });
+  }
+  if (actionGrid) {
+    createVerticalDragGesture(actionGrid, {
+      ...closeOpts,
+      shouldStart: () => quickPanel.classList.contains("is-open"),
+    });
+  }
+
+  createVerticalDragGesture(phoneEl, {
+    closeDirection: -1,
+    targetEl: quickPanel,
+    onDragStart: prepareQuickPanelCloseDrag,
+    shouldStart: (event) => {
+      if (confirmPanel.classList.contains("is-open")) return false;
+      if (!quickPanel.classList.contains("is-open")) return false;
+      if (event.target.closest("#quickPanel")) return false;
+      if (event.target.closest(".drawer, .score-sheet, .nav-button, .icon-button, .title-wrap")) {
+        return false;
+      }
+      return !event.target.closest("#newAssignmentPanel, #confirmPanel, #rosterEditorPanel, #settingsPanel");
+    },
+    onClose: closeAllCenterPanels,
+  });
+}
+
+const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   sheetEl: quickPanel,
   canStart: (event) => {
-    if (overlayTransitionBusy) return false;
+    if (gesturesLocked()) return false;
     if (hasOpenOverlay()) return false;
     return !event.target.closest("button:not(.student-card), input, select, textarea");
   },
-  canPull: () => !hasOpenOverlay() && scrollContainer.scrollTop <= 0,
+  canPull: canPullQuickPanel,
   onPrepare: () => {
-    renderQuickAssignmentList(getState());
+    renderQuickPanel();
     quickPanel.classList.add("is-dragging");
   },
   onOpen: finishTopSheetOpen,
   onCancel: cancelTopSheetOpen,
 });
 
-bindTopSheetCloseGesture(quickPanel);
+bindQuickPanelCloseGesture(quickPanelOpenGesture.abortRelease);
 bindTopSheetCloseGesture(newAssignmentPanel);

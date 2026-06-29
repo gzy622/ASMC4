@@ -3,9 +3,10 @@ import { titleNode, drawer, quickPanel, assignmentList } from "../dom-refs.js";
 import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
-import { renderQuickAssignmentList } from "./quickPanel.js";
+import { renderQuickPanel } from "./quickPanel.js";
 import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
+import { syncScoreTensUi } from "../score-sheet/tens-ui.js";
 
 export function render() {
   const state = getState();
@@ -17,9 +18,10 @@ export function render() {
     renderAssignmentList(state);
   }
   if (quickPanel.classList.contains("is-open")) {
-    renderQuickAssignmentList(state);
+    renderQuickPanel();
   }
   renderSettingsState(state);
   renderScoringMode(state);
+  syncScoreTensUi(state.scoreTensMode);
   renderProgress(state, assignment);
 }

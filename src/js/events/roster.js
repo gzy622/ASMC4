@@ -1,5 +1,4 @@
 import {
-  editRosterBtn,
   rosterEditorClose,
   rosterCancelBtn,
   rosterSaveBtn,
@@ -7,7 +6,6 @@ import {
   rosterEditorList
 } from "../dom-refs.js";
 import {
-  openRosterEditor,
   closeRosterEditor,
   addEmptyRow,
   removeRow,
@@ -17,7 +15,6 @@ import {
 } from "../ui/roster.js";
 
 export function bindRosterEvents() {
-  editRosterBtn.addEventListener("click", openRosterEditor);
   rosterEditorClose.addEventListener("click", closeRosterEditor);
   rosterCancelBtn.addEventListener("click", closeRosterEditor);
   rosterSaveBtn.addEventListener("click", saveRoster);

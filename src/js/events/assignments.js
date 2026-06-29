@@ -6,7 +6,6 @@ import {
   invertButton,
   newAssignmentCreateButton,
   newAssignmentInput,
-  quickAssignmentList,
   quickRenameInput,
   quickSubjectSelect
 } from "../dom-refs.js";
@@ -21,7 +20,7 @@ import {
 } from "../business/assignment.js";
 import { render } from "../render/index.js";
 import { closeDrawer } from "../ui/drawer.js";
-import { closeAllCenterPanels, openNewAssignmentPanel } from "../ui/panels.js";
+import { openNewAssignmentPanel, closeAllCenterPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
 import { announce } from "../utils/dom.js";
 
@@ -35,13 +34,6 @@ export function bindAssignmentEvents() {
   newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
   newAssignmentInput.addEventListener("keydown", event => {
     if (event.key === "Enter") createAssignmentFromDialog();
-  });
-
-  quickAssignmentList.addEventListener("click", event => {
-    const chip = event.target.closest(".quick-chip");
-    if (!chip) return;
-    selectAssignment(chip.dataset.assignmentId);
-    closeAllCenterPanels();
   });
 
   assignmentList.addEventListener("click", event => {
@@ -65,8 +57,8 @@ export function bindAssignmentEvents() {
 
     const item = event.target.closest(".assignment-item");
     if (!item) return;
+    closeDrawer({ withTransitionLock: false });
     selectAssignment(item.dataset.assignmentId);
-    closeDrawer();
   });
 
   assignmentList.addEventListener("keydown", event => {
@@ -84,8 +76,8 @@ export function bindAssignmentEvents() {
     const item = event.target.closest(".assignment-item");
     if (!item) return;
     event.preventDefault();
+    closeDrawer({ withTransitionLock: false });
     selectAssignment(item.dataset.assignmentId);
-    closeDrawer();
   });
 
   invertButton.addEventListener("click", () => {
