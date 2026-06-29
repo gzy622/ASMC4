@@ -45,8 +45,14 @@ checks = [
         "closeConfirm();" in read("src/js/ui/backup.js"),
     ),
     (
-        "long press survives release until click",
-        "longPressResetTimer = setTimeout" in read("src/js/score-sheet/longpress.js"),
+        "long press consumes Android synthetic click",
+        "setSuppressNextCardClick(true);" in read("src/js/score-sheet/longpress.js"),
+    ),
+    (
+        "Android WebView native long-press haptics disabled",
+        "webView.setHapticFeedbackEnabled(false);" in read(
+            "android/app/src/main/java/com/gzy622/asmc4/MainActivity.java"
+        ),
     ),
 ]
 

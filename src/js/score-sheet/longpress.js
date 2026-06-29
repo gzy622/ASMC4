@@ -5,7 +5,8 @@ import {
   longPressTriggered,
   setLongPressTimer,
   clearLongPressTimer,
-  setLongPressTriggered
+  setLongPressTriggered,
+  setSuppressNextCardClick
 } from "../runtime.js";
 import { isStudentForceNone } from "../utils/display.js";
 import { openScoreSheet } from "./index.js";
@@ -33,6 +34,7 @@ export function handleLongPressStart(event) {
     longPressStarts.delete(pointerId);
     setLongPressTimer(pointerId, null);
     setLongPressTriggered(true);
+    setSuppressNextCardClick(true);
     clearTimeout(longPressResetTimer);
     longPressResetTimer = setTimeout(() => {
       setLongPressTriggered(false);

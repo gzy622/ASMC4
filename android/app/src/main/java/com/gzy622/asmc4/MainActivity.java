@@ -4,6 +4,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -15,6 +16,9 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    WebView webView = getBridge().getWebView();
+    webView.setHapticFeedbackEnabled(false);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       View root = getWindow().getDecorView();
