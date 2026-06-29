@@ -115,18 +115,21 @@ rtk cargo test
 **硬开关（已验证有效）**
 
 - 不用 browser MCP、不派 Task/explore 子 agent（双份上下文）。
+  - 「不用 browser MCP」含自起 HTTP server + CDP 调试。DOM/CSS 行为先在脑中推理优先级/数据流，必要时 `node -e` 跑最小样例；真要预览用 `dev.cmd`。
 - ponytail 小 diff：少抽象、少测试框架；探索类回复短结论，长表格仅用户明确要求时写。
 
 **该用却常漏**
 
 - 多文件 `git diff` / 长 `git log`：显式 `rtk`（见上节）；短 `--stat` 可不用。
 - 同一 bug **第 2 次复发**：先读 `~/.agents/skills/hunt/SKILL.md` 定根因，勿多轮「读文件 → 试 fix」。
+  - 「设置不生效」类 bug 先 grep `hidden`/`display`/现有同类设置的处理，套既有模式；CSS 优先级问题（`display:grid` 盖过 `[hidden]`）无需浏览器即可定根因。
 - 架构/域知识：写进 [CodeGraph.md](CodeGraph.md)（如「手势」），对话里只给结论与路径，避免每 session 重探索。
 
 **读代码**
 
 - 先 `CodeGraph.md` 索引 + `Grep`，再带 `offset/limit` 的 `Read`。
 - 本 session 已读过的文件：优先 grep 变更行，避免整文件反复 Read（上下文压缩后会再读一遍，浪费更大）。
+- `Grep` 默认带 `path` 限定 `src/` 或具体文件，避免扫到 `android/build/`、`dist/` 构建产物。
 
 **任务分工**
 
@@ -135,6 +138,7 @@ rtk cargo test
 **上下文**
 
 - 对话触达压缩说明总量偏高；压缩是补救，不能替代上面几条。
+- 写新设置/新隐藏控件前先 grep 既有同类处理（`[hidden]`、`display:none !important` 模式），一次写对，省掉事后浏览器调试整轮。
 
 **顶栏 / 当前作业（可复用）**
 
