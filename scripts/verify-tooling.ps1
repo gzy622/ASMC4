@@ -50,12 +50,23 @@ if (Test-Path $cr) {
   else { Pass '.cursorrules conflict-free' }
 }
 
-# Git must not track agent-local paths
+# Local Cursor rules/skills must be tracked (not gitignored)
 Push-Location $Root
 try {
-  $tracked = git ls-files .cursor .cursorrules opencode.json .opencode reasonix.toml 2>$null
-  if ($tracked) { Fail "agent-local files tracked in git: $($tracked -join ', ')" }
-  else { Pass 'agent-local paths not in git index' }
+  $tracked = git ls-files .cursor/rules .cursor/skills 2>$null
+  if ($tracked.Count -ge 2) { Pass ".cursor rules/skills tracked in git ($($tracked.Count) files)" }
+  else { Fail '.cursor/ not tracked — Cursor Settings will not list Project Rules' }
+  $ignored = git check-ignore -q .cursor/rules/ponytail.mdc 2>$null; $LASTEXITCODE
+  if ($LASTEXITCODE -eq 0) { Fail '.cursor/ is gitignored — remove from .gitignore' }
+  else { Pass '.cursor/ not gitignored' }
+} finally { Pop-Location }
+
+# Git must not track machine-local agent paths
+Push-Location $Root
+try {
+  $bad = git ls-files .cursorrules opencode.json reasonix.toml 2>$null
+  if ($bad) { Fail "machine-local files tracked: $($bad -join ', ')" }
+  else { Pass 'machine-local agent paths not in git index' }
 } finally { Pop-Location }
 
 # Waza (user)

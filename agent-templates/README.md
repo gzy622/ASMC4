@@ -1,23 +1,15 @@
-# Agent 本地模板（可提交 Git）
+# Agent 本地模板（OpenCode / Reasonix）
 
-本目录是**多 Agent 共享配置的唯一起源**，供 `scripts/setup-agent-local.ps1` 生成本机文件。
+Cursor 的 **Rules / Skills** 在仓库根 `.cursor/`（已纳入 Git，Settings 里可见）。
 
-## 生成物（均在 .gitignore，勿 push）
+本目录仅保留其它 Agent 的本机模板：
 
-| 生成路径 | 用途 |
-|----------|------|
-| `.cursor/rules/` | Cursor 规则 |
-| `.cursor/skills/` | Cursor 可点名 ponytail 辅助 skill |
-| `.cursorrules` | Cursor 遗留入口（空 stub，防 Headroom 冲突） |
-| `opencode.json` | OpenCode Desktop 项目配置 |
-| `.opencode/plugins/` | OpenCode ponytail 插件 |
-| `reasonix.toml` | Reasonix Desktop（从 `reasonix.toml.example` 复制） |
-
-## 所有 Agent 共同读取
-
-- **`AGENTS.md`**（仓库根，已跟踪）：项目规则 + RTK + 多 Agent 说明
-
-## 首次 / 克隆后
+| 模板 | 生成路径 | Git |
+|------|----------|-----|
+| `opencode.json` | 仓库根 | 否 |
+| `opencode/plugins/ponytail.mjs` | `.opencode/plugins/` | 否 |
+| `reasonix.toml.example` | `reasonix.toml` | 否 |
+| `cursorrules.stub` | `.cursorrules` | 否 |
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-agent-local.ps1
