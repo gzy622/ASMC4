@@ -9,9 +9,9 @@ function Warn($msg) { Write-Host "  [WARN] $msg" -ForegroundColor Yellow }
 
 Write-Host "`nASMC4 tooling verify (multi-agent / Windows)`n"
 
-# Templates (must be tracked for clone)
-$tplRules = Join-Path $Root 'agent-templates\cursor\rules\tooling-stack.mdc'
-if (Test-Path $tplRules) { Pass 'agent-templates present (Git-safe)' } else { Fail 'missing agent-templates/' }
+# Templates (OpenCode / Reasonix)
+$tplOc = Join-Path $Root 'agent-templates\opencode.json'
+if (Test-Path $tplOc) { Pass 'agent-templates present (OpenCode/Reasonix)' } else { Fail 'missing agent-templates/' }
 
 # RTK
 if (Get-Command rtk -ErrorAction SilentlyContinue) {
