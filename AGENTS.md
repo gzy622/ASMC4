@@ -16,22 +16,20 @@
 ## 命令
 
 ```bash
-.\start-lan.cmd              # 右键管理员(首次)，同 Wi-Fi 手机访问
-.\start-lan.cmd 3000         # 指定端口
-.\start-usb-preview.cmd
-.\start-usb-preview.cmd 3000
-node build.mjs
-node build.mjs --watch
-npm run preview
-npm run cap:sync
-npm run cap:open
-npm run cap:run
+.\dev.cmd                    # 统一预览（交互菜单）
+npm run dev                  # 同上（npm）
+npm run build                # 仅构建 dist/
+npm run preview              # 仅静态服务（需先 build）
+npm run cap:sync / cap:open / cap:run
 ```
 
-预览方式：
+无线 adb（可选）：`scripts/dev-device.local.json` 的 `adbWireless`；已配对设备无需配置。
 
-- `start-lan.cmd`：同 Wi-Fi，手机访问 PC 局域网 IP（首次需右键管理员运行以添加防火墙规则）
-- `start-usb-preview.cmd`：USB 直连，`adb reverse` 转发，手机访问 `localhost`，无需 Wi-Fi
+选项 4（Android）：`gradlew installDebug` + 启动 Activity；签名冲突时自动卸载重装。不用 `cap run`（无线设备上 native-run 不稳定）。
+
+选项 5 / `build-apk.cmd` / `npm run apk`：构建 APK 到 `apkOutputDir`（默认桌面），供远控下载，无需 adb。
+
+`preview.cmd` / `start-lan.cmd` / `start-usb-preview.cmd` 为兼容别名，转发至 `dev.cmd`。
 
 ## 索引
 

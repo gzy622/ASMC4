@@ -68,24 +68,24 @@ async function build() {
 
   writeFileSync(join(dist, "index.html"), html);
 
-  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ 更新完成`);
+  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ ok`);
 }
 
 await build();
 
 if (watchMode) {
-  console.log("[watch] 监听 src/ 及 index.html 变更中...");
+  console.log("[watch] watching src/ and index.html...");
   watch(join(src, "css"), { recursive: true }, (_, f) => {
-    console.log(`[watch] CSS 变更: ${f}`);
+    console.log(`[watch] CSS: ${f}`);
     build().catch(e => console.error("[watch] build error:", e));
   });
   watch(join(src, "js"), { recursive: true }, (_, f) => {
-    console.log(`[watch] JS 变更: ${f}`);
+    console.log(`[watch] JS: ${f}`);
     build().catch(e => console.error("[watch] build error:", e));
   });
   watch(__dirname, (_, f) => {
     if (f === "index.html") {
-      console.log("[watch] index.html 变更");
+      console.log("[watch] index.html");
       build().catch(e => console.error("[watch] build error:", e));
     }
   });

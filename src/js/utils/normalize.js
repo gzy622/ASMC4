@@ -28,6 +28,23 @@ export function normalizeStudent(student, index) {
   };
 }
 
+export function createFreshStudentsFrom(students) {
+  return students.map((student, index) => {
+    const isNoRegistration = student.status === STATUS.NONE;
+
+    return {
+      id: Number(student.id) || index + 1,
+      serial: String(student.serial || index + 1).padStart(2, "0"),
+      name: String(student.name || "未命名"),
+      status: isNoRegistration ? STATUS.NONE : STATUS.NORMAL,
+      badge: "",
+      badgeType: "",
+      note: "",
+      updatedAt: ""
+    };
+  });
+}
+
 export function normalizeRosterEntry(entry, index) {
   const fallbackSerial = String(index + 1).padStart(2, "0");
   return {

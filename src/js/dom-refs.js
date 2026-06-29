@@ -51,6 +51,7 @@ export const rosterResetBtn = document.querySelector("#rosterResetBtn");
 export const newAssignmentSubjectInput = document.querySelector("#newAssignmentSubjectInput");
 export const quickRenameInput = document.querySelector("#quickRenameInput");
 export const quickSubjectSelect = document.querySelector("#quickSubjectSelect");
+export const quickNewAssignmentButton = document.querySelector("#quickNewAssignmentButton");
 
 export const settingsBtn = document.querySelector("#settingsBtn");
 export const settingsPanel = document.querySelector("#settingsPanel");

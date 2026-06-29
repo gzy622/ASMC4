@@ -4,6 +4,7 @@ import { getState } from "../state.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { renderQuickAssignmentList } from "../render/quickPanel.js";
+import { makeDefaultAssignmentTitle } from "../utils/id.js";
 
 export function openNewAssignmentPanel() {
   closeScoreSheet();
@@ -13,7 +14,7 @@ export function openNewAssignmentPanel() {
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
 
-  newAssignmentInput.value = "";
+  newAssignmentInput.value = makeDefaultAssignmentTitle();
   if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");

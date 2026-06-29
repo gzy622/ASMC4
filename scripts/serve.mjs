@@ -77,7 +77,7 @@ const lanIP = getLANIP();
 
 server.listen(port, '0.0.0.0', () => {
   console.log('');
-  console.log('  >>>  ASMC4 — Dev Server (Node.js)');
+  console.log('  >>>  ASMC4 - Dev Server (Node.js)');
   console.log('');
   console.log(`  Local     http://localhost:${port}/`);
   if (lanIP) {

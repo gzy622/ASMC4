@@ -5,6 +5,7 @@ import { newAssignmentInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
+import { createFreshStudentsFrom } from "../utils/normalize.js";
 import { isStudentForceNone } from "../utils/display.js";
 import { assignmentList } from "../dom-refs.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
@@ -34,22 +35,6 @@ export function createAssignmentFromDialog() {
   render();
   closeAllCenterPanels();
   announce(`已新建作业：${title}`);
-}
-
-export function createFreshStudentsFrom(students) {
-  return students.map((student, index) => {
-    const isNoRegistration = student.status === STATUS.NONE;
-
-    return {
-      id: Number(student.id) || index + 1,
-      serial: String(student.serial || index + 1).padStart(2, "0"),
-      name: String(student.name || "未命名"),
-      status: isNoRegistration ? STATUS.NONE : STATUS.NORMAL,
-      badge: "",
-      badgeType: "",
-      updatedAt: ""
-    };
-  });
 }
 
 export function invertCurrentAssignmentSubmission() {
@@ -89,7 +74,7 @@ export function deleteCurrentAssignment() {
   if (state.assignments.length === 0) {
     const fallback = {
       id: makeId("assignment"),
-      title: "新作业",
+      title: makeDefaultAssignmentTitle(),
       createdAt: new Date().toISOString(),
       students: createFreshStudentsFrom(defaultStudents)
     };
@@ -126,7 +111,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
       if (state.assignments.length === 0) {
         const fallback = {
           id: makeId("assignment"),
-          title: "新作业",
+          title: makeDefaultAssignmentTitle(),
           createdAt: new Date().toISOString(),
           students: createFreshStudentsFrom(defaultStudents)
         };

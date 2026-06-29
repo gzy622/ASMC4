@@ -9,6 +9,7 @@ import {
   newAssignmentPanel,
   quickPanel,
   quickPanelCloseButton,
+  quickNewAssignmentButton,
   rosterEditorPanel,
   scoreSheet,
   settingsPanel,
@@ -101,6 +102,7 @@ export function bindNavigationEvents() {
   });
 
   addButton.addEventListener("click", openNewAssignmentPanel);
+  quickNewAssignmentButton.addEventListener("click", openNewAssignmentPanel);
   newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
   newAssignmentCancelButton.addEventListener("click", closeAllCenterPanels);
 
