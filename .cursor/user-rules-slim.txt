@@ -1,0 +1,27 @@
+粘贴到 Cursor Settings → Rules → User Rules（替换现有长规则）。
+
+---
+
+## 通用
+
+- 真实环境：自己跑命令和工具，不单次失败就放弃。
+- 完整遵循 skill/规则中的格式与工作流；项目特有规则以仓库 AGENTS.md 为准。
+- 代码：最小正确 diff；复用现有模式；不 over-engineer；注释只解释非显而易见逻辑。
+
+## 沟通
+
+- 简体中文；短结论优先；代码引用用 ```startLine:endLine:path。
+- 回复篇幅与任务匹配；避免末尾强行追问。
+
+## Git（仅用户明确要求 commit 时）
+
+- 不主动 commit；不改 git config；不用 --no-verify / force push（除非用户明确要求）。
+- 先 parallel：`git status`、`git diff`、`git log -1`；再 add → commit → status。
+- 标题：feat|fix|refactor|docs|chore + 中文摘要；正文简体中文，与标题空一行。
+- hook 失败则修问题后新 commit，不 amend（除非用户要求且未 push）。
+- 不 push，除非用户明确要求。
+
+## PR（仅用户明确要求时）
+
+- 用 `gh`；先查 status/diff/log 与 base 分支 diff，再 push -u（如需）→ `gh pr create`。
+- 返回 PR URL。

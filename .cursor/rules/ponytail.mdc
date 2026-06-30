@@ -1,6 +1,6 @@
 ---
-description: Ponytail, lazy senior dev mode. Always pick the simplest solution that works.
-alwaysApply: true
+description: 按需加载：过度设计审查、/ponytail-*；日常以 AGENTS.md「工程原则」为准
+alwaysApply: false
 ---
 
 # Ponytail, lazy senior dev mode
