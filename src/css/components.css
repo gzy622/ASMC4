@@ -777,6 +777,19 @@
       gap: 8px;
     }
 
+    .quick-history-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .quick-action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .quick-action-btn {
       height: 44px;
       border: 0;
@@ -941,6 +954,56 @@
       clip: rect(0, 0, 0, 0);
       white-space: nowrap;
       border: 0;
+    }
+
+    .app-toast {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 20px;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(28, 30, 34, 0.94);
+      color: #fff;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+      transform: translateY(calc(100% + 24px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+    }
+
+    .app-toast.is-visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .app-toast-message {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .app-toast-action {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .app-toast-action:active {
+      background: rgba(255, 255, 255, 0.22);
     }
 
     .score-sheet {

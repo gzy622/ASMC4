@@ -181,7 +181,7 @@ export function collectRosterFromEditor() {
   });
 
   if (hasEmptyName) {
-    announce("请填写所有学生姓名");
+    announce("请填写姓名");
     return null;
   }
 
@@ -195,7 +195,7 @@ export function saveRoster() {
   applyRosterToAllAssignments(roster);
   render();
   closeRosterEditor();
-  announce("名单已更新");
+  announce("名单已更新", { action: "undo" });
 }
 
 export function resetRoster() {
@@ -215,7 +215,7 @@ export function resetRoster() {
       render();
       closeRosterEditor();
       closeConfirm();
-      announce("名单已重置为默认 50 人");
+      announce("名单已重置", { action: "undo" });
     }
   });
 }

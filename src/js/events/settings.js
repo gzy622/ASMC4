@@ -30,26 +30,26 @@ export function bindSettingsEvents() {
   showBarScoringToggleSwitch?.addEventListener("click", () => {
     const state = getState();
     state.showBarScoringToggle = !(state.showBarScoringToggle !== false);
-    saveAppState();
+    saveAppState({ history: false });
     render();
-    announce(state.showBarScoringToggle ? "已显示顶栏打分按钮" : "已隐藏顶栏打分按钮");
+    announce(state.showBarScoringToggle ? "顶栏按钮已显示" : "顶栏按钮已隐藏");
   });
 
   showBarStatsSwitch?.addEventListener("click", () => {
     const state = getState();
     state.showBarStats = !(state.showBarStats !== false);
-    saveAppState();
+    saveAppState({ history: false });
     render();
-    announce(state.showBarStats !== false ? "已显示顶栏已交人数" : "已隐藏顶栏已交人数");
+    announce(state.showBarStats !== false ? "已交人数已显示" : "已交人数已隐藏");
   });
 
   scoreTensModeSwitch.addEventListener("click", () => {
     const state = getState();
     state.scoreTensMode = !state.scoreTensMode;
     setScoreTensMode(state.scoreTensMode);
-    saveAppState();
+    saveAppState({ history: false });
     render();
-    announce(state.scoreTensMode ? "已开启×10模式" : "已关闭×10模式");
+    announce(state.scoreTensMode ? "×10 已开启" : "×10 已关闭");
   });
 
   settingsExportBtn.addEventListener("click", async () => {

@@ -106,7 +106,7 @@ export function importBackup(file) {
             render();
             closeDrawer();
             closeConfirm();
-            announce("备份已导入");
+            announce("备份已导入", { action: "undo" });
           } catch (err) {
             alert("导入失败：" + err.message);
           }

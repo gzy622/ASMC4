@@ -55,9 +55,9 @@ export function bindStudentEvents() {
   function toggleHideNames() {
     const state = getState();
     state.hideNames = !state.hideNames;
-    saveAppState();
+    saveAppState({ history: false });
     render();
-    announce(state.hideNames ? "已隐藏真实姓名" : "已显示真实姓名");
+    announce(state.hideNames ? "已隐藏姓名" : "已显示姓名");
   }
 
   function bindQuickSettingRow(rowEl, switchEl, toggleFn) {

@@ -47,6 +47,7 @@ function hasOpenOverlay() {
 function bindEmptyAreaClose() {
   phoneEl.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
+    if (event.target.closest("#appToast")) return;
     if (overlayTransitionBusy) {
       if (hasOpenOverlay()) consumeOverlayEmptyClick(event);
       return;

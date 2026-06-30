@@ -34,7 +34,7 @@ export function createAssignmentFromDialog() {
   saveAppState();
   render();
   closeAllCenterPanels();
-  announce(`已新建作业：${title}`);
+  announce("已新建作业", { action: "undo" });
 }
 
 export function invertCurrentAssignmentSubmission() {
@@ -125,7 +125,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
       saveAppState();
       render();
       closeConfirm();
-      announce("已删除作业");
+      announce("已删除作业", { action: "undo" });
     }
   });
 }
@@ -204,10 +204,11 @@ export function renameAssignment(assignmentId) {
       assignment.updatedAt = new Date().toISOString();
       saveAppState();
       render();
-      const parts = [];
-      if (titleChanged) parts.push(`已重命名为${trimmed}`);
-      if (subjectChanged) parts.push(newSubject ? `科目已设为${newSubject}` : "已清除科目");
-      announce(parts.join("，"));
+      if (titleChanged) {
+        announce("已重命名", { action: "undo" });
+      } else {
+        announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo" });
+      }
     } else {
       render();
     }

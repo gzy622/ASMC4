@@ -4,6 +4,7 @@ import { isStudentForceNone, getStateClass } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { renderScoringMode } from "../render/scoringMode.js";
+import { renderHistoryButtons } from "../render/quickPanel.js";
 import { announce } from "../utils/dom.js";
 import { hapticLight } from "../utils/haptics.js";
 
@@ -32,13 +33,14 @@ export function toggleStudent(student, cardEl) {
 
   renderProgress(state, assignment);
   renderScoringMode(state);
-  announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交");
+  renderHistoryButtons();
+  announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交", { action: "undo" });
 }
 
 export function toggleScoringMode() {
   const state = getState();
   state.scoringMode = !state.scoringMode;
-  saveAppState();
+  saveAppState({ history: false });
   render();
-  announce(state.scoringMode ? "已开启打分模式，点击卡片即可打分" : "已关闭打分模式，长按卡片可打分");
+  announce(state.scoringMode ? "打分模式已开启" : "打分模式已关闭");
 }

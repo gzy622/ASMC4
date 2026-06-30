@@ -26,7 +26,7 @@ import { announce } from "../utils/dom.js";
 
 function selectAssignment(assignmentId) {
   getState().currentAssignmentId = assignmentId;
-  saveAppState();
+  saveAppState({ history: false });
   render();
 }
 
@@ -90,7 +90,7 @@ export function bindAssignmentEvents() {
       onConfirm: () => {
         invertCurrentAssignmentSubmission();
         closeConfirm();
-        announce("已反选提交状态");
+        announce("已反选提交", { action: "undo" });
       }
     });
   });
@@ -106,7 +106,7 @@ export function bindAssignmentEvents() {
         deleteCurrentAssignment();
         closeConfirm();
         closeAllCenterPanels();
-        announce("已删除当前作业");
+        announce("已删除作业", { action: "undo" });
       }
     });
   });
@@ -128,7 +128,7 @@ export function bindAssignmentEvents() {
         assignment.updatedAt = new Date().toISOString();
         saveAppState();
         render();
-        announce("已重命名为" + trimmed);
+        announce("已重命名", { action: "undo" });
       }
     }
     function cancelRename() {
@@ -161,7 +161,7 @@ export function bindAssignmentEvents() {
       assignment.subject = quickSubjectSelect.value;
       saveAppState();
       render();
-      announce(assignment.subject ? `科目已设为${assignment.subject}` : "已清除科目");
+      announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo" });
     });
   }
 }

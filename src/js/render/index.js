@@ -3,7 +3,7 @@ import { titleNode, drawer, quickPanel, assignmentList } from "../dom-refs.js";
 import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
-import { renderQuickPanel } from "./quickPanel.js";
+import { renderQuickPanel, renderHistoryButtons } from "./quickPanel.js";
 import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
 import { syncScoreTensUi } from "../score-sheet/tens-ui.js";
@@ -24,4 +24,5 @@ export function render() {
   renderScoringMode(state);
   syncScoreTensUi(state.scoreTensMode);
   renderProgress(state, assignment);
+  renderHistoryButtons();
 }

@@ -1,5 +1,5 @@
-import { getCurrentAssignment, getAssignmentStats } from "../state.js";
-import { quickRenameInput, quickSubjectSelect, quickCurrentSubject, quickCurrentStats } from "../dom-refs.js";
+import { getCurrentAssignment, getAssignmentStats, canUndo, canRedo } from "../state.js";
+import { quickRenameInput, quickSubjectSelect, quickCurrentSubject, quickCurrentStats, undoButton, redoButton } from "../dom-refs.js";
 
 export function renderQuickPanel() {
   const current = getCurrentAssignment();
@@ -27,6 +27,11 @@ export function renderQuickPanel() {
   if (quickSubjectSelect) {
     quickSubjectSelect.value = current.subject || "";
   }
+}
+
+export function renderHistoryButtons() {
+  if (undoButton) undoButton.disabled = !canUndo();
+  if (redoButton) redoButton.disabled = !canRedo();
 }
 
 // Alias for backward compat during migration

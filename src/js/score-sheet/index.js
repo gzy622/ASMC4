@@ -61,6 +61,7 @@ export function confirmScore() {
   if (!scoreSheetStudent) return;
 
   const score = parseInt(scoreInputValue, 10);
+  const hasScore = !(isNaN(score) || score <= 0);
   if (isNaN(score) || score <= 0) {
     scoreSheetStudent.badge = "";
     scoreSheetStudent.badgeType = "";
@@ -78,16 +79,21 @@ export function confirmScore() {
   scoreSheetStudent.updatedAt = new Date().toISOString();
   saveAppState();
   render();
-  const savedBadge = scoreSheetStudent.badge || "无";
   closeScoreSheet();
-  announce(`已保存：分数 ${savedBadge}${trimmedNote ? `，备注 ${trimmedNote}` : ""}`);
+
+  let message = "已保存备注";
+  if (!hasScore && !trimmedNote) message = "已清空分数";
+  else if (hasScore && !trimmedNote) message = "已保存分数";
+  else if (hasScore && trimmedNote) message = "已保存分数和备注";
+
+  announce(message, { action: "undo" });
 }
 
 export function toggleTensMode() {
   const next = !scoreTensMode;
   syncScoreTensUi(next);
   getState().scoreTensMode = next;
-  saveAppState();
+  saveAppState({ history: false });
 }
 
 function armScoreSheetPointerGuard() {

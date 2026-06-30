@@ -3,7 +3,12 @@ import { normalizeAssignment, normalizeRosterEntry } from "./utils/normalize.js"
 import { clone } from "./utils/clone.js";
 import { defaultStudents, defaultAssignment } from "./data/defaults.js";
 
+const MAX_HISTORY = 50;
+
 let appState = loadAppState();
+let lastSerialized = JSON.stringify(appState);
+const undoStack = [];
+const redoStack = [];
 
 export { defaultStudents };
 
@@ -11,12 +16,54 @@ export function getState() {
   return appState;
 }
 
-export function saveAppState() {
+export function canUndo() {
+  return undoStack.length > 0;
+}
+
+export function canRedo() {
+  return redoStack.length > 0;
+}
+
+function persistSerialized(serialized) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    localStorage.setItem(STORAGE_KEY, serialized);
   } catch (error) {
     console.warn("保存失败：localStorage 可能已满", error);
   }
+}
+
+export function saveAppState({ history = true } = {}) {
+  const currentSerialized = JSON.stringify(appState);
+  if (currentSerialized === lastSerialized) return;
+
+  if (history) {
+    undoStack.push(JSON.parse(lastSerialized));
+    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  }
+  redoStack.length = 0;
+
+  lastSerialized = currentSerialized;
+  persistSerialized(currentSerialized);
+}
+
+export function undoAppState() {
+  if (!canUndo()) return false;
+
+  redoStack.push(clone(appState));
+  appState = clone(undoStack.pop());
+  lastSerialized = JSON.stringify(appState);
+  persistSerialized(lastSerialized);
+  return true;
+}
+
+export function redoAppState() {
+  if (!canRedo()) return false;
+
+  undoStack.push(clone(appState));
+  appState = clone(redoStack.pop());
+  lastSerialized = JSON.stringify(appState);
+  persistSerialized(lastSerialized);
+  return true;
 }
 
 export function getCurrentAssignment() {
