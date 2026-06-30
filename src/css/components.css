@@ -654,6 +654,14 @@
       gap: 12px;
     }
 
+    .settings-section.native-only {
+      display: none;
+    }
+
+    .is-native .settings-section.native-only {
+      display: block;
+    }
+
     .setting-text {
       min-width: 0;
     }

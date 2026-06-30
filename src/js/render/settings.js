@@ -5,7 +5,8 @@ import {
   scoringModeSwitch,
   scoreTensModeSwitch,
   showBarScoringToggleSwitch,
-  showBarStatsSwitch
+  showBarStatsSwitch,
+  hapticsEnabledSwitch
 } from "../dom-refs.js";
 
 function syncSwitch(el, on, labelOn, labelOff) {
@@ -62,5 +63,12 @@ export function renderSettingsState(state) {
     state.scoreTensMode,
     "×10模式已开启，点击关闭",
     "×10模式已关闭，点击开启"
+  );
+
+  syncSwitch(
+    hapticsEnabledSwitch,
+    state.hapticsEnabled !== false,
+    "振动反馈已开启，点击关闭",
+    "振动反馈已关闭，点击开启"
   );
 }

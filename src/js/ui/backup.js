@@ -96,6 +96,7 @@ export function importBackup(file) {
             state.scoreTensMode = Boolean(data.scoreTensMode);
             state.showBarScoringToggle = data.showBarScoringToggle !== false;
             state.showBarStats = data.showBarStats !== false;
+            state.hapticsEnabled = data.hapticsEnabled !== false;
             state.currentAssignmentId = currentAssignmentId;
             state.assignments = assignments;
             state.roster = Array.isArray(data.roster)

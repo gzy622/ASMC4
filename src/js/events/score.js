@@ -13,7 +13,7 @@ import {
   setNoteInputValue,
   setScoreInputValue
 } from "../runtime.js";
-import { hapticLight } from "../utils/haptics.js";
+import { hapticSelection } from "../utils/haptics.js";
 import {
   closeScoreSheet,
   confirmScore,
@@ -46,11 +46,12 @@ export function bindScoreEvents() {
     const button = event.target.closest(".numpad-btn");
     if (!button) return;
 
+    hapticSelection();
+
     const { value, action } = button.dataset;
 
     if (value !== undefined) {
       if (scoreTensMode) {
-        hapticLight();
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
         confirmScore();
         return;

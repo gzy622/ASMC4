@@ -2,6 +2,7 @@ import { undoAppState, redoAppState } from "../state.js";
 import { undoButton, redoButton, appToastAction } from "../dom-refs.js";
 import { render } from "../render/index.js";
 import { announce, hideToast } from "../utils/dom.js";
+import { hapticSelection } from "../utils/haptics.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeConfirm } from "../ui/confirm.js";
 
@@ -19,6 +20,7 @@ function closeTransientEditing() {
 
 export function performUndo() {
   if (!undoAppState()) return;
+  hapticSelection();
   closeTransientEditing();
   render();
   hideToast();
@@ -27,6 +29,7 @@ export function performUndo() {
 
 export function performRedo() {
   if (!redoAppState()) return;
+  hapticSelection();
   closeTransientEditing();
   render();
   hideToast();

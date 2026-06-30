@@ -101,7 +101,7 @@
 
     <aside class="drawer" id="assignmentDrawer" aria-label="作业项目列表" aria-hidden="true">
       <div class="drawer-head">
-        <div class="drawer-title">AssignmentCheck</div>
+        <div class="drawer-title" id="drawerTitle"></div>
         <button class="panel-close" id="drawerCloseButton" type="button" aria-label="关闭作业列表">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
@@ -293,6 +293,19 @@
               <p class="setting-desc">打分面板数字键按一次相当于输入十位。</p>
             </div>
             <button class="switch" id="scoreTensModeSwitch" type="button" aria-label="切换×10模式">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section native-only">
+          <div class="settings-section-title">触感</div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">振动反馈</p>
+              <p class="setting-desc">开关、打分键盘与撤销操作时的触觉反馈。</p>
+            </div>
+            <button class="switch" id="hapticsEnabledSwitch" type="button" aria-label="切换振动反馈">
               <span class="switch-knob"></span>
             </button>
           </div>

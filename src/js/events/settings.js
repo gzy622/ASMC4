@@ -5,6 +5,7 @@ import {
   scoreTensModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
+  hapticsEnabledSwitch,
   settingsExportBtn,
   settingsImportBtn,
   settingsRosterBtn,
@@ -19,6 +20,7 @@ import { openSettings, closeSettings } from "../ui/settings.js";
 import { renderRosterRows } from "../ui/roster.js";
 import { swapOverlay } from "../ui/overlay.js";
 import { announce } from "../utils/dom.js";
+import { hapticSelection } from "../utils/haptics.js";
 import { render } from "../render/index.js";
 
 export function bindSettingsEvents() {
@@ -28,6 +30,7 @@ export function bindSettingsEvents() {
   scoringModeSwitch.addEventListener("click", toggleScoringMode);
 
   showBarScoringToggleSwitch?.addEventListener("click", () => {
+    hapticSelection();
     const state = getState();
     state.showBarScoringToggle = !(state.showBarScoringToggle !== false);
     saveAppState({ history: false });
@@ -36,6 +39,7 @@ export function bindSettingsEvents() {
   });
 
   showBarStatsSwitch?.addEventListener("click", () => {
+    hapticSelection();
     const state = getState();
     state.showBarStats = !(state.showBarStats !== false);
     saveAppState({ history: false });
@@ -44,12 +48,22 @@ export function bindSettingsEvents() {
   });
 
   scoreTensModeSwitch.addEventListener("click", () => {
+    hapticSelection();
     const state = getState();
     state.scoreTensMode = !state.scoreTensMode;
     setScoreTensMode(state.scoreTensMode);
     saveAppState({ history: false });
     render();
     announce(state.scoreTensMode ? "×10 已开启" : "×10 已关闭");
+  });
+
+  hapticsEnabledSwitch?.addEventListener("click", () => {
+    hapticSelection();
+    const state = getState();
+    state.hapticsEnabled = !(state.hapticsEnabled !== false);
+    saveAppState({ history: false });
+    render();
+    announce(state.hapticsEnabled !== false ? "振动反馈已开启" : "振动反馈已关闭");
   });
 
   settingsExportBtn.addEventListener("click", async () => {

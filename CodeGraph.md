@@ -119,6 +119,12 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - **`[hidden]` 陷阱**：`.icon-button` / `.bar-stats` 须 `[hidden] { display: none !important; }`。
 - 顶栏打分 → `render/scoringMode.js`；已交人数 → `render/progress.js`（`#barStats`）。
 
+### Android 触觉
+
+- `utils/haptics.js`：统一 `Haptics.impact(Light)`；**勿单独** `selectionChanged()`（Android 须先 `selectionStart` 才振）。
+- `state.hapticsEnabled`（默认 true）；设置「振动反馈」用 `.settings-section.native-only`（仅 `body.is-native`）。
+- 触点：键盘、全部 switch、撤销/重做；卡片与打分 sheet 沿用 `hapticLight`。
+
 ### Toast / announce
 
 - 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。

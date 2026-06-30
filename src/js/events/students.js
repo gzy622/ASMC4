@@ -20,6 +20,7 @@ import { handleLongPressEnd, handleLongPressMove, handleLongPressStart } from ".
 import { isStudentForceNone } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
+import { hapticSelection } from "../utils/haptics.js";
 
 export function bindStudentEvents() {
   scoringToggle.addEventListener("click", toggleScoringMode);
@@ -53,6 +54,7 @@ export function bindStudentEvents() {
   });
 
   function toggleHideNames() {
+    hapticSelection();
     const state = getState();
     state.hideNames = !state.hideNames;
     saveAppState({ history: false });

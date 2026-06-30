@@ -8,7 +8,17 @@ const dist = join(__dirname, "dist");
 const src = join(__dirname, "src");
 const watchMode = process.argv.includes("--watch");
 
+function formatBuildVersion(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `b${y}${m}${d}.${h}${min}`;
+}
+
 async function build() {
+  const buildVersion = formatBuildVersion();
   mkdirSync(join(dist, "js"), { recursive: true });
   mkdirSync(join(dist, "css"), { recursive: true });
 
@@ -23,6 +33,9 @@ async function build() {
     chunkNames: "chunks/[name]-[hash]",
     entryNames: "[name]",
     sourcemap: false,
+    define: {
+      __BUILD_VERSION__: JSON.stringify(buildVersion),
+    },
   });
 
   const cssFiles = [
@@ -68,7 +81,7 @@ async function build() {
 
   writeFileSync(join(dist, "index.html"), html);
 
-  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ ok`);
+  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ ok  ${buildVersion}`);
 }
 
 await build();

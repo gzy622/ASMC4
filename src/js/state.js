@@ -129,6 +129,7 @@ function loadAppState() {
     scoreTensMode: false,
     showBarScoringToggle: true,
     showBarStats: true,
+    hapticsEnabled: true,
     currentAssignmentId: defaultAssignment.id,
     assignments: [clone(defaultAssignment)],
     roster: rosterFromDefault()
@@ -166,6 +167,7 @@ function loadAppState() {
       scoreTensMode: Boolean(parsed.scoreTensMode),
       showBarScoringToggle: parsed.showBarScoringToggle !== false,
       showBarStats: parsed.showBarStats !== false,
+      hapticsEnabled: parsed.hapticsEnabled !== false,
       currentAssignmentId,
       assignments,
       roster
