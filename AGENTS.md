@@ -175,6 +175,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-agent-local.ps
 
 **在 Cursor 里查看**：`Ctrl+Shift+J` → **Rules** → **Project Rules**（应见 `ponytail`、`tooling-stack`）；**Skills** 页见 `ponytail-review` 等。`AGENTS.md` 在 **Project Rules** 或 Agent 说明里单独出现。
 
-**Waza**（hunt/check 等）在用户目录 `~/.agents/skills/`，不会出现在本项目 Skills 列表，Agent 仍可按任务读取。
+**Waza**（think/ui/check/hunt/write/learn/read/health）在用户目录 `~/.agents/skills/`，不会出现在本项目 Skills 列表，Agent 仍可按任务读取。
 
 冲突时：**AGENTS.md > `.cursor/rules` > 全局插件注入**。

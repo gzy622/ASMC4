@@ -29,4 +29,4 @@ alwaysApply: true
 
 ## 技能路由
 
-小 bug → ponytail；复发 / 难定位 → **hunt**（`~/.agents/skills/`）；合并前 → **check**；过度设计 → **ponytail-review**（`.cursor/skills/`）。见 AGENTS.md 17–18。
+小 bug → ponytail；复发 / 难定位 → **hunt**（`~/.agents/skills/`）；新方案 → **think**；前端 UI → **ui**；合并前 → **check**；过度设计 → **ponytail-review**（`.cursor/skills/`）。见 AGENTS.md 17–18。
