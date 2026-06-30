@@ -86,11 +86,11 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 ## Agent 会话
 
-按需读取，勿每轮重注入。Cursor 硬开关见 `.cursor/rules/cursor-lean.mdc`。
+按需读取，勿每轮重注入；这里只保留 ASMC4 项目经验。
 
 ### 硬开关
 
-- 不用 browser MCP、不派 Task/explore 子 agent。
+- 不用 browser MCP。
 - DOM/CSS 先推理优先级/数据流；必要时 `node -e`；预览用 `dev.cmd`。
 - ponytail 小 diff；探索类回复短结论。
 
