@@ -16,16 +16,20 @@
 ## 命令
 
 ```bash
-.\dev.cmd                    # 统一预览（交互菜单）
+.\dev.cmd                    # 统一预览（交互菜单 1–6）
 npm run dev                  # 同上（npm）
 npm run build                # 仅构建 dist/
 npm run preview              # 仅静态服务（需先 build）
 npm run cap:sync / cap:open / cap:run
 ```
 
-无线 adb（可选）：`scripts/dev-device.local.json` 的 `adbWireless`；已配对设备无需配置。
+无线 adb（可选）：`scripts/dev-device.local.json` 的 `adbWireless`（无线调试页当前 IP:端口，会变）；`adb devices` 已有设备时可不配。
 
-选项 4（Android）：`gradlew installDebug` + 启动 Activity；签名冲突时自动卸载重装。不用 `cap run`（无线设备上 native-run 不稳定）。
+**dev 会话热键：** B=rebuild dist · R=rebuild+install Android · Q=quit。Web 后台 `serve.mjs` + `--watch`；合并模式 `dev.cmd -Surface full -Target pc|lan|adb` 或菜单 6。
+
+选项 4（Android）：`gradlew installDebug` + 启动 Activity；签名冲突时自动卸载重装。不用 `cap run`（无线设备上 native-run 不稳定）。选项 6 首次 Android 安装失败不杀会话，按 R 重试。
+
+无线日常：**6→2 (LAN)** 预览 Web，同窗口 **R** 装 App；优于 6→3（adb reverse 在无线上常失败，脚本会降级 LAN）。
 
 选项 5 / `build-apk.cmd` / `npm run apk`：构建 APK 到 `apkOutputDir`（默认桌面），供远控下载，无需 adb。
 
@@ -139,6 +143,14 @@ rtk cargo test
 
 - 对话触达压缩说明总量偏高；压缩是补救，不能替代上面几条。
 - 写新设置/新隐藏控件前先 grep 既有同类处理（`[hidden]`、`display:none !important` 模式），一次写对，省掉事后浏览器调试整轮。
+
+**dev.ps1 / 无线 adb（可复用）**
+
+- **Invoke-Adb** 必须 `Invoke-Adb -Command @('devices')` 等形式；禁止 `Invoke-Adb devices` / `Invoke-Adb start-server`（PowerShell 会误绑参数或把 `start-server` 当开关）。
+- **多设备**：`IP:端口` 与 `adb-…_adb-tls-connect._tcp` 并存时，优先 `adbWireless` 的 IP，断开 mDNS 重复项；`Get-AdbReadyDevices` 过滤 adb 帮助文本假序列号。
+- **StrictMode**：管道/`Where-Object` 结果用 `@(...).Count`；字符串插值带端口用 `"${host}:"` 不能 `"$host:"`。
+- **Gradle**：`installDebug` 成败看 `BUILD SUCCESSFUL` / `Installed on N device`，不单信 `$LASTEXITCODE`；装前 `Resolve-AdbDevices` + `ANDROID_SERIAL`。
+- **adb reverse** 无线上常失败 → 自动降级手机 Web 为 LAN URL；排障：`adb kill-server; adb start-server; adb connect IP:端口`。
 
 **顶栏 / 当前作业（可复用）**
 

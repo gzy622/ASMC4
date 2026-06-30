@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { addButton, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput, titleButton } from "../dom-refs.js";
+import { addButton, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
@@ -31,7 +31,6 @@ function blurCenterPanelFocus() {
 }
 
 export function closeAllCenterPanels({ restoreFocus = true } = {}) {
-  const wasQuickPanelOpen = quickPanel.classList.contains("is-open");
   const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
 
   blurCenterPanelFocus();
@@ -45,11 +44,8 @@ export function closeAllCenterPanels({ restoreFocus = true } = {}) {
 
   closeConfirm();
 
-  if (restoreFocus) {
-    requestAnimationFrame(() => {
-      if (wasQuickPanelOpen) titleButton.focus();
-      else if (wasNewAssignmentPanelOpen) addButton.focus();
-    });
+  if (restoreFocus && wasNewAssignmentPanelOpen) {
+    requestAnimationFrame(() => addButton.focus());
   }
 }
 

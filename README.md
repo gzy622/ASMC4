@@ -10,7 +10,7 @@
 dev.cmd
 ```
 
-按菜单选择 1–5；或直接带参数：
+按菜单选择 1–6；或直接带参数：
 
 | 需求 | 命令 |
 |------|------|
@@ -19,10 +19,15 @@ dev.cmd
 | Web · 手机 · adb | `dev.cmd -Surface web -Target adb` |
 | Android 应用 · adb 安装 | `dev.cmd -Surface android` 或选 4 |
 | Android APK · 远控下载 | `build-apk.cmd` 或 `dev.cmd -Surface apk` 或选 5 |
+| **Web + Android 同窗口** | `dev.cmd -Surface full -Target pc\|lan\|adb` 或选 6 |
 
 等价：`npm run dev`（交互菜单）、`npm run apk`（仅构建 APK）。
 
-**无线 adb（可选）：** 若手机已通过 USB 或系统「无线调试」配对，无需配置。仅在没有可见设备时，复制 `scripts/dev-device.example.json` 为 `scripts/dev-device.local.json` 并填入 `adbWireless`（IP:端口）。
+**会话内热键**（Web / Android / 选项 6）：**B** 手动重建 dist · **R** 重建并安装 Android · **Q** 退出。后台 `--watch` 保存即编译；Web 刷新浏览器，Android 按 **R**。
+
+**日常无线推荐：** 选 **6 → 2 (LAN)** 做手机浏览器预览；同一窗口按 **R** 推 Android。比 **adb reverse**（6→3）更稳。
+
+**无线 adb（可选）：** 复制 `scripts/dev-device.example.json` 为 `scripts/dev-device.local.json` 并填入 `adbWireless`（手机「无线调试」页当前 **IP:端口**，每次配对可能变）。已 `adb devices` 可见设备时可不配。
 
 **选项 5 / `build-apk.cmd`：** 构建 APK 并复制到指定目录（默认桌面），无需 adb。适合用手机远控电脑后，通过远控软件把 APK 下载到手机安装。
 
@@ -37,7 +42,7 @@ dev.cmd
 
 `apkVariant` 为 `release` 时需项目根目录有 `asmc4.keystore`，否则自动退回 `debug`。
 
-**Android 选项 4：** 使用 `gradlew installDebug` 安装（不用 `cap run`）；若与已装正式版签名冲突会自动卸载后重装。
+**Android 选项 4 / 6：** `gradlew installDebug` + 启动 Activity（不用 `cap run`）；签名冲突自动卸载重装。选项 6 下 Android 首次安装失败不退出，按 **R** 重试。
 
 **构建：** `npm run build`（仅打包，不预览）
 
