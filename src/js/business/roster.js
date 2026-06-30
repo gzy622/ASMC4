@@ -3,8 +3,6 @@ import { STATUS } from "../constants.js";
 
 export function applyRosterToAllAssignments(newRoster) {
   const state = getState();
-  const rosterMap = new Map();
-  newRoster.forEach(entry => rosterMap.set(entry.id, entry));
 
   state.assignments.forEach(assignment => {
     const oldMap = new Map();
