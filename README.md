@@ -1,6 +1,6 @@
 # ASMC4
 
-纯前端作业管理应用。数据：`localStorage["asmc4_assignments_v1"]`。
+静态前端打分系统；Web 与 Capacitor Android（`android/`）。数据：`localStorage["asmc4_assignments_v1"]`。
 
 ## 预览（统一入口）
 
@@ -44,21 +44,39 @@ dev.cmd
 
 **Android 选项 4 / 6：** `gradlew installDebug` + 启动 Activity（不用 `cap run`）；签名冲突自动卸载重装。选项 6 下 Android 首次安装失败不退出，按 **R** 重试。
 
-**构建：** `npm run build`（仅打包，不预览）
+**构建：** `npm run build`（仅打包到 `dist/`，不预览）
 
 旧脚本 `preview.cmd` / `start-lan.cmd` / `start-usb-preview.cmd` 仍可用，内部转发到 `dev.cmd`。
 
+## 验证
+
+```powershell
+node build.mjs
+python verify.py
+```
+
 ## 入口
+
+```text
+index.html -> src/js/app.js -> bindEvents() + render()
+```
+
+数据流：`events/` → `business/` → `state.js` → `saveAppState()` → `render()`。
 
 - `src/js/app.js`: 启动
 - `src/js/state.js`: 持久状态
 - `src/js/runtime.js`: 运行时可变状态
 - `src/js/dom-refs.js`: DOM 引用
+- `src/js/data/defaults.js`: 默认值
+- `src/js/constants.js`: 全局常量
+- `src/js/native-shim.js`: Android 原生桥接垫片
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
 - `src/js/render/`: 渲染
 - `src/js/ui/`: 面板
+- `src/js/score-sheet/`: 打分
 - `src/js/gestures/`: 手势
 - `src/js/utils/`: 工具
+- `src/css/`: 样式
 
 详细结构：[CodeGraph.md](CodeGraph.md)。硬约束：[AGENTS.md](AGENTS.md)。
