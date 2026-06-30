@@ -15,7 +15,7 @@ function syncSwitch(el, on, labelOn, labelOff) {
   el.setAttribute("aria-label", on ? labelOn : labelOff);
 }
 
-export function renderSettingsState(state) {
+export function syncHideNameSwitches(state) {
   const showRealNames = !state.hideNames;
   const hideNameLabels = [
     "当前显示真实姓名，点击后隐藏",
@@ -23,6 +23,10 @@ export function renderSettingsState(state) {
   ];
   syncSwitch(hideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
   syncSwitch(quickHideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
+}
+
+export function renderSettingsState(state) {
+  syncHideNameSwitches(state);
 
   const scoringLabels = [
     "打分模式已开启，点击关闭",

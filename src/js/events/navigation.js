@@ -104,11 +104,11 @@ export function bindNavigationEvents() {
   newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
   newAssignmentCancelButton.addEventListener("click", closeAllCenterPanels);
 
-  titleButton.addEventListener("click", openQuickPanel);
+  titleButton.addEventListener("click", () => openQuickPanel());
   titleButton.addEventListener("keydown", event => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      openQuickPanel();
+      openQuickPanel({ focusName: true });
     }
   });
   quickPanelCloseButton.addEventListener("click", closeAllCenterPanels);

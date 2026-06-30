@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput, titleButton } from "../dom-refs.js";
+import { addButton, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput, titleButton } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
@@ -8,7 +8,7 @@ import { makeDefaultAssignmentTitle } from "../utils/id.js";
 export function openNewAssignmentPanel() {
   closeScoreSheet();
   closeDrawer();
-  closeAllCenterPanels();
+  closeAllCenterPanels({ restoreFocus: false });
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -30,7 +30,10 @@ function blurCenterPanelFocus() {
   }
 }
 
-export function closeAllCenterPanels() {
+export function closeAllCenterPanels({ restoreFocus = true } = {}) {
+  const wasQuickPanelOpen = quickPanel.classList.contains("is-open");
+  const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
+
   blurCenterPanelFocus();
   closeScoreSheet();
 
@@ -41,22 +44,27 @@ export function closeAllCenterPanels() {
   newAssignmentPanel.setAttribute("aria-hidden", "true");
 
   closeConfirm();
+
+  if (restoreFocus) {
+    requestAnimationFrame(() => {
+      if (wasQuickPanelOpen) titleButton.focus();
+      else if (wasNewAssignmentPanelOpen) addButton.focus();
+    });
+  }
 }
 
-export function openQuickPanel() {
+export function openQuickPanel({ focusName = false } = {}) {
   closeScoreSheet();
   closeDrawer();
-  closeAllCenterPanels();
+  closeAllCenterPanels({ restoreFocus: false });
   renderQuickPanel();
 
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
 
-  requestAnimationFrame(() => {
-    if (document.activeElement === titleButton && quickRenameInput) {
-      quickRenameInput.focus();
-    }
-  });
+  if (focusName) {
+    requestAnimationFrame(() => quickRenameInput?.focus());
+  }
 }
 
 export function commitQuickPanelOpen() {
