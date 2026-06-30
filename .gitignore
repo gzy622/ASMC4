@@ -14,6 +14,7 @@ reasonix.toml
 .cursorrules
 .opencode/
 opencode.json
+headroom_memory.db
 
 # Agent-local device config (wireless adb address)
 scripts/dev-device.local.json
