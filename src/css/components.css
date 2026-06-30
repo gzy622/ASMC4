@@ -506,7 +506,8 @@
       background: rgb(244, 244, 244);
     }
     #quickPanel {
-      max-height: none;
+      max-height: 100dvh;
+      max-height: 100lvh;
     }
 
     #quickPanel,
@@ -551,8 +552,10 @@
       align-items: center;
     }
     #quickPanel .panel-body {
-      flex: 0 0 auto;
-      overflow: visible;
+      flex: 0 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
     }
     #quickPanel::after,
