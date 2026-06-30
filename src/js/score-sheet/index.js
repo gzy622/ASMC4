@@ -1,7 +1,7 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreDisplay, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
-import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setNoteInputValue, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
+import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
 import { syncScoreTensUi } from "./tens-ui.js";
 import { getDisplayName } from "../utils/display.js";
 import { render } from "../render/index.js";
@@ -42,6 +42,7 @@ export function openScoreSheet(student, guardPointer = false) {
 
 export function closeScoreSheet() {
   clearScoreSheetPointerGuard();
+  setSuppressNextCardClick(false);
   setScoreSheetStudent(null);
   setScoreInputValue("0");
   setNoteInputValue("");
