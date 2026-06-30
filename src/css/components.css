@@ -505,6 +505,9 @@
       transform: translateY(-100%);
       background: rgb(244, 244, 244);
     }
+    #quickPanel {
+      max-height: none;
+    }
 
     #quickPanel,
     #newAssignmentPanel {
@@ -548,10 +551,8 @@
       align-items: center;
     }
     #quickPanel .panel-body {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      flex: 0 0 auto;
+      overflow: visible;
       touch-action: pan-y;
     }
     #quickPanel::after,
