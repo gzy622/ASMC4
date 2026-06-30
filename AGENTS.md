@@ -159,6 +159,13 @@ rtk cargo test
 - **`[hidden]` 陷阱**：本项 `.icon-button { display: grid }`、`.bar-stats { position: absolute }` 会盖过 UA 的 `[hidden]`，顶栏隐藏须配 `.icon-button[hidden]` / `.bar-stats[hidden] { display: none !important; }`（同 `#quickPanel .assignment-subject-tag[hidden]` 模式）。
 - **渲染落点**：顶栏打分按钮 → `render/scoringMode.js`；顶栏已交人数 → `render/progress.js`（`#barStats`）；打分模式逻辑仍共用 `toggleScoringMode` / `state.scoringMode`。
 
+**Toast / announce（可复用）**
+
+- **批量改文案**：先 `rg 'announce\(' src/`（输出长时用 `rtk rg`）列出全部调用点，按表一次改完；勿逐文件反复 Read 核对（易同一文件读 10+ 次）。
+- **实现落点**：`utils/dom.js`（`announce` / `hideToast`）；带 `action: "undo"|"redo"` 仅 `events/history.js`。普通 `announce()` 会关掉旧 toast 的撤回按钮。
+- **文案约定**：只表达结果，约 4–8 字，不拼作业名/分数/备注；撤回/重做 toast 固定「已撤回」「已重做」，按钮固定「撤回」「重做」。
+- **不进历史**：显示类设置、`selectAssignment` 等用 `saveAppState({ history: false })`，对应 toast 不应带撤回按钮。
+
 ## 多 Agent 栈
 
 | 层级 | 内容 | Git |
