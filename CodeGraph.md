@@ -84,6 +84,48 @@ index.html -> src/js/app.js -> bindEvents() + render()
 2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
 3. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
 
+## Agent 会话
+
+按需读取，勿每轮重注入。Cursor 硬开关见 `.cursor/rules/cursor-lean.mdc`。
+
+### 硬开关
+
+- 不用 browser MCP、不派 Task/explore 子 agent。
+- DOM/CSS 先推理优先级/数据流；必要时 `node -e`；预览用 `dev.cmd`。
+- ponytail 小 diff；探索类回复短结论。
+
+### 读代码
+
+- 先本文件索引 + `Grep`，再 `Read`（带 offset/limit）。
+- 已读文件优先 grep 变更行；`Grep` 限定 `src/` 或具体文件。
+
+### 复发 bug
+
+- 第 2 次复发：读 `~/.agents/skills/hunt/SKILL.md` 定根因。
+- 「设置不生效」：grep `hidden`/`display`/同类设置；`display:grid` 盖 `[hidden]` 时加 `display:none !important`。
+
+### dev.ps1 / 无线 adb
+
+- **Invoke-Adb** 用 `Invoke-Adb -Command @('devices')`；禁止 `Invoke-Adb devices`。
+- 多设备：优先 `adbWireless` IP；`Get-AdbReadyDevices` 过滤假序列号。
+- **StrictMode**：管道结果 `@(...).Count`；端口插值 `"${host}:"` 非 `"$host:"`。
+- **Gradle**：看 `BUILD SUCCESSFUL` / `Installed on N device`；装前 `Resolve-AdbDevices` + `ANDROID_SERIAL`。
+- **adb reverse** 无线常失败 → 降级 LAN；排障 `adb kill-server; adb start-server; adb connect IP:端口`。
+
+### 顶栏 / 当前作业
+
+- `#quickPanel`：`quick-settings-card` 两行；行可点，`switch` 上 `stopPropagation`。
+- `showBarXxx`（默认 true，`!== false`）→ 设置页 switch → `render/*` 设 `hidden`；备份同步 `backup.js`。
+- **`[hidden]` 陷阱**：`.icon-button` / `.bar-stats` 须 `[hidden] { display: none !important; }`。
+- 顶栏打分 → `render/scoringMode.js`；已交人数 → `render/progress.js`（`#barStats`）。
+
+### Toast / announce
+
+- 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。
+- 落点：`utils/dom.js`；undo/redo 仅 `events/history.js`。
+- 文案 4–8 字；撤回/重做 toast 固定「已撤回」「已重做」。
+- 显示类设置、`selectAssignment` 用 `saveAppState({ history: false })`，toast 不带撤回。
+
 ## 约束
 
 - DOM 查询只放在 `dom-refs.js`

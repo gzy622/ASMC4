@@ -1,32 +1,12 @@
 ---
-description: 多 Agent 工具栈（ponytail、RTK、Headroom、Waza）兼容路由
-alwaysApply: true
+description: 多 Agent 工具栈（Codex/OpenCode/Headroom）；跨 Agent 协作时 @ 引用
+alwaysApply: false
 ---
 
 # 工具栈（多 Agent / Windows）
 
-权威顺序：**`AGENTS.md`（项目）> 本文件 > 各 Agent 全局插件**。禁止 Headroom 旧版「所有命令都加 rtk」注入。
+权威顺序：**`AGENTS.md` > 本文件 > 全局插件**。禁止 Headroom「所有命令都加 rtk」。
 
-## 各 Agent 如何加载
-
-| Agent | 项目入口 | ponytail | RTK / Headroom |
-|-------|----------|----------|----------------|
-| **Cursor** | `AGENTS.md` + `.cursor/rules/` | `ponytail.mdc` | Shell 显式 `rtk`；API 可选 Headroom |
-| **Codex App** | `AGENTS.md` | 全局 ponytail 插件 | 同左 |
-| **OpenCode Desktop** | `AGENTS.md` + 本地 `opencode.json` | `.opencode/plugins/ponytail.mjs` | 同左 |
-| **Reasonix Desktop** | `AGENTS.md` + 本地 `reasonix.toml` | AGENTS 规则 | 同左 |
-
-## RTK（与 AGENTS.md 一致）
-
-- **不要**对所有命令无脑加 `rtk`。
-- **使用**：长 `git` 历史、`rtk rg`、长测试/构建输出。
-- **不用**：`node build.mjs`、`python verify.py`、短命令、交互式命令。
-
-## Headroom（可选）
-
-- 启动：`.\scripts\start-headroom-proxy.cmd`
-- 未配置 Cursor Base URL 时仍可用 RTK + ponytail。
-
-## 技能路由
-
-小 bug → ponytail；复发 / 难定位 → **hunt**（`~/.agents/skills/`）；新方案 → **think**；前端 UI → **ui**；合并前 → **check**；过度设计 → **ponytail-review**（`.cursor/skills/`）。见 AGENTS.md 17–18。
+- **RTK**：长 git/rg/测试输出才加；短命令、`node build.mjs`、`python verify.py` 不加。
+- **Headroom**（可选）：`.\scripts\start-headroom-proxy.cmd` → Cursor Base URL `http://127.0.0.1:8787/p/ASMC4/v1`
+- **技能路由**：小 bug → ponytail；复发 → hunt；新方案 → think；UI → ui；合并前 → check；过度设计 → ponytail-review。

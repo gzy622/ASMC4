@@ -1,0 +1,8 @@
+dist/
+node_modules/
+android/app/build/
+android/build/
+android/.gradle/
+.codegraph/
+.deepseek/
+.reasonix/

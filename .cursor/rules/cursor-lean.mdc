@@ -1,0 +1,13 @@
+---
+description: Cursor 加速硬开关（单模型直出，对齐 Codex 日常节奏）
+alwaysApply: true
+---
+
+# Cursor 加速
+
+- **单线程直出**：不派 Task/explore 子 agent；不用 browser MCP（预览用 `dev.cmd`）。
+- **先索引后读**：`CodeGraph.md` + `Grep`（限定 `src/`）→ 必要时 `Read` offset/limit；避免整文件反复读。
+- **域知识按需**：Session 经验在 [CodeGraph.md](../../CodeGraph.md)「Agent 会话」；复发 bug 再读 `~/.agents/skills/hunt/SKILL.md`。
+- **Skills 按需**：默认不读 skill 文件；用户说 review/audit/debt/gain/help 或 `/ponytail-*` 时再读 `docs/ponytail/` 或 `.cursor/skills/`。
+- **RTK**：仅长 git/rg/测试输出加 `rtk`；短命令不加。
+- **回复**：简体中文，短结论；长表格仅用户明确要求。

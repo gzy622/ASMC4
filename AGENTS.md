@@ -114,57 +114,19 @@ rtk cargo test
 - 提交同步只做 `git add`、`git commit`、`git push`，除非用户要求 PR。
 - 最终回复优先短结论。
 
-### Session 经验（可复用）
+域知识与 Session 经验见 [CodeGraph.md](CodeGraph.md)「Agent 会话」（按需读，勿每轮重注入）。
 
-**硬开关（已验证有效）**
+## Cursor 加速（已配置）
 
-- 不用 browser MCP、不派 Task/explore 子 agent（双份上下文）。
-  - 「不用 browser MCP」含自起 HTTP server + CDP 调试。DOM/CSS 行为先在脑中推理优先级/数据流，必要时 `node -e` 跑最小样例；真要预览用 `dev.cmd`。
-- ponytail 小 diff：少抽象、少测试框架；探索类回复短结论，长表格仅用户明确要求时写。
-
-**该用却常漏**
-
-- 多文件 `git diff` / 长 `git log`：显式 `rtk`（见上节）；短 `--stat` 可不用。
-- 同一 bug **第 2 次复发**：先读 `~/.agents/skills/hunt/SKILL.md` 定根因，勿多轮「读文件 → 试 fix」。
-  - 「设置不生效」类 bug 先 grep `hidden`/`display`/现有同类设置的处理，套既有模式；CSS 优先级问题（`display:grid` 盖过 `[hidden]`）无需浏览器即可定根因。
-- 架构/域知识：写进 [CodeGraph.md](CodeGraph.md)（如「手势」），对话里只给结论与路径，避免每 session 重探索。
-
-**读代码**
-
-- 先 `CodeGraph.md` 索引 + `Grep`，再带 `offset/limit` 的 `Read`。
-- 本 session 已读过的文件：优先 grep 变更行，避免整文件反复 Read（上下文压缩后会再读一遍，浪费更大）。
-- `Grep` 默认带 `path` 限定 `src/` 或具体文件，避免扫到 `android/build/`、`dist/` 构建产物。
-
-**任务分工**
-
-- 大 feature 可由低成本 agent 先实现；本 agent 负责验收、根因 fix、文档与提交。
-
-**上下文**
-
-- 对话触达压缩说明总量偏高；压缩是补救，不能替代上面几条。
-- 写新设置/新隐藏控件前先 grep 既有同类处理（`[hidden]`、`display:none !important` 模式），一次写对，省掉事后浏览器调试整轮。
-
-**dev.ps1 / 无线 adb（可复用）**
-
-- **Invoke-Adb** 必须 `Invoke-Adb -Command @('devices')` 等形式；禁止 `Invoke-Adb devices` / `Invoke-Adb start-server`（PowerShell 会误绑参数或把 `start-server` 当开关）。
-- **多设备**：`IP:端口` 与 `adb-…_adb-tls-connect._tcp` 并存时，优先 `adbWireless` 的 IP，断开 mDNS 重复项；`Get-AdbReadyDevices` 过滤 adb 帮助文本假序列号。
-- **StrictMode**：管道/`Where-Object` 结果用 `@(...).Count`；字符串插值带端口用 `"${host}:"` 不能 `"$host:"`。
-- **Gradle**：`installDebug` 成败看 `BUILD SUCCESSFUL` / `Installed on N device`，不单信 `$LASTEXITCODE`；装前 `Resolve-AdbDevices` + `ANDROID_SERIAL`。
-- **adb reverse** 无线上常失败 → 自动降级手机 Web 为 LAN URL；排障：`adb kill-server; adb start-server; adb connect IP:端口`。
-
-**顶栏 / 当前作业（可复用）**
-
-- **当前作业快捷开关**：`#quickPanel` 用 `quick-settings-card` 纵向两行（显示真实姓名、打分模式）；行容器可点，`switch` 上 `stopPropagation` 防双触发；说明文字放设置页，面板保持紧凑。
-- **顶栏显示类设置**：状态字段 `showBarXxx`（默认 `true`，读写用 `!== false` 兼容旧 localStorage）→ 设置页 `switch` → 对应 `render/*` 设 DOM `hidden`；备份导入同步 `backup.js`。
-- **`[hidden]` 陷阱**：本项 `.icon-button { display: grid }`、`.bar-stats { position: absolute }` 会盖过 UA 的 `[hidden]`，顶栏隐藏须配 `.icon-button[hidden]` / `.bar-stats[hidden] { display: none !important; }`（同 `#quickPanel .assignment-subject-tag[hidden]` 模式）。
-- **渲染落点**：顶栏打分按钮 → `render/scoringMode.js`；顶栏已交人数 → `render/progress.js`（`#barStats`）；打分模式逻辑仍共用 `toggleScoringMode` / `state.scoringMode`。
-
-**Toast / announce（可复用）**
-
-- **批量改文案**：先 `rg 'announce\(' src/`（输出长时用 `rtk rg`）列出全部调用点，按表一次改完；勿逐文件反复 Read 核对（易同一文件读 10+ 次）。
-- **实现落点**：`utils/dom.js`（`announce` / `hideToast`）；带 `action: "undo"|"redo"` 仅 `events/history.js`。普通 `announce()` 会关掉旧 toast 的撤回按钮。
-- **文案约定**：只表达结果，约 4–8 字，不拼作业名/分数/备注；撤回/重做 toast 固定「已撤回」「已重做」，按钮固定「撤回」「重做」。
-- **不进历史**：显示类设置、`selectAssignment` 等用 `saveAppState({ history: false })`，对应 toast 不应带撤回按钮。
+| 项 | 配置 |
+|---|---|
+| 硬开关 | `.cursor/rules/cursor-lean.mdc`（alwaysApply） |
+| ponytail | `.cursor/rules/ponytail.mdc`（alwaysApply） |
+| 多 Agent 栈 | `.cursor/rules/tooling-stack.mdc`（**按需 @**，不每轮注入） |
+| Skills | 仅 `ponytail-review` 在 `.cursor/skills/`；其余在 `docs/ponytail/` |
+| 索引排除 | `.cursorignore`（dist/android 构建/node_modules） |
+| MCP | Settings → MCP：**关** `cursor-ide-browser`；可选保留 `cursor-app-control` |
+| 全局 Skills | Settings → Skills：关 canvas/automate/babysit 等与本项目无关项 |
 
 ## 多 Agent 栈
 
@@ -180,7 +142,7 @@ rtk cargo test
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-agent-local.ps1
 ```
 
-**在 Cursor 里查看**：`Ctrl+Shift+J` → **Rules** → **Project Rules**（应见 `ponytail`、`tooling-stack`）；**Skills** 页见 `ponytail-review` 等。`AGENTS.md` 在 **Project Rules** 或 Agent 说明里单独出现。
+**在 Cursor 里查看**：`Ctrl+Shift+J` → **Rules** → **Project Rules**（`ponytail`、`cursor-lean`；`tooling-stack` 按需 @）。**Skills** 页仅 `ponytail-review`；其余见 `docs/ponytail/`。
 
 **Waza**（think/ui/check/hunt/write/learn/read/health）在用户目录 `~/.agents/skills/`，不会出现在本项目 Skills 列表，Agent 仍可按任务读取。
 
