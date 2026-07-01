@@ -2,7 +2,7 @@ import { saveAppState, getState } from "../state.js";
 import { render } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
-import { normalizeAssignment, normalizeRosterEntry } from "../utils/normalize.js";
+import { normalizeAssignment, normalizeRosterFromBackup } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
 import { importBackupInput } from "../dom-refs.js";
 import { isNativePlatform } from "../utils/native.js";
@@ -86,9 +86,9 @@ export function importBackup(file) {
               return;
             }
 
-            const currentAssignmentId = assignments.some(function(item) {
-              return item.id === data.currentAssignmentId;
-            }) ? data.currentAssignmentId : assignments[0].id;
+            const currentAssignment = assignments.find(function(item) {
+              return String(item.id) === String(data.currentAssignmentId);
+            }) || assignments[0];
 
             const state = getState();
             state.hideNames = Boolean(data.hideNames);
@@ -97,11 +97,9 @@ export function importBackup(file) {
             state.showBarScoringToggle = data.showBarScoringToggle !== false;
             state.showBarStats = data.showBarStats !== false;
             state.hapticsEnabled = data.hapticsEnabled !== false;
-            state.currentAssignmentId = currentAssignmentId;
+            state.currentAssignmentId = currentAssignment.id;
             state.assignments = assignments;
-            state.roster = Array.isArray(data.roster)
-              ? data.roster.map(normalizeRosterEntry)
-              : assignments[0].students.map(s => ({ id: s.id, serial: s.serial, name: s.name, nonEnglish: false }));
+            state.roster = normalizeRosterFromBackup(data, assignments[0].students);
 
             saveAppState();
             render();

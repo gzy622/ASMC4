@@ -1,5 +1,5 @@
 import { STORAGE_KEY, STATUS } from "./constants.js";
-import { normalizeAssignment, normalizeRosterEntry } from "./utils/normalize.js";
+import { normalizeAssignment, normalizeRosterFromBackup } from "./utils/normalize.js";
 import { clone } from "./utils/clone.js";
 import { defaultStudents, defaultAssignment } from "./data/defaults.js";
 
@@ -153,13 +153,10 @@ function loadAppState() {
       return fallback;
     }
 
-    const currentAssignmentId = assignments.some(item => item.id === parsed.currentAssignmentId)
-      ? parsed.currentAssignmentId
-      : assignments[0].id;
+    const currentAssignment = assignments.find(item => String(item.id) === String(parsed.currentAssignmentId))
+      || assignments[0];
 
-    const roster = Array.isArray(parsed.roster)
-      ? parsed.roster.map(normalizeRosterEntry)
-      : assignments[0].students.map(s => ({ id: s.id, serial: s.serial, name: s.name, nonEnglish: false }));
+    const roster = normalizeRosterFromBackup(parsed, assignments[0].students);
 
     return {
       hideNames: Boolean(parsed.hideNames),
@@ -168,7 +165,7 @@ function loadAppState() {
       showBarScoringToggle: parsed.showBarScoringToggle !== false,
       showBarStats: parsed.showBarStats !== false,
       hapticsEnabled: parsed.hapticsEnabled !== false,
-      currentAssignmentId,
+      currentAssignmentId: currentAssignment.id,
       assignments,
       roster
     };

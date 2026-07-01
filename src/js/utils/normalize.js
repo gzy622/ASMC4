@@ -54,3 +54,23 @@ export function normalizeRosterEntry(entry, index) {
     nonEnglish: Boolean(entry.nonEnglish)
   };
 }
+
+export function normalizeRosterFromBackup(data, fallbackStudents) {
+  const sourceRoster = Array.isArray(data?.roster) ? data.roster : fallbackStudents;
+  const roster = sourceRoster.map(normalizeRosterEntry);
+  const nonEnglishIds = new Set(
+    Array.isArray(data?.nonEnglishStudents)
+      ? data.nonEnglishStudents.map(item => String(item && item.id))
+      : []
+  );
+
+  if (nonEnglishIds.size > 0) {
+    roster.forEach(item => {
+      if (nonEnglishIds.has(String(item.id))) {
+        item.nonEnglish = true;
+      }
+    });
+  }
+
+  return roster;
+}

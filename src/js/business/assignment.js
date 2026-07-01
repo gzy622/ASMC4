@@ -166,6 +166,13 @@ export function renameAssignment(assignmentId) {
     if (s.value === assignment.subject) opt.selected = true;
     select.appendChild(opt);
   });
+  if (assignment.subject && !SUBJECT_OPTIONS.some(s => s.value === assignment.subject)) {
+    const opt = document.createElement("option");
+    opt.value = assignment.subject;
+    opt.textContent = assignment.subject;
+    opt.selected = true;
+    select.insertBefore(opt, select.firstChild);
+  }
 
   const meta = item.querySelector(".assignment-meta");
   const subjectTag = meta.querySelector(".assignment-subject-tag");
