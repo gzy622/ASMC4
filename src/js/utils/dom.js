@@ -18,6 +18,9 @@ export function hideToast() {
   appToast.hidden = true;
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
+  appToast.style.transition = "";
+  appToast.style.transform = "";
+  appToast.style.willChange = "";
 }
 
 function showToast(message, options = {}) {

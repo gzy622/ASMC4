@@ -988,6 +988,7 @@
       transform: translateY(0);
       opacity: 1;
       pointer-events: auto;
+      touch-action: none;
     }
 
     .app-toast-message {

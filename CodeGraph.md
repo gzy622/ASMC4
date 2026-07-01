@@ -20,7 +20,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/render/`: 渲染（含 7 个模块）
 - `src/js/ui/`: 面板（含 7 个模块）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势（含 7 个模块）
+- `src/js/gestures/`: 手势（含 8 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
@@ -94,11 +94,18 @@ DOM（`index.html` + `dom-refs.js`）：
 
 `.drawer:not(.is-open) { pointer-events: none }`（`components.css`）— 侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
 
+### `#appToast`
+
+- 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。
+- `hideToast()` 须清内联 `transform` / `transition` / `willChange`，避免下次入场动画异常。
+- 可见态 `.app-toast.is-visible` 设 `touch-action: none`，减轻与原生滚动冲突。
+
 ### 改手势后手动测
 
 1. 列表顶下拉打开；面板内、**面板下空白**、学生区上滑关闭。
 2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
-3. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
+3. toast 显示时框内下滑关闭；轻点「撤回/重做」不误关。
+4. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
 
 ## Agent 会话
 
@@ -144,7 +151,7 @@ DOM（`index.html` + `dom-refs.js`）：
 ### Toast / announce
 
 - 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。
-- 落点：`utils/dom.js`；undo/redo 仅 `events/history.js`。
+- 落点：`utils/dom.js`；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`。
 - 文案 4–8 字；撤回/重做 toast 固定「已撤回」「已重做」。
 - 显示类设置、`selectAssignment` 用 `saveAppState({ history: false })`，toast 不带撤回。
 

@@ -4,6 +4,7 @@ import "./gestures/score-swipe.js";
 import "./gestures/drawer-gestures.js";
 import "./gestures/panel-swipe.js";
 import "./gestures/press-feedback.js";
+import "./gestures/toast-swipe.js";
 import "./native-shim.js";
 import "./utils/back-guard.js";
 import { fillSubjectSelect } from "./utils/subject-select.js";
