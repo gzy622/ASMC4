@@ -19,6 +19,21 @@ python verify.py
 - 先读数据流和 caller，再最小 diff；复用现有代码，不主动加依赖/抽象/测试框架。
 - 复杂细节按需读 [CodeGraph.md](CodeGraph.md)。
 
+## 收尾
+
+小改完成后在**同一会话**打 `/ship`（或说「提交同步」）。流程见 [.agents/skills/ship/SKILL.md](.agents/skills/ship/SKILL.md)。
+
+### 文档维护（默认不改）
+
+| diff 命中 | 更新 |
+|-----------|------|
+| 样式 / bugfix / 不改行为 | 否 |
+| DOM id | `index.html` + `dom-refs.js`；打分 sheet → CodeGraph「打分 sheet」 |
+| 手势 | CodeGraph「手势」 |
+| 状态 / 持久化字段 | CodeGraph「数据」+ 硬规则 5 |
+| 预览命令 | `README.md` |
+| agent 约定 | `AGENTS.md` |
+
 ## 硬规则
 
 1. 改 DOM id 同步 `index.html` 和 `src/js/dom-refs.js`。
