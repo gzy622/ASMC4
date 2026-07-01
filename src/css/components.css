@@ -1141,7 +1141,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      letter-spacing: -1px;
     }
 
     .score-display-value {

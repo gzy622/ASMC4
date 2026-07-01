@@ -15,12 +15,15 @@ async function loadHaptics() {
 }
 
 export async function hapticLight() {
-  if (!canHaptic()) return;
-  const { Haptics, ImpactStyle } = await loadHaptics();
-  Haptics.impact({ style: ImpactStyle.Light });
+  if (canHaptic()) {
+    const { Haptics, ImpactStyle } = await loadHaptics();
+    Haptics.impact({ style: ImpactStyle.Light });
+    return;
+  }
+  navigator.vibrate?.(10);
 }
 
-// ponytail: Android selectionChanged() is a no-op until selectionStart(); use impact instead.
+// Android selectionChanged() is a no-op until selectionStart(); use impact instead.
 export async function hapticSelection() {
   return hapticLight();
 }

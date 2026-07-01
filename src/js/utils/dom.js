@@ -14,7 +14,40 @@ function clearToastInlineStyles() {
   appToast.style.transform = "";
   appToast.style.willChange = "";
   appToast.style.opacity = "";
+  void appToast.offsetWidth;
   appToast.style.transition = "";
+}
+
+function hideToastAfterGesture() {
+  appToast.style.transition = "none";
+  appToast.classList.remove("is-visible");
+  appToast.hidden = true;
+  appToastAction.hidden = true;
+  delete appToastAction.dataset.action;
+  void appToast.offsetWidth;
+  appToast.style.transition = "";
+  appToast.style.transform = "";
+  appToast.style.willChange = "";
+  appToast.style.opacity = "";
+}
+
+export function hideToast() {
+  clearTimeout(toastTimer);
+  toastTimer = null;
+  abortToastDismiss();
+
+  const fromGesture =
+    appToast.style.transform !== "" || appToast.style.opacity !== "";
+
+  if (fromGesture) {
+    hideToastAfterGesture();
+    return;
+  }
+
+  appToast.classList.remove("is-visible");
+  appToast.hidden = true;
+  appToastAction.hidden = true;
+  delete appToastAction.dataset.action;
 }
 
 export function setThemeColor(color) {
@@ -22,17 +55,6 @@ export function setThemeColor(color) {
   if (meta) {
     meta.setAttribute("content", color);
   }
-}
-
-export function hideToast() {
-  clearTimeout(toastTimer);
-  toastTimer = null;
-  abortToastDismiss();
-  clearToastInlineStyles();
-  appToast.classList.remove("is-visible");
-  appToast.hidden = true;
-  appToastAction.hidden = true;
-  delete appToastAction.dataset.action;
 }
 
 function showToast(message, options = {}) {
