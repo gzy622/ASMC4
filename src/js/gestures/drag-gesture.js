@@ -17,7 +17,8 @@ export function createVerticalDragGesture(el, {
   shouldStart = () => true,
   onDragStart,
   onProgress,
-  getReleaseSecondary
+  getReleaseSecondary,
+  getCloseTargetPx,
 }) {
   let startY = null;
   let startX = null;
@@ -27,6 +28,8 @@ export function createVerticalDragGesture(el, {
   let lastMoveAt = 0;
   let lastVelocity = 0;
   let releaseAnimating = false;
+  let releaseGeneration = 0;
+  let activeRelease = null;
   let pendingTransform = null;
   let rafId = null;
 
@@ -107,6 +110,27 @@ export function createVerticalDragGesture(el, {
     lastMoveAt = now;
   }
 
+  function abortRelease() {
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    flushTransform();
+    releasePointer();
+    releaseDirection(activePointerId);
+    startY = null;
+    startX = null;
+    dragging = false;
+    currentDelta = 0;
+    activePointerId = null;
+    lastMoveAt = 0;
+    lastVelocity = 0;
+    if (releaseAnimating) {
+      releaseAnimating = false;
+      setOverlayTransitionBusy(false);
+      clearDragStyles();
+    }
+  }
+
   function handlePointerDown(event) {
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
@@ -179,7 +203,10 @@ export function createVerticalDragGesture(el, {
       Math.abs(delta) >= threshold
       || (Math.abs(delta) >= MIN_FLING_DISTANCE && velocity * closeDirection >= FLING_VELOCITY_THRESHOLD)
     );
-    const targetDelta = shouldClose ? closeDirection * targetEl.offsetHeight : 0;
+    const closeTargetPx = getCloseTargetPx
+      ? getCloseTargetPx(targetEl)
+      : targetEl.offsetHeight;
+    const targetDelta = shouldClose ? closeDirection * closeTargetPx : 0;
 
     flushTransform();
     releasePointer();
@@ -192,6 +219,7 @@ export function createVerticalDragGesture(el, {
 
     if (!wasDragging) return;
 
+    const generation = releaseGeneration;
     releaseAnimating = true;
     setOverlayTransitionBusy(true);
     targetEl.style.transform = `translateY(${delta}px)`;
@@ -199,19 +227,25 @@ export function createVerticalDragGesture(el, {
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
     try {
-      const release = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
-      await release.finished;
+      activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      await activeRelease.finished;
+      if (generation !== releaseGeneration) return;
       setOverlayTransitionBusy(false);
       if (shouldClose) {
         onClose();
       }
     } finally {
+      if (generation !== releaseGeneration) {
+        activeRelease = null;
+        return;
+      }
       clearDragStyles();
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
       setOverlayTransitionBusy(false);
       releaseAnimating = false;
+      activeRelease = null;
     }
   }
 
@@ -232,6 +266,8 @@ export function createVerticalDragGesture(el, {
       event.preventDefault();
     }
   }, { passive: false });
+
+  return { abortRelease };
 }
 
 export function createTopSheetOpenGesture(bindEl, {

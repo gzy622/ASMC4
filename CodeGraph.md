@@ -97,14 +97,16 @@ DOM（`index.html` + `dom-refs.js`）：
 ### `#appToast`
 
 - 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。
-- `hideToast()` 须清内联 `transform` / `transition` / `willChange`，避免下次入场动画异常。
+- 关闭位移须与 CSS `translateY(calc(100% + 24px))` 对齐：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
+- `showToast` / `hideToast` 先 `abortToastDismiss()`（`registerToastDismissAbort` ← `abortRelease`），再 `clearToastInlineStyles()`，避免连续操作残留内联样式或过期 `onClose`。
+- `hideToast()` 改状态前 `transition: none`，避免 CSS 与 WAAPI 分段动画。
 - 可见态 `.app-toast.is-visible` 设 `touch-action: none`，减轻与原生滚动冲突。
 
 ### 改手势后手动测
 
 1. 列表顶下拉打开；面板内、**面板下空白**、学生区上滑关闭。
 2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
-3. toast 显示时框内下滑关闭；轻点「撤回/重做」不误关。
+3. toast 显示时框内下滑关闭；轻点「撤回/重做」不误关；连续打分/撤回时 toast 仍可点、可滑、不挡点击。
 4. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
 
 ## Agent 会话

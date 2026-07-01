@@ -3,6 +3,19 @@ import { canUndo, canRedo } from "../state.js";
 
 const TOAST_DURATION_MS = 4000;
 let toastTimer = null;
+let abortToastDismiss = () => {};
+
+export function registerToastDismissAbort(fn) {
+  abortToastDismiss = fn;
+}
+
+function clearToastInlineStyles() {
+  appToast.style.transition = "none";
+  appToast.style.transform = "";
+  appToast.style.willChange = "";
+  appToast.style.opacity = "";
+  appToast.style.transition = "";
+}
 
 export function setThemeColor(color) {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -14,17 +27,18 @@ export function setThemeColor(color) {
 export function hideToast() {
   clearTimeout(toastTimer);
   toastTimer = null;
+  abortToastDismiss();
+  clearToastInlineStyles();
   appToast.classList.remove("is-visible");
   appToast.hidden = true;
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
-  appToast.style.transition = "";
-  appToast.style.transform = "";
-  appToast.style.willChange = "";
 }
 
 function showToast(message, options = {}) {
   clearTimeout(toastTimer);
+  abortToastDismiss();
+  clearToastInlineStyles();
   appToastMessage.textContent = message;
 
   const action = options.action;
