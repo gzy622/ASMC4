@@ -6,6 +6,7 @@ const PRESSABLE = [
   ".icon-button",
   ".title-wrap",
   ".drawer-action-btn",
+  ".assignment-item-action",
   ".assignment-item",
   ".assignment-item-add",
   ".panel-close",
@@ -20,7 +21,7 @@ const PRESSABLE = [
 ].join(",");
 
 const ASSIGNMENT_ITEM_INNER =
-  ".assignment-item-action,.assignment-edit-input,.assignment-edit-subject";
+  ".assignment-item-actions,.assignment-item-action,.assignment-edit-input,.assignment-edit-subject";
 
 const pressed = new Map();
 const releaseTimers = new Map();

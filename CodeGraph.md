@@ -94,6 +94,8 @@ DOM（`index.html` + `dom-refs.js`）：
 
 `.drawer:not(.is-open) { pointer-events: none }`（`components.css`）— 侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
 
+侧栏作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独接 `is-pressed`；父项 `.assignment-item` 的 `:active` / `is-pressed` 须排除 `.assignment-item-actions` 与操作钮，避免点编辑/删除时整条缩放。
+
 ### `#appToast`
 
 - 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。

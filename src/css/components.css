@@ -318,8 +318,8 @@
       touch-action: manipulation;
     }
 
-    .assignment-item:active:not(:has(.assignment-item-action:active)):not(:has(.assignment-edit-input:active)):not(:has(.assignment-edit-subject:active)),
-    .assignment-item.is-pressed {
+    .assignment-item:active:not(:has(.assignment-item-actions:active)):not(:has(.assignment-edit-input:active)):not(:has(.assignment-edit-subject:active)),
+    .assignment-item.is-pressed:not(:has(.assignment-item-action.is-pressed)) {
       transform: scale(0.985);
     }
 
@@ -349,7 +349,13 @@
       cursor: pointer;
       color: var(--muted);
       font-size: 14px;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
+      touch-action: manipulation;
+    }
+
+    .assignment-item-action:active,
+    .assignment-item-action.is-pressed {
+      transform: scale(0.92);
     }
 
     .assignment-item-action:hover {
