@@ -29,11 +29,10 @@ if (Get-Command headroom -ErrorAction SilentlyContinue) {
   }
 } else { Fail 'headroom not in PATH' }
 
-# Local Cursor (gitignored)
-foreach ($r in @('ponytail.mdc', 'tooling-stack.mdc')) {
-  $p = Join-Path $Root ".cursor\rules\$r"
-  if (Test-Path $p) { Pass "local .cursor/rules/$r" } else { Warn "run setup-agent-local.ps1 — missing .cursor/rules/$r" }
-}
+# Optional local Cursor rules (gitignored; AGENTS.md is the project default)
+$toolingRule = Join-Path $Root '.cursor\rules\tooling-stack.mdc'
+if (Test-Path $toolingRule) { Pass 'local .cursor/rules/tooling-stack.mdc' }
+else { Warn 'optional: tooling-stack.mdc via setup-agent-local.ps1' }
 
 # OpenCode local
 if ((Test-Path (Join-Path $Root 'opencode.json')) -and (Test-Path (Join-Path $Root '.opencode\plugins\ponytail.mjs'))) {
@@ -53,10 +52,10 @@ if (Test-Path $cr) {
 # Local Cursor rules/skills must be tracked (not gitignored)
 Push-Location $Root
 try {
-  $tracked = git ls-files .cursor/rules .cursor/skills 2>$null
-  if ($tracked.Count -ge 2) { Pass ".cursor rules/skills tracked in git ($($tracked.Count) files)" }
-  else { Fail '.cursor/ not tracked — Cursor Settings will not list Project Rules' }
-  $ignored = git check-ignore -q .cursor/rules/ponytail.mdc 2>$null; $LASTEXITCODE
+  $tracked = git ls-files .cursor 2>$null
+  if ($tracked.Count -ge 1) { Pass ".cursor tracked in git ($($tracked.Count) files)" }
+  else { Fail '.cursor/ not tracked — pull latest' }
+  $ignored = git check-ignore -q .cursor/user-rules-slim.txt 2>$null; $LASTEXITCODE
   if ($LASTEXITCODE -eq 0) { Fail '.cursor/ is gitignored — remove from .gitignore' }
   else { Pass '.cursor/ not gitignored' }
 } finally { Pop-Location }

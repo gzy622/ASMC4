@@ -331,7 +331,15 @@
         </div>
 
         <div class="score-display-row">
-          <div class="score-display" id="scoreDisplay">0</div>
+          <div class="score-display" id="scoreDisplay">
+            <span class="score-display-value" id="scoreDisplayValue">0</span>
+            <button class="score-display-backspace" id="scoreBackspaceBtn" type="button" aria-label="删除上一位数字" title="删除上一位数字">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 5.5H8.2L3.5 12l4.7 6.5H21V5.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M10.5 9.25l5.5 5.5M16 9.25l-5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="score-numpad">
@@ -346,12 +354,7 @@
           <button class="numpad-btn" data-value="9" type="button">9</button>
           <button class="numpad-btn numpad-btn-function score-tens-btn" id="scoreTensBtn" data-action="tens" type="button">×10</button>
           <button class="numpad-btn" data-value="0" type="button">0</button>
-          <button class="numpad-btn numpad-btn-function numpad-btn-backspace" data-action="backspace" type="button" aria-label="删除上一位数字" title="删除上一位数字">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 5.5H8.2L3.5 12l4.7 6.5H21V5.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M10.5 9.25l5.5 5.5M16 9.25l-5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
+          <button class="numpad-btn numpad-btn-function" data-action="decimal" type="button" aria-label="小数点" title="小数点">.</button>
         </div>
 
         <div class="score-note-wrap">

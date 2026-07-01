@@ -28,7 +28,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `navigation.js`: 抽屉、中心面板、Esc
 - `assignments.js`: 新建、切换、重命名、删除、反选
 - `students.js`: 点击、姓名开关、打分模式、长按
-- `score.js`: 数字键盘、备注、确认/取消
+- `score.js`: 数字键盘、小数点、显示区退格、备注、确认/取消
 - `backup.js`: 导入、导出
 - `settings.js`: 设置页、×10、花名册跳转
 - `roster.js`: 花名册编辑
@@ -53,6 +53,22 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `pendingConfirmAction`, `scoreSheetStudent`, `scoreInputValue`, `scoreTensMode`
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
 - `overlayTransitionBusy`, `pointerDirectionLock`
+
+## 打分 sheet
+
+DOM（`index.html` + `dom-refs.js`）：
+
+- `#scoreDisplay`：显示区容器；数值在 `#scoreDisplayValue`。
+- `#scoreBackspaceBtn`：退格，叠在显示区右侧（不在数字键盘格内）。
+- `.score-numpad`：1–9、×10、`0`、小数点（`data-action="decimal"`，占原退格格位）。
+
+输入（`events/score.js` → `runtime.scoreInputValue`）：
+
+- 整数部分最多 3 位（当前为 `0` 时下一数字键替换）。
+- 小数点后最多 2 位；×10 模式禁用小数点。
+- 确认（`score-sheet/index.js` `confirmScore`）：`parseFloat`，badge 四舍五入到 2 位小数。
+
+按压反馈：`press-feedback.js` 含 `.score-display-backspace`。
 
 ## 手势
 
@@ -123,7 +139,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 - `utils/haptics.js`：统一 `Haptics.impact(Light)`；**勿单独** `selectionChanged()`（Android 须先 `selectionStart` 才振）。
 - `state.hapticsEnabled`（默认 true）；设置「振动反馈」用 `.settings-section.native-only`（仅 `body.is-native`）。
-- 触点：键盘、全部 switch、撤销/重做；卡片与打分 sheet 沿用 `hapticLight`。
+- 触点：键盘、全部 switch、撤销/重做；打分数字键与显示区退格用 `hapticSelection`；卡片与 sheet 开闭沿用 `hapticLight`。
 
 ### Toast / announce
 

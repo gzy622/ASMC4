@@ -12,6 +12,7 @@ const PRESSABLE = [
   ".quick-action-btn",
   ".dialog-button",
   ".numpad-btn",
+  ".score-display-backspace",
   ".score-action-btn",
   ".roster-foot-btn",
   ".roster-row-btn",

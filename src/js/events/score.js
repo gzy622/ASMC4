@@ -1,4 +1,5 @@
 import {
+  scoreBackspaceBtn,
   scoreCancel,
   scoreConfirm,
   scoreNoteClear,
@@ -55,19 +56,33 @@ export function bindScoreEvents() {
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
         confirmScore();
         return;
-      } else if (scoreInputValue === "0") {
-        setScoreInputValue(value);
-      } else if (scoreInputValue.length < 3) {
+      }
+      const dotIndex = scoreInputValue.indexOf(".");
+      if (dotIndex === -1) {
+        if (scoreInputValue === "0") {
+          setScoreInputValue(value);
+        } else if (scoreInputValue.length < 3) {
+          setScoreInputValue(scoreInputValue + value);
+        }
+      } else if (scoreInputValue.length - dotIndex - 1 < 2) {
         setScoreInputValue(scoreInputValue + value);
       }
-    } else if (action === "backspace") {
-      setScoreInputValue(
-        scoreInputValue.length > 1 ? scoreInputValue.slice(0, -1) : "0"
-      );
+    } else if (action === "decimal") {
+      if (!scoreTensMode && !scoreInputValue.includes(".")) {
+        setScoreInputValue(scoreInputValue + ".");
+      }
     } else if (action === "tens") {
       toggleTensMode();
     }
 
+    updateScoreDisplay();
+  });
+
+  scoreBackspaceBtn.addEventListener("click", () => {
+    hapticSelection();
+    setScoreInputValue(
+      scoreInputValue.length > 1 ? scoreInputValue.slice(0, -1) : "0"
+    );
     updateScoreDisplay();
   });
 }

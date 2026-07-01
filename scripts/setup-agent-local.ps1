@@ -18,12 +18,12 @@ if (-not (Test-Path $Tpl)) {
 
 Write-Host "`nASMC4 setup-agent-local (Windows)`n"
 
-# Cursor: tracked in .cursor/ — only verify
-$rule = Join-Path $Root '.cursor\rules\ponytail.mdc'
-if (Test-Path $rule) {
-  Write-Host "  [ok] Cursor: .cursor/rules + .cursor/skills (in repo)"
+# Cursor: project guidance in AGENTS.md + .cursor/ (tracked)
+$cursorDir = Join-Path $Root '.cursor'
+if (Test-Path $cursorDir) {
+  Write-Host "  [ok] Cursor: AGENTS.md + .cursor/ (in repo)"
 } else {
-  Write-Warning "  [warn] missing .cursor/rules — pull latest or restore from git"
+  Write-Warning "  [warn] missing .cursor/ — pull latest"
 }
 
 # OpenCode

@@ -1,6 +1,6 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
-import { scoreSheet, scoreDisplay, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
+import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
 import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
 import { syncScoreTensUi } from "./tens-ui.js";
 import { getDisplayName } from "../utils/display.js";
@@ -55,20 +55,21 @@ export function closeScoreSheet() {
 }
 
 export function updateScoreDisplay() {
-  scoreDisplay.textContent = scoreInputValue;
+  scoreDisplayValue.textContent = scoreInputValue;
 }
 
 export function confirmScore() {
   if (!scoreSheetStudent) return;
 
-  const score = parseInt(scoreInputValue, 10);
+  const score = parseFloat(scoreInputValue);
   const hasScore = !(isNaN(score) || score <= 0);
   if (isNaN(score) || score <= 0) {
     scoreSheetStudent.badge = "";
     scoreSheetStudent.badgeType = "";
     scoreSheetStudent.status = STATUS.NORMAL;
   } else {
-    scoreSheetStudent.badge = String(score);
+    const rounded = Math.round(score * 100) / 100;
+    scoreSheetStudent.badge = String(rounded);
     scoreSheetStudent.badgeType = "score";
     scoreSheetStudent.status = STATUS.REGISTERED;
   }

@@ -77,6 +77,9 @@
 
       .score-display {
         min-height: 68px;
+      }
+
+      .score-display-value {
         font-size: 42px;
       }
 

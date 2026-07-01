@@ -1,6 +1,6 @@
 # Agent 本地模板（OpenCode / Reasonix）
 
-Cursor 的 **Rules / Skills** 在仓库根 `.cursor/`（已纳入 Git，Settings 里可见）。
+Cursor 项目说明见 **AGENTS.md**；`.cursor/` 仅保留少量共享配置（已纳入 Git）。
 
 本目录仅保留其它 Agent 的本机模板：
 
