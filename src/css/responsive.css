@@ -1,7 +1,7 @@
     @media (min-width: 431px) {
       .phone {
         border-radius: 28px;
-        box-shadow: 0 22px 70px rgba(0,0,0,0.18);
+        box-shadow: var(--phone-shadow);
       }
     }
 
