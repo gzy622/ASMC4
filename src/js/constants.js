@@ -2,7 +2,7 @@ export const STORAGE_KEY = "asmc4_assignments_v1";
 
 export const STATUS = {
   NORMAL: "normal",
-  REGISTERED: "registered",
+  SUBMITTED: "submitted",
   NONE: "none"
 };
 

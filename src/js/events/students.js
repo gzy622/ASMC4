@@ -1,7 +1,7 @@
 import {
   grid,
-  hideNameSwitch,
-  quickHideNameSwitch,
+  showRealNameSwitch,
+  quickShowRealNameSwitch,
   quickScoringModeSwitch,
   scoringToggle
 } from "../dom-refs.js";
@@ -53,13 +53,13 @@ export function bindStudentEvents() {
     }
   });
 
-  function toggleHideNames() {
+  function toggleShowRealNames() {
     hapticSelection();
     const state = getState();
-    state.hideNames = !state.hideNames;
+    state.showRealNames = !state.showRealNames;
     saveAppState({ history: false });
     render();
-    announce(state.hideNames ? "已隐藏姓名" : "已显示姓名");
+    announce(state.showRealNames ? "已显示姓名" : "已隐藏姓名");
   }
 
   function bindQuickSettingRow(rowEl, switchEl, toggleFn) {
@@ -70,11 +70,11 @@ export function bindStudentEvents() {
     });
   }
 
-  hideNameSwitch?.addEventListener("click", toggleHideNames);
+  showRealNameSwitch?.addEventListener("click", toggleShowRealNames);
   bindQuickSettingRow(
-    quickHideNameSwitch?.closest(".quick-setting-row"),
-    quickHideNameSwitch,
-    toggleHideNames
+    quickShowRealNameSwitch?.closest(".quick-setting-row"),
+    quickShowRealNameSwitch,
+    toggleShowRealNames
   );
   bindQuickSettingRow(
     quickScoringModeSwitch?.closest(".quick-setting-row"),

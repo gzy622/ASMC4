@@ -7,7 +7,7 @@ const longPressTimers = new Map();
 let longPressTriggered = false;
 let suppressNextCardClick = false;
 
-let overlayTransitionBusy = false;
+let drawerPanelTransitionBusy = false;
 let pointerDirectionLock = null;
 let pointerDirectionLockId = null;
 
@@ -20,7 +20,7 @@ export {
   longPressTimers,
   longPressTriggered,
   suppressNextCardClick,
-  overlayTransitionBusy
+  drawerPanelTransitionBusy
 };
 
 export function setPendingConfirmAction(val) { pendingConfirmAction = val; }
@@ -43,7 +43,7 @@ export function clearAllLongPressTimers() {
 }
 export function setLongPressTriggered(val) { longPressTriggered = val; }
 export function setSuppressNextCardClick(val) { suppressNextCardClick = val; }
-export function setOverlayTransitionBusy(val) { overlayTransitionBusy = val; }
+export function setDrawerPanelTransitionBusy(val) { drawerPanelTransitionBusy = val; }
 export function claimDirection(pointerId, dir) {
   if (pointerDirectionLockId !== null && pointerDirectionLockId !== pointerId) {
     return null;

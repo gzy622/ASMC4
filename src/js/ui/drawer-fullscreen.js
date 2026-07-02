@@ -1,19 +1,11 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { closeFloatingPanels } from "./panels.js";
 import { drawer } from "../dom-refs.js";
-import {
-  expandDrawer,
-  contractDrawer,
-  snapResetDrawer,
-  snapPrepareDrawer
-} from "./drawer.js";
-import {
-  overlayTransitionBusy,
-  setOverlayTransitionBusy
-} from "../runtime.js";
 import { getState } from "../state.js";
-import { renderAssignmentList } from "../render/assignmentList.js";
 import { setThemeColor } from "../utils/dom.js";
+import { renderAssignmentList } from "../render/assignmentList.js";
+import { closeFloatingPanels } from "./panels.js";
+import { expandDrawer, contractDrawer, snapResetDrawer, snapPrepareDrawer } from "./drawer.js";
+import { drawerPanelTransitionBusy, setDrawerPanelTransitionBusy } from "../runtime.js";
 
 const EXPAND_DURATION = 280;
 const CONTENT_FADE = 180;
@@ -22,9 +14,9 @@ function wait(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-export async function openOverlay(panel, renderFn) {
-  if (overlayTransitionBusy) return;
-  setOverlayTransitionBusy(true);
+export async function openDrawerFullscreenPanel(panel, renderFn) {
+  if (drawerPanelTransitionBusy) return;
+  setDrawerPanelTransitionBusy(true);
 
   closeScoreSheet();
   closeFloatingPanels();
@@ -44,12 +36,12 @@ export async function openOverlay(panel, renderFn) {
 
   snapResetDrawer();
 
-  setOverlayTransitionBusy(false);
+  setDrawerPanelTransitionBusy(false);
 }
 
-export async function swapOverlay(fromPanel, toPanel, renderFn) {
-  if (overlayTransitionBusy) return;
-  setOverlayTransitionBusy(true);
+export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
+  if (drawerPanelTransitionBusy) return;
+  setDrawerPanelTransitionBusy(true);
 
   fromPanel.classList.add("is-closing");
   fromPanel.classList.remove("is-open");
@@ -65,12 +57,12 @@ export async function swapOverlay(fromPanel, toPanel, renderFn) {
   await wait(CONTENT_FADE);
 
   snapResetDrawer();
-  setOverlayTransitionBusy(false);
+  setDrawerPanelTransitionBusy(false);
 }
 
-export async function closeOverlay(panel) {
-  if (overlayTransitionBusy) return;
-  setOverlayTransitionBusy(true);
+export async function closeDrawerFullscreenPanel(panel) {
+  if (drawerPanelTransitionBusy) return;
+  setDrawerPanelTransitionBusy(true);
 
   panel.classList.add("is-closing");
   panel.classList.remove("is-open");
@@ -87,5 +79,5 @@ export async function closeOverlay(panel) {
 
   setThemeColor("#f4f4f4");
 
-  setOverlayTransitionBusy(false);
+  setDrawerPanelTransitionBusy(false);
 }

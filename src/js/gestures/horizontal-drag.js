@@ -1,6 +1,6 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { claimDirection, releaseDirection, setOverlayTransitionBusy } from "../runtime.js";
+import { claimDirection, releaseDirection, setDrawerPanelTransitionBusy } from "../runtime.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -190,21 +190,21 @@ export function createHorizontalDragGesture(bindEl, {
 
     if (wasDragging) {
       releaseAnimating = true;
-      setOverlayTransitionBusy(true);
+      setDrawerPanelTransitionBusy(true);
       targetEl.style.transform = `translateX(${releasedPx}px)`;
       const secondaryTarget = getReleaseSecondary
         ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
         : null;
       try {
         await animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget).finished;
-        setOverlayTransitionBusy(false);
+        setDrawerPanelTransitionBusy(false);
         if (onRelease) onRelease(dx, wasDragging, velocity);
       } finally {
         clearDragStyles();
         if (secondaryTarget) {
           secondaryTarget.el.style[secondaryTarget.prop] = "";
         }
-        setOverlayTransitionBusy(false);
+        setDrawerPanelTransitionBusy(false);
         releaseAnimating = false;
       }
     }

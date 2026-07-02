@@ -13,7 +13,7 @@ import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
 import { closeFloatingPanels } from "../ui/panels.js";
 import { closeDrawer } from "../ui/drawer.js";
-import { overlayTransitionBusy } from "../runtime.js";
+import { drawerPanelTransitionBusy } from "../runtime.js";
 import { isNativePlatform } from "./native.js";
 
 const OVERLAY_ELS = [
@@ -60,7 +60,7 @@ if (!isNativePlatform()) {
   window.addEventListener("popstate", () => {
     if (!barrierActive) return;
     barrierActive = false;
-    if (overlayTransitionBusy) { ensureBarrier(); return; }
+    if (drawerPanelTransitionBusy) { ensureBarrier(); return; }
     if (anyOverlayOpen()) {
       closeTopmostOverlay();
       if (anyOverlayOpen()) ensureBarrier();

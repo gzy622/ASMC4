@@ -71,7 +71,7 @@ export function confirmScore() {
     const rounded = Math.round(score * 100) / 100;
     scoreSheetStudent.badge = String(rounded);
     scoreSheetStudent.badgeType = "score";
-    scoreSheetStudent.status = STATUS.REGISTERED;
+    scoreSheetStudent.status = STATUS.SUBMITTED;
   }
 
   const trimmedNote = noteInputValue.trim();

@@ -101,30 +101,30 @@
       z-index: 2;
     }
 
-    .student-card.is-registered {
+    .student-card.is-submitted {
       background-color: #16302a;
       box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
         0 1px 0 rgba(0, 0, 0, 0.14);
     }
 
-    .student-card.is-registered .name {
+    .student-card.is-submitted .name {
       color: #f0fbf5;
     }
 
-    .student-card.is-registered .serial {
+    .student-card.is-submitted .serial {
       color: rgba(255, 255, 255, 0.10);
     }
 
-    .student-card.is-registered .badge {
+    .student-card.is-submitted .badge {
       color: #a7d4bb;
     }
 
-    .student-card.is-registered .note-text {
+    .student-card.is-submitted .note-text {
       color: #9bc4ab;
     }
 
-    .student-card.is-registered:focus-visible {
+    .student-card.is-submitted:focus-visible {
       outline: 1px solid rgba(255, 255, 255, 0.4);
       outline-offset: -1px;
     }
@@ -1342,7 +1342,7 @@
       display: flex;
     }
 
-    .roster-editor {
+    .fullscreen-panel {
       position: absolute;
       inset: 0;
       z-index: 70;
@@ -1353,26 +1353,26 @@
       visibility: hidden;
     }
 
-    .roster-editor.is-open,
-    .roster-editor.is-closing {
+    .fullscreen-panel.is-open,
+    .fullscreen-panel.is-closing {
       pointer-events: auto;
       visibility: visible;
     }
 
-    .roster-editor > * {
+    .fullscreen-panel > * {
       opacity: 0;
       transition: opacity 180ms var(--motion);
     }
 
-    .roster-editor.is-open > * {
+    .fullscreen-panel.is-open > * {
       opacity: 1;
     }
 
-    .roster-editor.no-anim > * {
+    .fullscreen-panel.no-anim > * {
       transition: none !important;
     }
 
-    .roster-editor-head {
+    .fullscreen-panel-head {
       height: 52px;
       padding: 0 16px;
       border-bottom: 1px solid var(--line);
@@ -1381,24 +1381,24 @@
       justify-content: space-between;
       flex-shrink: 0;
     }
-    .is-native .roster-editor-head {
+    .is-native .fullscreen-panel-head {
       padding-top: env(safe-area-inset-top);
       height: calc(52px + env(safe-area-inset-top));
     }
 
-    .roster-editor-body {
+    .fullscreen-panel-body {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 8px 12px;
     }
 
-    .roster-editor-body::-webkit-scrollbar {
+    .fullscreen-panel-body::-webkit-scrollbar {
       width: 0;
       height: 0;
     }
 
-    .roster-editor-foot {
+    .fullscreen-panel-foot {
       flex-shrink: 0;
       padding: 10px 12px;
       border-top: 1px solid var(--line);
@@ -1406,7 +1406,7 @@
       flex-direction: column;
       gap: 10px;
     }
-    .is-native .roster-editor-foot {
+    .is-native .fullscreen-panel-foot {
       padding-bottom: calc(10px + env(safe-area-inset-bottom));
     }
 

@@ -22,13 +22,13 @@ export function getEffectiveStatus(student, assignment) {
 
 export function getStateClass(student, assignment) {
   const status = getEffectiveStatus(student, assignment);
-  if (status === STATUS.REGISTERED) return "is-registered";
+  if (status === STATUS.SUBMITTED) return "is-submitted";
   if (status === STATUS.NONE) return "no-registration";
   return "";
 }
 
 export function getDisplayName(student, index) {
-  if (!getState().hideNames) return student.name;
+  if (getState().showRealNames) return student.name;
   return getStemBranchName(index);
 }
 
@@ -50,7 +50,7 @@ export function getCardAriaLabel(student, index, assignment) {
 }
 
 export function getStatusText(status) {
-  if (status === STATUS.REGISTERED) return "已登记";
+  if (status === STATUS.SUBMITTED) return "已交";
   if (status === STATUS.NONE) return "无登记";
   return "普通状态";
 }

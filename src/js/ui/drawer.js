@@ -3,20 +3,20 @@ import { drawer } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { overlayTransitionBusy, setOverlayTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
+import { drawerPanelTransitionBusy, setDrawerPanelTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
 
 const DRAWER_TRANSITION_MS = 320;
 
 export function openDrawer({ withTransitionLock = true } = {}) {
-  if (overlayTransitionBusy) return;
+  if (drawerPanelTransitionBusy) return;
   closeScoreSheet();
   renderAssignmentList(getState());
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
-    setOverlayTransitionBusy(true);
-    setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+    setDrawerPanelTransitionBusy(true);
+    setTimeout(() => setDrawerPanelTransitionBusy(false), DRAWER_TRANSITION_MS);
   }
 }
 
@@ -28,8 +28,8 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   drawer.setAttribute("aria-hidden", "true");
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
-    setOverlayTransitionBusy(true);
-    setTimeout(() => setOverlayTransitionBusy(false), DRAWER_TRANSITION_MS);
+    setDrawerPanelTransitionBusy(true);
+    setTimeout(() => setDrawerPanelTransitionBusy(false), DRAWER_TRANSITION_MS);
   }
 }
 

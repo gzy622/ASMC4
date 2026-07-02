@@ -90,7 +90,7 @@ export function getAssignmentStats(assignment) {
     return true;
   });
 
-  const submitted = activeStudents.filter(student => student.status === STATUS.REGISTERED).length;
+  const submitted = activeStudents.filter(student => student.status === STATUS.SUBMITTED).length;
   const total = activeStudents.length;
 
   return {
@@ -124,7 +124,7 @@ function loadAppState() {
   }));
 
   const fallback = {
-    hideNames: false,
+    showRealNames: true,
     scoringMode: false,
     scoreTensMode: false,
     showBarScoringToggle: true,
@@ -159,7 +159,7 @@ function loadAppState() {
     const roster = normalizeRosterFromBackup(parsed, assignments[0].students);
 
     return {
-      hideNames: Boolean(parsed.hideNames),
+      showRealNames: parsed.showRealNames !== false,
       scoringMode: Boolean(parsed.scoringMode),
       scoreTensMode: Boolean(parsed.scoreTensMode),
       showBarScoringToggle: parsed.showBarScoringToggle !== false,

@@ -13,7 +13,7 @@ import { closeRosterEditor } from "./ui/roster.js";
 import { closeSettings } from "./ui/settings.js";
 import { closeFloatingPanels } from "./ui/panels.js";
 import { closeDrawer } from "./ui/drawer.js";
-import { overlayTransitionBusy } from "./runtime.js";
+import { drawerPanelTransitionBusy } from "./runtime.js";
 import { isNativePlatform } from "./utils/native.js";
 
 (async () => {
@@ -35,7 +35,7 @@ import { isNativePlatform } from "./utils/native.js";
   });
 
   App.addListener("backButton", () => {
-    if (overlayTransitionBusy) return;
+    if (drawerPanelTransitionBusy) return;
 
     if (confirmScrim.classList.contains("is-open")) {
       closeConfirm();

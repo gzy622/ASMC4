@@ -10,10 +10,10 @@ import {
   rosterEditorPanel,
   rosterEditorList
 } from "../dom-refs.js";
-import { closeOverlay } from "./overlay.js";
+import { closeDrawerFullscreenPanel } from "./drawer-fullscreen.js";
 
 export async function closeRosterEditor() {
-  return closeOverlay(rosterEditorPanel);
+  return closeDrawerFullscreenPanel(rosterEditorPanel);
 }
 
 export function renderRosterRows(roster) {

@@ -170,7 +170,7 @@
         <div class="quick-settings-card">
           <div class="quick-setting-row">
             <span class="quick-setting-label">显示真实姓名</span>
-            <button class="switch" id="quickHideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+            <button class="switch" id="quickShowRealNameSwitch" type="button" aria-label="切换是否显示真实姓名">
               <span class="switch-knob"></span>
             </button>
           </div>
@@ -213,8 +213,8 @@
       </div>
     </section>
 
-    <section class="roster-editor" id="rosterEditorPanel" aria-label="编辑学生名单" aria-hidden="true">
-      <div class="roster-editor-head">
+    <section class="fullscreen-panel" id="rosterEditorPanel" aria-label="编辑学生名单" aria-hidden="true">
+      <div class="fullscreen-panel-head">
         <div class="panel-title">编辑名单</div>
         <button class="panel-close" id="rosterEditorClose" type="button" aria-label="关闭名单编辑">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -223,9 +223,9 @@
         </button>
       </div>
 
-      <div class="roster-editor-body" id="rosterEditorList"></div>
+      <div class="fullscreen-panel-body" id="rosterEditorList"></div>
 
-      <div class="roster-editor-foot">
+      <div class="fullscreen-panel-foot">
         <button class="roster-foot-btn danger" id="rosterResetBtn" type="button">重置默认 50 人</button>
         <div class="roster-foot-actions">
           <button class="roster-foot-btn" id="rosterCancelBtn" type="button">取消</button>
@@ -234,8 +234,8 @@
       </div>
     </section>
 
-    <section class="roster-editor" id="settingsPanel" aria-label="设置" aria-hidden="true">
-      <div class="roster-editor-head">
+    <section class="fullscreen-panel" id="settingsPanel" aria-label="设置" aria-hidden="true">
+      <div class="fullscreen-panel-head">
         <div class="panel-title">设置</div>
         <button class="panel-close" id="settingsCloseButton" type="button" aria-label="关闭设置">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -244,7 +244,7 @@
         </button>
       </div>
 
-      <div class="roster-editor-body" id="settingsBody">
+      <div class="fullscreen-panel-body" id="settingsBody">
         <div class="settings-section">
           <div class="settings-section-title">显示</div>
           <div class="setting-row">
@@ -252,7 +252,7 @@
               <p class="setting-title">显示真实姓名</p>
               <p class="setting-desc">关闭后显示天干地支代号。</p>
             </div>
-            <button class="switch" id="hideNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+            <button class="switch" id="showRealNameSwitch" type="button" aria-label="切换是否显示真实姓名">
               <span class="switch-knob"></span>
             </button>
           </div>

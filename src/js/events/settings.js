@@ -18,7 +18,7 @@ import { setScoreTensMode } from "../runtime.js";
 import { toggleScoringMode } from "../business/student.js";
 import { openSettings, closeSettings } from "../ui/settings.js";
 import { renderRosterRows } from "../ui/roster.js";
-import { swapOverlay } from "../ui/overlay.js";
+import { swapDrawerFullscreenPanel } from "../ui/drawer-fullscreen.js";
 import { announce } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
 import { render } from "../render/index.js";
@@ -75,6 +75,6 @@ export function bindSettingsEvents() {
 
   settingsRosterBtn.addEventListener("click", () => {
     const state = getState();
-    swapOverlay(settingsPanel, rosterEditorPanel, () => renderRosterRows(state.roster));
+    swapDrawerFullscreenPanel(settingsPanel, rosterEditorPanel, () => renderRosterRows(state.roster));
   });
 }

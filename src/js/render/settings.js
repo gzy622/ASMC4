@@ -1,6 +1,6 @@
 import {
-  hideNameSwitch,
-  quickHideNameSwitch,
+  showRealNameSwitch,
+  quickShowRealNameSwitch,
   quickScoringModeSwitch,
   scoringModeSwitch,
   scoreTensModeSwitch,
@@ -16,18 +16,18 @@ function syncSwitch(el, on, labelOn, labelOff) {
   el.setAttribute("aria-label", on ? labelOn : labelOff);
 }
 
-export function syncHideNameSwitches(state) {
-  const showRealNames = !state.hideNames;
-  const hideNameLabels = [
+export function syncShowRealNameSwitches(state) {
+  const showRealNames = state.showRealNames !== false;
+  const showRealNameLabels = [
     "当前显示真实姓名，点击后隐藏",
     "当前隐藏真实姓名，点击后显示"
   ];
-  syncSwitch(hideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
-  syncSwitch(quickHideNameSwitch, showRealNames, hideNameLabels[0], hideNameLabels[1]);
+  syncSwitch(showRealNameSwitch, showRealNames, showRealNameLabels[0], showRealNameLabels[1]);
+  syncSwitch(quickShowRealNameSwitch, showRealNames, showRealNameLabels[0], showRealNameLabels[1]);
 }
 
 export function renderSettingsState(state) {
-  syncHideNameSwitches(state);
+  syncShowRealNameSwitches(state);
 
   const scoringLabels = [
     "打分模式已开启，点击关闭",

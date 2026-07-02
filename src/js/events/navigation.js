@@ -25,14 +25,14 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
-import { overlayTransitionBusy } from "../runtime.js";
+import { drawerPanelTransitionBusy } from "../runtime.js";
 
-function consumeOverlayEmptyClick(event) {
+function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
   event.stopImmediatePropagation();
 }
 
-function hasOpenOverlay() {
+function anyFloatingLayerOpen() {
   return (
     confirmPanel.classList.contains("is-open")
     || scoreSheet.classList.contains("is-open")
@@ -48,43 +48,43 @@ function bindEmptyAreaClose() {
   phoneEl.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
-    if (overlayTransitionBusy) {
-      if (hasOpenOverlay()) consumeOverlayEmptyClick(event);
+    if (drawerPanelTransitionBusy) {
+      if (anyFloatingLayerOpen()) consumeFloatingLayerEmptyClick(event);
       return;
     }
     if (confirmPanel.classList.contains("is-open")) return;
 
     if (scoreSheet.classList.contains("is-open")) {
       if (event.target.closest(".score-sheet")) return;
-      consumeOverlayEmptyClick(event);
+      consumeFloatingLayerEmptyClick(event);
       closeScoreSheet();
       return;
     }
 
     if (rosterEditorPanel.classList.contains("is-open")) {
       if (event.target.closest("#rosterEditorPanel")) return;
-      consumeOverlayEmptyClick(event);
+      consumeFloatingLayerEmptyClick(event);
       closeRosterEditor();
       return;
     }
 
     if (settingsPanel.classList.contains("is-open")) {
       if (event.target.closest("#settingsPanel")) return;
-      consumeOverlayEmptyClick(event);
+      consumeFloatingLayerEmptyClick(event);
       closeSettings();
       return;
     }
 
     if (newAssignmentPanel.classList.contains("is-open") || quickPanel.classList.contains("is-open")) {
       if (event.target.closest("#newAssignmentPanel, #quickPanel")) return;
-      consumeOverlayEmptyClick(event);
+      consumeFloatingLayerEmptyClick(event);
       closeFloatingPanels();
       return;
     }
 
     if (drawer.classList.contains("is-open")) {
       if (event.target.closest(".drawer")) return;
-      consumeOverlayEmptyClick(event);
+      consumeFloatingLayerEmptyClick(event);
       closeDrawer();
     }
   }, true);
@@ -116,7 +116,7 @@ export function bindNavigationEvents() {
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
-    if (overlayTransitionBusy) return;
+    if (drawerPanelTransitionBusy) return;
     event.preventDefault();
 
     if (confirmPanel.classList.contains("is-open")) {

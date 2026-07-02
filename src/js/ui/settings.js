@@ -1,12 +1,12 @@
 import { settingsPanel } from "../dom-refs.js";
 import { renderSettingsState } from "../render/settings.js";
 import { getState } from "../state.js";
-import { openOverlay, closeOverlay } from "./overlay.js";
+import { openDrawerFullscreenPanel, closeDrawerFullscreenPanel } from "./drawer-fullscreen.js";
 
 export function openSettings() {
-  openOverlay(settingsPanel, () => renderSettingsState(getState()));
+  openDrawerFullscreenPanel(settingsPanel, () => renderSettingsState(getState()));
 }
 
 export async function closeSettings() {
-  return closeOverlay(settingsPanel);
+  return closeDrawerFullscreenPanel(settingsPanel);
 }

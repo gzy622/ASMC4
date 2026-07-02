@@ -6,7 +6,7 @@ import {
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { claimDirection, releaseDirection, setOverlayTransitionBusy } from "../runtime.js";
+import { claimDirection, releaseDirection, setDrawerPanelTransitionBusy } from "../runtime.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -126,7 +126,7 @@ export function createVerticalDragGesture(el, {
     lastVelocity = 0;
     if (releaseAnimating) {
       releaseAnimating = false;
-      setOverlayTransitionBusy(false);
+      setDrawerPanelTransitionBusy(false);
       clearDragStyles();
     }
   }
@@ -221,7 +221,7 @@ export function createVerticalDragGesture(el, {
 
     const generation = releaseGeneration;
     releaseAnimating = true;
-    setOverlayTransitionBusy(true);
+    setDrawerPanelTransitionBusy(true);
     targetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
@@ -230,7 +230,7 @@ export function createVerticalDragGesture(el, {
       activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
-      setOverlayTransitionBusy(false);
+      setDrawerPanelTransitionBusy(false);
       if (shouldClose) {
         onClose();
       }
@@ -243,7 +243,7 @@ export function createVerticalDragGesture(el, {
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setOverlayTransitionBusy(false);
+      setDrawerPanelTransitionBusy(false);
       releaseAnimating = false;
       activeRelease = null;
     }
@@ -481,7 +481,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    setOverlayTransitionBusy(true);
+    setDrawerPanelTransitionBusy(true);
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
@@ -504,7 +504,7 @@ export function createTopSheetOpenGesture(bindEl, {
       if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setOverlayTransitionBusy(false);
+      setDrawerPanelTransitionBusy(false);
       releaseAnimating = false;
       activeRelease = null;
     }
@@ -515,7 +515,7 @@ export function createTopSheetOpenGesture(bindEl, {
     activeRelease?.cancel();
     activeRelease = null;
     releaseAnimating = false;
-    setOverlayTransitionBusy(false);
+    setDrawerPanelTransitionBusy(false);
     clearDragStyles();
   }
 

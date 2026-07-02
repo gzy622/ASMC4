@@ -18,7 +18,7 @@ export function normalizeStudent(student, index) {
     id: Number(student.id) || index + 1,
     serial: String(student.serial || fallbackSerial).padStart(2, "0"),
     name: String(student.name || "未命名"),
-    status: [STATUS.NORMAL, STATUS.REGISTERED, STATUS.NONE].includes(student.status)
+    status: [STATUS.NORMAL, STATUS.SUBMITTED, STATUS.NONE].includes(student.status)
       ? student.status
       : STATUS.NORMAL,
     badge: String(student.badge || ""),

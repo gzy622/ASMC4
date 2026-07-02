@@ -12,7 +12,7 @@ export function toggleStudent(student, cardEl) {
   if (student.status === STATUS.NONE) return;
   if (isStudentForceNone(student, getCurrentAssignment())) return;
 
-  student.status = student.status === STATUS.REGISTERED ? STATUS.NORMAL : STATUS.REGISTERED;
+  student.status = student.status === STATUS.SUBMITTED ? STATUS.NORMAL : STATUS.SUBMITTED;
 
   if (student.badgeType === "submit") {
     student.badge = "";
@@ -34,7 +34,7 @@ export function toggleStudent(student, cardEl) {
   renderProgress(state, assignment);
   renderScoringMode(state);
   renderHistoryButtons();
-  announce(student.status === STATUS.REGISTERED ? "已设为已交" : "已设为未交", { action: "undo" });
+  announce(student.status === STATUS.SUBMITTED ? "已设为已交" : "已设为未交", { action: "undo" });
 }
 
 export function toggleScoringMode() {

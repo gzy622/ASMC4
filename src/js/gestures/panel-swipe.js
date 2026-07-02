@@ -10,11 +10,11 @@ import {
   settingsPanel
 } from "../dom-refs.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
-import { overlayTransitionBusy, setOverlayTransitionBusy } from "../runtime.js";
+import { drawerPanelTransitionBusy, setDrawerPanelTransitionBusy } from "../runtime.js";
 import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
-function blocksPullToOpen() {
+function anyFloatingLayerOpen() {
   return (
     drawer.classList.contains("is-open")
     || quickPanel.classList.contains("is-open")
@@ -26,16 +26,16 @@ function blocksPullToOpen() {
   );
 }
 
-function hasOpenOverlay() {
-  return blocksPullToOpen() || quickPanel.classList.contains("is-dragging");
+function blocksQuickPanelPull() {
+  return anyFloatingLayerOpen() || quickPanel.classList.contains("is-dragging");
 }
 
 function gesturesLocked() {
-  return overlayTransitionBusy && hasOpenOverlay();
+  return drawerPanelTransitionBusy && blocksQuickPanelPull();
 }
 
 function canPullQuickPanel() {
-  return !blocksPullToOpen() && scrollContainer.scrollTop <= 1;
+  return !anyFloatingLayerOpen() && scrollContainer.scrollTop <= 1;
 }
 
 function cancelTopSheetOpen() {
@@ -57,10 +57,10 @@ function bindTopSheetCloseGesture(panel) {
     closeDirection: -1,
     targetEl: panel,
     shouldStart: (event) => {
-      if (overlayTransitionBusy) return false;
+      if (drawerPanelTransitionBusy) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!panel.classList.contains("is-open")) return false;
-      return !event.target.closest(".top-sheet, .modal-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
+      return !event.target.closest(".top-sheet, .modal-panel, .fullscreen-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
     },
     onClose: closeFloatingPanels,
   });
@@ -73,7 +73,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       commitQuickPanelOpen();
     }
     quickPanel.classList.remove("is-dragging");
-    setOverlayTransitionBusy(false);
+    setDrawerPanelTransitionBusy(false);
   }
 
   const closeOpts = {
@@ -115,7 +115,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!quickPanel.classList.contains("is-open")) return false;
       if (event.target.closest("#quickPanel")) return false;
-      if (event.target.closest(".drawer, .score-sheet, .nav-button, .icon-button, .title-wrap")) {
+      if (event.target.closest(".drawer, .score-sheet, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) {
         return false;
       }
       return !event.target.closest("#newAssignmentPanel, #confirmPanel, #rosterEditorPanel, #settingsPanel");
@@ -128,7 +128,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   sheetEl: quickPanel,
   canStart: (event) => {
     if (gesturesLocked()) return false;
-    if (hasOpenOverlay()) return false;
+    if (blocksQuickPanelPull()) return false;
     return !event.target.closest("button:not(.student-card), input, select, textarea");
   },
   canPull: canPullQuickPanel,

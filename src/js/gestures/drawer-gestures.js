@@ -1,6 +1,6 @@
 import { phoneEl, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
-import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, overlayTransitionBusy } from "../runtime.js";
+import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, drawerPanelTransitionBusy } from "../runtime.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
@@ -23,8 +23,8 @@ createHorizontalDragGesture(phoneEl, {
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
   shouldStart: (event) => {
-    if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .nav-button, .icon-button, .title-wrap")) return false;
-    if (overlayTransitionBusy) return false;
+    if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) return false;
+    if (drawerPanelTransitionBusy) return false;
     if (quickPanel.classList.contains("is-open")) return false;
     if (newAssignmentPanel.classList.contains("is-open")) return false;
     if (scoreSheet.classList.contains("is-open")) return false;
@@ -51,7 +51,7 @@ createHorizontalDragGesture(phoneEl, {
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
-  shouldStart: () => !overlayTransitionBusy,
+  shouldStart: () => !drawerPanelTransitionBusy,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {
     if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });
@@ -64,9 +64,9 @@ createHorizontalDragGesture(phoneEl, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: (event) => {
-    if (overlayTransitionBusy) return false;
+    if (drawerPanelTransitionBusy) return false;
     if (!drawer.classList.contains("is-open")) return false;
-    return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .nav-button, .icon-button, .title-wrap");
+    return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap");
   },
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {

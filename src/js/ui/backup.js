@@ -91,7 +91,7 @@ export function importBackup(file) {
             }) || assignments[0];
 
             const state = getState();
-            state.hideNames = Boolean(data.hideNames);
+            state.showRealNames = data.showRealNames !== false;
             state.scoringMode = Boolean(data.scoringMode);
             state.scoreTensMode = Boolean(data.scoreTensMode);
             state.showBarScoringToggle = data.showBarScoringToggle !== false;

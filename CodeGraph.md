@@ -25,7 +25,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 ## 事件域
 
-- `navigation.js`: 抽屉、中心面板、Esc
+- `navigation.js`: 抽屉、浮层、Esc
 - `assignments.js`: 新建、切换、重命名、删除、反选
 - `students.js`: 点击、姓名开关、打分模式、长按
 - `score.js`: 数字键盘、小数点、显示区退格、备注、确认/取消
@@ -39,7 +39,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 ```js
 {
-  hideNames,
+  showRealNames,
   scoringMode,
   scoreTensMode,
   currentAssignmentId,
@@ -52,7 +52,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 - `pendingConfirmAction`, `scoreSheetStudent`, `scoreInputValue`, `scoreTensMode`
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
-- `overlayTransitionBusy`, `pointerDirectionLock`
+- `drawerPanelTransitionBusy`, `pointerDirectionLock`
 
 ## 打分 sheet
 
@@ -78,7 +78,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 | 方向 | 绑定元素 | 条件 |
 |------|---------|------|
-| 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `hasOpenOverlay()` 为 false |
+| 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `blocksQuickPanelPull()` 为 false |
 | 上滑关闭（面板内） | `.panel-head`、`.top-sheet-handle-zone`、`.quick-action-grid` | `#quickPanel.is-open` |
 | 上滑关闭（面板外） | `phoneEl`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
@@ -86,8 +86,8 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### overlay 状态（勿混用）
 
-- `blocksPullToOpen()`：侧栏 / 顶部 sheet（`#quickPanel`、`#newAssignmentPanel`）/ 居中确认框（`#confirmPanel`）/ 打分 sheet / 全屏页（设置、名单编辑）的 `is-open` → 禁止再下拉打开。
-- `hasOpenOverlay()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）；旧命名只换成 `.top-sheet` / `.modal-panel` 对应语义。
+- `anyFloatingLayerOpen()`：侧栏 / 顶部 sheet（`#quickPanel`、`#newAssignmentPanel`）/ 居中确认框（`#confirmPanel`）/ 打分 sheet / 全屏页（设置、名单编辑）的 `is-open` → 禁止再下拉打开。
+- `blocksQuickPanelPull()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）。
 - 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
 
 ### 侧栏与触摸

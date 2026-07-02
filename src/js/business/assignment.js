@@ -44,7 +44,7 @@ export function invertCurrentAssignmentSubmission() {
     if (student.status === STATUS.NONE) return;
     if (isStudentForceNone(student, assignment)) return;
 
-    if (student.status === STATUS.REGISTERED) {
+    if (student.status === STATUS.SUBMITTED) {
       student.status = STATUS.NORMAL;
 
       if (student.badgeType === "submit" || student.badge === "已交") {
@@ -55,7 +55,7 @@ export function invertCurrentAssignmentSubmission() {
       return;
     }
 
-    student.status = STATUS.REGISTERED;
+    student.status = STATUS.SUBMITTED;
   });
 
   saveAppState();
