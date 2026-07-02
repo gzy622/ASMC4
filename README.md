@@ -46,8 +46,6 @@ dev.cmd
 
 **构建：** `npm run build`（仅打包到 `dist/`，不预览）
 
-旧脚本 `preview.cmd` / `start-lan.cmd` / `start-usb-preview.cmd` 仍可用，内部转发到 `dev.cmd`。
-
 ## 验证
 
 ```powershell
