@@ -15,7 +15,7 @@ createVerticalDragGesture(phoneEl, {
     if (overlayTransitionBusy) return false;
     if (confirmPanel.classList.contains("is-open")) return false;
     if (!scoreSheet.classList.contains("is-open")) return false;
-    return !event.target.closest(".score-sheet, .center-panel, .drawer, .nav-button, .icon-button, .title-wrap");
+    return !event.target.closest(".score-sheet, .top-sheet, .modal-panel, .drawer, .nav-button, .icon-button, .title-wrap");
   },
   onClose: closeScoreSheet,
 });

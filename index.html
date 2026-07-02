@@ -101,7 +101,7 @@
 
     <aside class="drawer" id="assignmentDrawer" aria-label="作业项目列表" aria-hidden="true">
       <div class="drawer-head">
-        <div class="drawer-title" id="drawerTitle"></div>
+        <div class="drawer-version" id="drawerVersion"></div>
         <button class="panel-close" id="drawerCloseButton" type="button" aria-label="关闭作业列表">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
@@ -121,7 +121,7 @@
       <input type="file" id="importBackupInput" accept=".json" style="display:none" />
     </aside>
 
-    <section class="center-panel" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
+    <section class="top-sheet" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-title">新建作业</div>
         <button class="panel-close" id="newAssignmentCloseButton" type="button" aria-label="关闭新建作业">
@@ -145,7 +145,7 @@
       </div>
     </section>
 
-    <section class="center-panel" id="quickPanel" aria-label="当前作业" aria-hidden="true">
+    <section class="top-sheet" id="quickPanel" aria-label="当前作业" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-head-main">
           <div class="panel-title">当前作业</div>
@@ -198,7 +198,7 @@
     </section>
 
     <div class="confirm-scrim" id="confirmScrim"></div>
-    <section class="center-panel confirm-panel" id="confirmPanel" aria-label="确认操作" aria-hidden="true">
+    <section class="modal-panel confirm-panel" id="confirmPanel" aria-label="确认操作" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-title" id="confirmTitle">确认操作</div>
       </div>

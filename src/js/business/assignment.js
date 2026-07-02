@@ -10,7 +10,7 @@ import { isStudentForceNone } from "../utils/display.js";
 import { assignmentList } from "../dom-refs.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
 import { closeDrawer } from "../ui/drawer.js";
-import { closeAllCenterPanels } from "../ui/panels.js";
+import { closeFloatingPanels } from "../ui/panels.js";
 
 export function createAssignmentFromDialog() {
   const inputValue = newAssignmentInput.value.trim();
@@ -33,7 +33,7 @@ export function createAssignmentFromDialog() {
 
   saveAppState();
   render();
-  closeAllCenterPanels();
+  closeFloatingPanels();
   announce("已新建作业", { action: "undo" });
 }
 

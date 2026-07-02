@@ -23,7 +23,7 @@ createHorizontalDragGesture(phoneEl, {
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
   shouldStart: (event) => {
-    if (event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap")) return false;
+    if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .nav-button, .icon-button, .title-wrap")) return false;
     if (overlayTransitionBusy) return false;
     if (quickPanel.classList.contains("is-open")) return false;
     if (newAssignmentPanel.classList.contains("is-open")) return false;
@@ -66,7 +66,7 @@ createHorizontalDragGesture(phoneEl, {
   shouldStart: (event) => {
     if (overlayTransitionBusy) return false;
     if (!drawer.classList.contains("is-open")) return false;
-    return !event.target.closest(".drawer, .score-sheet, .center-panel, .nav-button, .icon-button, .title-wrap");
+    return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .nav-button, .icon-button, .title-wrap");
   },
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {

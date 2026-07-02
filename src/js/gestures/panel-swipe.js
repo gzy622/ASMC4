@@ -11,7 +11,7 @@ import {
 } from "../dom-refs.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
 import { overlayTransitionBusy, setOverlayTransitionBusy } from "../runtime.js";
-import { closeAllCenterPanels, commitQuickPanelOpen } from "../ui/panels.js";
+import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
 function blocksPullToOpen() {
@@ -50,7 +50,7 @@ function finishTopSheetOpen() {
 function bindTopSheetCloseGesture(panel) {
   createVerticalDragGesture(panel, {
     closeDirection: -1,
-    onClose: closeAllCenterPanels,
+    onClose: closeFloatingPanels,
   });
 
   createVerticalDragGesture(phoneEl, {
@@ -60,9 +60,9 @@ function bindTopSheetCloseGesture(panel) {
       if (overlayTransitionBusy) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!panel.classList.contains("is-open")) return false;
-      return !event.target.closest(".center-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
+      return !event.target.closest(".top-sheet, .modal-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
     },
-    onClose: closeAllCenterPanels,
+    onClose: closeFloatingPanels,
   });
 }
 
@@ -79,7 +79,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
   const closeOpts = {
     closeDirection: -1,
     targetEl: quickPanel,
-    onClose: closeAllCenterPanels,
+    onClose: closeFloatingPanels,
     onDragStart: prepareQuickPanelCloseDrag,
   };
 
@@ -120,7 +120,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       }
       return !event.target.closest("#newAssignmentPanel, #confirmPanel, #rosterEditorPanel, #settingsPanel");
     },
-    onClose: closeAllCenterPanels,
+    onClose: closeFloatingPanels,
   });
 }
 

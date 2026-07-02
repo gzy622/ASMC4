@@ -27,7 +27,7 @@ dev.cmd
 
 **日常无线推荐：** 选 **6 → 2 (LAN)** 做手机浏览器预览；同一窗口按 **R** 推 Android。比 **adb reverse**（6→3）更稳。
 
-**无线 adb（可选）：** 复制 `scripts/dev-device.example.json` 为 `scripts/dev-device.local.json` 并填入 `adbWireless`（手机「无线调试」页当前 **IP:端口**，每次配对可能变）。已 `adb devices` 可见设备时可不配。
+**无线 adb（可选）：** 手机开启「无线调试」后，`dev.cmd` 会通过 `adb mdns` 自动发现当前 IP:端口并连接（端口每次会变，无需手改）。可选 `scripts/dev-device.local.json` 的 `adbWireless` 用于固定主机或 mdns 不可用时的回退。已 `adb devices` 可见设备时可不配。
 
 **选项 5 / `build-apk.cmd`：** 构建 APK 并复制到指定目录（默认桌面），无需 adb。适合用手机远控电脑后，通过远控软件把 APK 下载到手机安装。
 

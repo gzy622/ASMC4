@@ -20,7 +20,7 @@ import {
 } from "../business/assignment.js";
 import { render } from "../render/index.js";
 import { closeDrawer } from "../ui/drawer.js";
-import { openNewAssignmentPanel, closeAllCenterPanels } from "../ui/panels.js";
+import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
 import { announce } from "../utils/dom.js";
 
@@ -105,7 +105,7 @@ export function bindAssignmentEvents() {
       onConfirm: () => {
         deleteCurrentAssignment();
         closeConfirm();
-        closeAllCenterPanels();
+        closeFloatingPanels();
         announce("已删除作业", { action: "undo" });
       }
     });

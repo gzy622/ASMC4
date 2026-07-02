@@ -17,7 +17,7 @@ import {
 } from "../dom-refs.js";
 import { closeDrawer, openDrawer } from "../ui/drawer.js";
 import {
-  closeAllCenterPanels,
+  closeFloatingPanels,
   openNewAssignmentPanel,
   openQuickPanel
 } from "../ui/panels.js";
@@ -78,7 +78,7 @@ function bindEmptyAreaClose() {
     if (newAssignmentPanel.classList.contains("is-open") || quickPanel.classList.contains("is-open")) {
       if (event.target.closest("#newAssignmentPanel, #quickPanel")) return;
       consumeOverlayEmptyClick(event);
-      closeAllCenterPanels();
+      closeFloatingPanels();
       return;
     }
 
@@ -102,8 +102,8 @@ export function bindNavigationEvents() {
   });
 
   addButton.addEventListener("click", openNewAssignmentPanel);
-  newAssignmentCloseButton.addEventListener("click", closeAllCenterPanels);
-  newAssignmentCancelButton.addEventListener("click", closeAllCenterPanels);
+  newAssignmentCloseButton.addEventListener("click", closeFloatingPanels);
+  newAssignmentCancelButton.addEventListener("click", closeFloatingPanels);
 
   titleButton.addEventListener("click", () => openQuickPanel());
   titleButton.addEventListener("keydown", event => {
@@ -112,7 +112,7 @@ export function bindNavigationEvents() {
       openQuickPanel({ focusName: true });
     }
   });
-  quickPanelCloseButton.addEventListener("click", closeAllCenterPanels);
+  quickPanelCloseButton.addEventListener("click", closeFloatingPanels);
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
@@ -131,7 +131,7 @@ export function bindNavigationEvents() {
       newAssignmentPanel.classList.contains("is-open")
       || quickPanel.classList.contains("is-open")
     ) {
-      closeAllCenterPanels();
+      closeFloatingPanels();
     } else if (drawer.classList.contains("is-open")) {
       closeDrawer();
     }

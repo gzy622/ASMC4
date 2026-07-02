@@ -13,6 +13,14 @@
 - 简体中文；短结论优先；代码引用用 ```startLine:endLine:path。
 - 回复篇幅与任务匹配；避免末尾强行追问。
 
+## Windows Shell（Agent）
+
+- 默认沙箱下 PowerShell 可能无 stdout/退出码，不代表本机故障。
+- 需要可靠结果：Shell 加 `required_permissions: ["all"]`。
+- Git Bash：`"C:\Program Files\Git\bin\bash.exe" -lc "..."`；禁止裸 `bash`（会命中 WSL/WindowsApps）。
+- 只读 Git 查询可兜底：`.git/HEAD`、`.git/packed-refs`。
+- 排查：沙箱空输出 → `all` 重试 → Git Bash 或读 `.git` 元数据。
+
 ## Git（仅用户明确要求 commit 时）
 
 - 不主动 commit；不改 git config；不用 --no-verify / force push（除非用户明确要求）。

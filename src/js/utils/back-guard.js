@@ -11,7 +11,7 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
-import { closeAllCenterPanels } from "../ui/panels.js";
+import { closeFloatingPanels } from "../ui/panels.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { overlayTransitionBusy } from "../runtime.js";
 import { isNativePlatform } from "./native.js";
@@ -44,7 +44,7 @@ function closeTopmostOverlay() {
   if (rosterEditorPanel.classList.contains("is-open")) return closeRosterEditor();
   if (settingsPanel.classList.contains("is-open")) return closeSettings();
   if (newAssignmentPanel.classList.contains("is-open") || quickPanel.classList.contains("is-open")) {
-    return closeAllCenterPanels();
+    return closeFloatingPanels();
   }
   if (drawer.classList.contains("is-open")) return closeDrawer();
 }

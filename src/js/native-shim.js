@@ -11,7 +11,7 @@ import { closeConfirm } from "./ui/confirm.js";
 import { closeScoreSheet } from "./score-sheet/index.js";
 import { closeRosterEditor } from "./ui/roster.js";
 import { closeSettings } from "./ui/settings.js";
-import { closeAllCenterPanels } from "./ui/panels.js";
+import { closeFloatingPanels } from "./ui/panels.js";
 import { closeDrawer } from "./ui/drawer.js";
 import { overlayTransitionBusy } from "./runtime.js";
 import { isNativePlatform } from "./utils/native.js";
@@ -54,7 +54,7 @@ import { isNativePlatform } from "./utils/native.js";
       return;
     }
     if (quickPanel.classList.contains("is-open") || newAssignmentPanel.classList.contains("is-open")) {
-      closeAllCenterPanels();
+      closeFloatingPanels();
       return;
     }
     if (drawer.classList.contains("is-open")) {

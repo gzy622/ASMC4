@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { closeAllCenterPanels } from "./panels.js";
+import { closeFloatingPanels } from "./panels.js";
 import { drawer } from "../dom-refs.js";
 import {
   expandDrawer,
@@ -27,7 +27,7 @@ export async function openOverlay(panel, renderFn) {
   setOverlayTransitionBusy(true);
 
   closeScoreSheet();
-  closeAllCenterPanels();
+  closeFloatingPanels();
 
   renderFn();
 

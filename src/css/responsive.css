@@ -66,12 +66,11 @@
         font-size: 13.5px;
       }
 
-      .center-panel {
+      .modal-panel {
         border-radius: 22px;
       }
 
-      #quickPanel,
-      #newAssignmentPanel {
+      .top-sheet {
         border-radius: 0 0 22px 22px;
       }
 

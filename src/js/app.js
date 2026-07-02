@@ -9,14 +9,14 @@ import "./native-shim.js";
 import "./utils/back-guard.js";
 import { fillSubjectSelect } from "./utils/subject-select.js";
 import { BUILD_VERSION } from "./build-version.js";
-import { quickSubjectSelect, newAssignmentSubjectInput, drawerTitle } from "./dom-refs.js";
+import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion } from "./dom-refs.js";
 
 document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
 
 fillSubjectSelect(quickSubjectSelect);
 fillSubjectSelect(newAssignmentSubjectInput);
 
-if (drawerTitle) drawerTitle.textContent = BUILD_VERSION;
+if (drawerVersion) drawerVersion.textContent = BUILD_VERSION;
 
 bindEvents();
 render();

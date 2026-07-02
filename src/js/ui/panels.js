@@ -8,7 +8,7 @@ import { makeDefaultAssignmentTitle } from "../utils/id.js";
 export function openNewAssignmentPanel() {
   closeScoreSheet();
   closeDrawer();
-  closeAllCenterPanels({ restoreFocus: false });
+  closeFloatingPanels({ restoreFocus: false });
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -23,17 +23,17 @@ export function openNewAssignmentPanel() {
   });
 }
 
-function blurCenterPanelFocus() {
+function blurTopSheetFocus() {
   const active = document.activeElement;
   if (active && (newAssignmentPanel.contains(active) || quickPanel.contains(active))) {
     active.blur();
   }
 }
 
-export function closeAllCenterPanels({ restoreFocus = true } = {}) {
+export function closeFloatingPanels({ restoreFocus = true } = {}) {
   const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
 
-  blurCenterPanelFocus();
+  blurTopSheetFocus();
   closeScoreSheet();
 
   quickPanel.classList.remove("is-open");
@@ -52,7 +52,7 @@ export function closeAllCenterPanels({ restoreFocus = true } = {}) {
 export function openQuickPanel({ focusName = false } = {}) {
   closeScoreSheet();
   closeDrawer();
-  closeAllCenterPanels({ restoreFocus: false });
+  closeFloatingPanels({ restoreFocus: false });
   renderQuickPanel();
 
   quickPanel.classList.add("is-open");

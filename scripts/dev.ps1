@@ -18,8 +18,8 @@
 
   Legacy: -Mode pc|lan|usb maps to web + matching target.
 
-  Wireless adb: copy scripts/dev-device.example.json to dev-device.local.json
-  and set adbWireless to your phone IP:port (Developer options - Wireless debugging).
+  Wireless adb: dev.ps1 auto-connects via adb mdns when Wireless debugging is on.
+  Optional dev-device.local.json adbWireless pins host / fallback when mdns is unavailable.
 #>
 
 param(
@@ -214,6 +214,103 @@ function Get-AdbWirelessAddress {
     return $wireless
 }
 
+function Get-AdbMdnsConnectAddresses {
+    $result = Invoke-Adb -Command @('mdns', 'services')
+    $addrs = @()
+    foreach ($line in ($result.Output | Select-Object -Skip 1)) {
+        $trimmed = "$line".Trim()
+        if (-not $trimmed) { continue }
+        if ($trimmed -match '_adb-tls-connect\._tcp\s+(\d+\.\d+\.\d+\.\d+:\d+)\s*$') {
+            $addrs += $Matches[1]
+        }
+    }
+    return @($addrs | Select-Object -Unique)
+}
+
+function Wait-AdbMdnsConnectAddresses {
+    param([int]$MaxWaitSec = 5)
+
+    $deadline = (Get-Date).AddSeconds($MaxWaitSec)
+    while ((Get-Date) -lt $deadline) {
+        $addrs = @(Get-AdbMdnsConnectAddresses)
+        if ($addrs.Count -gt 0) { return $addrs }
+        Start-Sleep -Milliseconds 500
+    }
+    return @(Get-AdbMdnsConnectAddresses)
+}
+
+function Set-AdbWirelessConfig {
+    param([string]$Address)
+
+    $localPath = Join-Path $ProjectRoot 'scripts/dev-device.local.json'
+    $cfg = [ordered]@{}
+    $current = $null
+    if (Test-Path -LiteralPath $localPath) {
+        try {
+            $parsed = Read-Utf8Text -Path $localPath | ConvertFrom-Json
+            foreach ($prop in $parsed.PSObject.Properties) {
+                $cfg[$prop.Name] = $prop.Value
+            }
+            $current = Get-ConfigProp $parsed 'adbWireless'
+        } catch {
+            Write-Host "[WARN] Could not read dev-device.local.json for adbWireless update: $_"
+        }
+    }
+
+    if ($current -eq $Address) { return }
+
+    $cfg['adbWireless'] = $Address
+    $json = ($cfg | ConvertTo-Json -Depth 4)
+    [System.IO.File]::WriteAllText($localPath, $json, [System.Text.UTF8Encoding]::new($false))
+    Write-Host "  [Adb]  Saved adbWireless -> $Address"
+}
+
+function Connect-AdbWirelessTargets {
+    param(
+        [string[]]$Addresses,
+        [switch]$UpdateConfig
+    )
+
+    foreach ($addr in $Addresses) {
+        if (-not $addr) { continue }
+        if (Connect-AdbWireless -Address $addr.Trim()) {
+            if ($UpdateConfig) { Set-AdbWirelessConfig -Address $addr.Trim() }
+            return $true
+        }
+    }
+    return $false
+}
+
+function Connect-AdbWirelessAuto {
+    $mdnsAddrs = @(Wait-AdbMdnsConnectAddresses)
+    $saved = Get-AdbWirelessAddress
+    $savedHost = if ($saved) { ($saved -split ':', 2)[0] } else { $null }
+
+    if ($mdnsAddrs.Count -gt 0) {
+        Write-Host "  [Adb]  mdns wireless: $($mdnsAddrs -join ', ')"
+        $ordered = @($mdnsAddrs)
+        if ($savedHost) {
+            $preferred = @($mdnsAddrs | Where-Object { $_.StartsWith("${savedHost}:") })
+            $rest = @($mdnsAddrs | Where-Object { -not $_.StartsWith("${savedHost}:") })
+            $ordered = $preferred + $rest
+        }
+
+        if (Connect-AdbWirelessTargets -Addresses $ordered -UpdateConfig) {
+            return $true
+        }
+
+        if ($savedHost -and @($mdnsAddrs | Where-Object { $_.StartsWith("${savedHost}:") }).Count -gt 0) {
+            return $false
+        }
+    }
+
+    if ($saved) {
+        return Connect-AdbWireless -Address $saved
+    }
+
+    return $false
+}
+
 function Connect-AdbWireless {
     param(
         [string]$Address,
@@ -272,8 +369,8 @@ function Ensure-AdbDevice {
 
     $wireless = Get-AdbWirelessAddress
 
-    if ($wireless) {
-        Connect-AdbWireless -Address $wireless.Trim() | Out-Null
+    if ($wireless -or @(Wait-AdbMdnsConnectAddresses -MaxWaitSec 1).Count -gt 0) {
+        Connect-AdbWirelessAuto | Out-Null
         $picked = Resolve-AdbDevices
         if ($picked) {
             Write-Host "  [Adb]  Device ready: $picked"
@@ -282,9 +379,9 @@ function Ensure-AdbDevice {
     }
 
     $hint = if ($wireless) {
-        "Wireless connect to $wireless failed. Wireless debugging port changes each session — update scripts/dev-device.local.json or plug USB."
+        'Wireless connect failed. Keep Wireless debugging on, re-pair once, or plug USB.'
     } else {
-        'No device found. Plug in USB, pair wireless debugging, or set adbWireless in scripts/dev-device.local.json (see dev-device.example.json).'
+        'No device found. Plug in USB, enable Wireless debugging, or set adbWireless in scripts/dev-device.local.json (see dev-device.example.json).'
     }
 
     if ($AllowMissing) {

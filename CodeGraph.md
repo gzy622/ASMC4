@@ -86,8 +86,8 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### overlay 状态（勿混用）
 
-- `blocksPullToOpen()`：侧栏 / 各 center-panel 的 `is-open` → 禁止再下拉打开。
-- `hasOpenOverlay()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）。
+- `blocksPullToOpen()`：侧栏 / 顶部 sheet（`#quickPanel`、`#newAssignmentPanel`）/ 居中确认框（`#confirmPanel`）/ 打分 sheet / 全屏页（设置、名单编辑）的 `is-open` → 禁止再下拉打开。
+- `hasOpenOverlay()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）；旧命名只换成 `.top-sheet` / `.modal-panel` 对应语义。
 - 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
 
 ### 侧栏与触摸
@@ -135,6 +135,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - **Invoke-Adb** 用 `Invoke-Adb -Command @('devices')`；禁止 `Invoke-Adb devices`。
 - 多设备：优先 `adbWireless` IP；`Get-AdbReadyDevices` 过滤假序列号。
+- 无线调试：`Connect-AdbWirelessAuto` 先 `adb mdns services`（`_adb-tls-connect._tcp`）再连配置里的 `adbWireless`；成功会回写 `dev-device.local.json`。
 - **StrictMode**：管道结果 `@(...).Count`；端口插值 `"${host}:"` 非 `"$host:"`。
 - **Gradle**：看 `BUILD SUCCESSFUL` / `Installed on N device`；装前 `Resolve-AdbDevices` + `ANDROID_SERIAL`。
 - **adb reverse** 无线常失败 → 降级 LAN；排障 `adb kill-server; adb start-server; adb connect IP:端口`。

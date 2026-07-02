@@ -14,6 +14,12 @@ node build.mjs
 python verify.py
 ```
 
+## Windows Shell
+
+- 默认沙箱下 PowerShell 可能无 stdout/退出码；可靠结果用 `required_permissions: ["all"]`。
+- Git Bash：`"C:\Program Files\Git\bin\bash.exe"`；禁止裸 `bash`（WSL/WindowsApps）。
+- 只读查分支：`.git/HEAD`、`.git/packed-refs`。
+
 ## 工程原则
 
 - 先读数据流和 caller，再最小 diff；复用现有代码，不主动加依赖/抽象/测试框架。
