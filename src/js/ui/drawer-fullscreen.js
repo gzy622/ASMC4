@@ -5,7 +5,7 @@ import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { closeFloatingPanels } from "./panels.js";
 import { expandDrawer, contractDrawer, snapResetDrawer, snapPrepareDrawer } from "./drawer.js";
-import { drawerPanelTransitionBusy, setDrawerPanelTransitionBusy } from "../runtime.js";
+import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 
 const EXPAND_DURATION = 280;
 const CONTENT_FADE = 180;
@@ -15,8 +15,8 @@ function wait(ms) {
 }
 
 export async function openDrawerFullscreenPanel(panel, renderFn) {
-  if (drawerPanelTransitionBusy) return;
-  setDrawerPanelTransitionBusy(true);
+  if (uiTransitionBusy) return;
+  setUiTransitionBusy(true);
 
   closeScoreSheet();
   closeFloatingPanels();
@@ -36,12 +36,12 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
 
   snapResetDrawer();
 
-  setDrawerPanelTransitionBusy(false);
+  setUiTransitionBusy(false);
 }
 
 export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
-  if (drawerPanelTransitionBusy) return;
-  setDrawerPanelTransitionBusy(true);
+  if (uiTransitionBusy) return;
+  setUiTransitionBusy(true);
 
   fromPanel.classList.add("is-closing");
   fromPanel.classList.remove("is-open");
@@ -57,12 +57,12 @@ export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
   await wait(CONTENT_FADE);
 
   snapResetDrawer();
-  setDrawerPanelTransitionBusy(false);
+  setUiTransitionBusy(false);
 }
 
 export async function closeDrawerFullscreenPanel(panel) {
-  if (drawerPanelTransitionBusy) return;
-  setDrawerPanelTransitionBusy(true);
+  if (uiTransitionBusy) return;
+  setUiTransitionBusy(true);
 
   panel.classList.add("is-closing");
   panel.classList.remove("is-open");
@@ -79,5 +79,5 @@ export async function closeDrawerFullscreenPanel(panel) {
 
   setThemeColor("#f4f4f4");
 
-  setDrawerPanelTransitionBusy(false);
+  setUiTransitionBusy(false);
 }

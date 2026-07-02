@@ -1,4 +1,4 @@
-# CodeGraph — ASMC4
+# CodeGraph：ASMC4
 
 纯前端作业管理应用。数据：`localStorage["asmc4_assignments_v1"]`。
 
@@ -52,7 +52,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 - `pendingConfirmAction`, `scoreSheetStudent`, `scoreInputValue`, `scoreTensMode`
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
-- `drawerPanelTransitionBusy`, `pointerDirectionLock`
+- `uiTransitionBusy`, `pointerDirectionLock`
 
 ## 打分 sheet
 
@@ -60,7 +60,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - `#scoreDisplay`：显示区容器；数值在 `#scoreDisplayValue`。
 - `#scoreBackspaceBtn`：退格，叠在显示区右侧（不在数字键盘格内）。
-- `.score-numpad`：1–9、×10、`0`、小数点（`data-action="decimal"`，占原退格格位）。
+- `.score-numpad`：1 到 9、×10、`0`、小数点（`data-action="decimal"`，占原退格格位）。
 
 输入（`events/score.js` → `runtime.scoreInputValue`）：
 
@@ -84,15 +84,15 @@ DOM（`index.html` + `dom-refs.js`）：
 
 面板下方空白与学生列表同在 `.scroll-container` 内。**`phoneEl` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
 
-### overlay 状态（勿混用）
+### 浮层状态（勿混用）
 
 - `anyFloatingLayerOpen()`：侧栏 / 顶部 sheet（`#quickPanel`、`#newAssignmentPanel`）/ 居中确认框（`#confirmPanel`）/ 打分 sheet / 全屏页（设置、名单编辑）的 `is-open` → 禁止再下拉打开。
-- `blocksQuickPanelPull()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算 overlay）。
+- `blocksQuickPanelPull()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算浮层占用）。
 - 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
 
 ### 侧栏与触摸
 
-`.drawer:not(.is-open) { pointer-events: none }`（`components.css`）— 侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
+`.drawer:not(.is-open) { pointer-events: none }`（`components.css`）：侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
 
 侧栏作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独接 `is-pressed`；父项 `.assignment-item` 的 `:active` / `is-pressed` 须排除 `.assignment-item-actions` 与操作钮，避免点编辑/删除时整条缩放。
 
@@ -157,7 +157,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。
 - 落点：`utils/dom.js`；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`。
-- 文案 4–8 字；撤回/重做 toast 固定「已撤回」「已重做」。
+- 文案 4 到 8 字；撤回/重做 toast 固定「已撤回」「已重做」。
 - 显示类设置、`selectAssignment` 用 `saveAppState({ history: false })`，toast 不带撤回。
 
 ## 约束

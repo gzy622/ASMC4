@@ -6,7 +6,7 @@ import {
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { claimDirection, releaseDirection, setDrawerPanelTransitionBusy } from "../runtime.js";
+import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -126,7 +126,7 @@ export function createVerticalDragGesture(el, {
     lastVelocity = 0;
     if (releaseAnimating) {
       releaseAnimating = false;
-      setDrawerPanelTransitionBusy(false);
+      setUiTransitionBusy(false);
       clearDragStyles();
     }
   }
@@ -221,7 +221,7 @@ export function createVerticalDragGesture(el, {
 
     const generation = releaseGeneration;
     releaseAnimating = true;
-    setDrawerPanelTransitionBusy(true);
+    setUiTransitionBusy(true);
     targetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
@@ -230,7 +230,7 @@ export function createVerticalDragGesture(el, {
       activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
-      setDrawerPanelTransitionBusy(false);
+      setUiTransitionBusy(false);
       if (shouldClose) {
         onClose();
       }
@@ -243,7 +243,7 @@ export function createVerticalDragGesture(el, {
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setDrawerPanelTransitionBusy(false);
+      setUiTransitionBusy(false);
       releaseAnimating = false;
       activeRelease = null;
     }
@@ -481,7 +481,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    setDrawerPanelTransitionBusy(true);
+    setUiTransitionBusy(true);
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
@@ -504,7 +504,7 @@ export function createTopSheetOpenGesture(bindEl, {
       if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setDrawerPanelTransitionBusy(false);
+      setUiTransitionBusy(false);
       releaseAnimating = false;
       activeRelease = null;
     }
@@ -515,7 +515,7 @@ export function createTopSheetOpenGesture(bindEl, {
     activeRelease?.cancel();
     activeRelease = null;
     releaseAnimating = false;
-    setDrawerPanelTransitionBusy(false);
+    setUiTransitionBusy(false);
     clearDragStyles();
   }
 

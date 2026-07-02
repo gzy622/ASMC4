@@ -10,7 +10,7 @@ import {
   settingsPanel
 } from "../dom-refs.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
-import { drawerPanelTransitionBusy, setDrawerPanelTransitionBusy } from "../runtime.js";
+import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
@@ -31,7 +31,7 @@ function blocksQuickPanelPull() {
 }
 
 function gesturesLocked() {
-  return drawerPanelTransitionBusy && blocksQuickPanelPull();
+  return uiTransitionBusy && blocksQuickPanelPull();
 }
 
 function canPullQuickPanel() {
@@ -57,7 +57,7 @@ function bindTopSheetCloseGesture(panel) {
     closeDirection: -1,
     targetEl: panel,
     shouldStart: (event) => {
-      if (drawerPanelTransitionBusy) return false;
+      if (uiTransitionBusy) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!panel.classList.contains("is-open")) return false;
       return !event.target.closest(".top-sheet, .modal-panel, .fullscreen-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
@@ -73,7 +73,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       commitQuickPanelOpen();
     }
     quickPanel.classList.remove("is-dragging");
-    setDrawerPanelTransitionBusy(false);
+    setUiTransitionBusy(false);
   }
 
   const closeOpts = {

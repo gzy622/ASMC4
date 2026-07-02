@@ -30,6 +30,11 @@ function selectAssignment(assignmentId) {
   render();
 }
 
+function selectAssignmentFromDrawer(assignmentId) {
+  selectAssignment(assignmentId);
+  closeDrawer({ withTransitionLock: false });
+}
+
 export function bindAssignmentEvents() {
   newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
   newAssignmentInput.addEventListener("keydown", event => {
@@ -57,8 +62,7 @@ export function bindAssignmentEvents() {
 
     const item = event.target.closest(".assignment-item");
     if (!item) return;
-    closeDrawer({ withTransitionLock: false });
-    selectAssignment(item.dataset.assignmentId);
+    selectAssignmentFromDrawer(item.dataset.assignmentId);
   });
 
   assignmentList.addEventListener("keydown", event => {
@@ -76,8 +80,7 @@ export function bindAssignmentEvents() {
     const item = event.target.closest(".assignment-item");
     if (!item) return;
     event.preventDefault();
-    closeDrawer({ withTransitionLock: false });
-    selectAssignment(item.dataset.assignmentId);
+    selectAssignmentFromDrawer(item.dataset.assignmentId);
   });
 
   invertButton.addEventListener("click", () => {

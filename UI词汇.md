@@ -207,19 +207,24 @@
 | 宽操作钮 | `.drawer-action-btn` | 侧栏和设置页复用 |
 | 快捷操作钮 | `.quick-action-btn` | 当前作业面板里的操作按钮 |
 
-## 仍容易误解的代码名
+## 命名校准
 
-| 代码名 | 实际含义 |
+| 代码名 | 当前含义 |
 |--------|----------|
 | `showRealNames` / `#showRealNameSwitch` / `#quickShowRealNameSwitch` | true 表示显示真实姓名 |
 | `STATUS.SUBMITTED` / `.is-submitted` | 界面叫「已交」 |
+| `uiTransitionBusy` | UI 过渡锁，拖拽释放和面板切换期间为 true |
+| `openDrawerFullscreenPanel()` / `closeDrawerFullscreenPanel()` | 侧栏展开后进入或退出全屏页 |
+
+## 通用样式名
+
+| 代码名 | 使用范围 |
+|--------|----------|
 | `.badge` | 在学生卡片里通常是分数角标 |
 | `.dialog-button` | 顶部 sheet、确认框、打分面板都在用 |
 | `.drawer-action-btn` | 侧栏和设置页都在用 |
 | `.phone` | 浏览器预览时的主容器 |
 | `.nav-button` | 实际是菜单按钮 |
-| `drawerPanelTransitionBusy` | 全局面板切换锁，不只是侧栏 |
-| `openDrawerFullscreenPanel()` / `closeDrawerFullscreenPanel()` | 侧栏展开后进入或退出全屏页 |
 
 ## 快速查找
 

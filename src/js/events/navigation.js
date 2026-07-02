@@ -25,7 +25,7 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
-import { drawerPanelTransitionBusy } from "../runtime.js";
+import { uiTransitionBusy } from "../runtime.js";
 
 function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
@@ -48,7 +48,7 @@ function bindEmptyAreaClose() {
   phoneEl.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
-    if (drawerPanelTransitionBusy) {
+    if (uiTransitionBusy) {
       if (anyFloatingLayerOpen()) consumeFloatingLayerEmptyClick(event);
       return;
     }
@@ -116,7 +116,7 @@ export function bindNavigationEvents() {
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
-    if (drawerPanelTransitionBusy) return;
+    if (uiTransitionBusy) return;
     event.preventDefault();
 
     if (confirmPanel.classList.contains("is-open")) {
