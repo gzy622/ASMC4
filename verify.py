@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -9,7 +10,31 @@ def read(relative_path):
     return (ROOT / relative_path).read_text(encoding="utf-8")
 
 
+index_html = read("index.html")
+build_script = read("build.mjs")
+html_stylesheets = re.findall(r'<link rel="stylesheet" href="([^"]+)"\s*/>', index_html)
+html_module_scripts = re.findall(r'<script type="module" src="([^"]+)"></script>', index_html)
+
 checks = [
+    (
+        "html stylesheet refs exist",
+        bool(html_stylesheets)
+        and all((ROOT / href).is_file() for href in html_stylesheets),
+    ),
+    (
+        "html module script refs exist",
+        bool(html_module_scripts)
+        and all((ROOT / src).is_file() for src in html_module_scripts),
+    ),
+    (
+        "build bundles html stylesheets",
+        all(f'"{Path(href).name}"' in build_script for href in html_stylesheets),
+    ),
+    (
+        "build rewrites module entry",
+        '<script type="module" src="src/js/app.js"></script>' in build_script
+        and '<script type="module" src="src/js/app.js"></script>' in index_html,
+    ),
     ("module entry binds events", "bindEvents();" in read("src/js/app.js")),
     (
         "event domains are split",
@@ -39,6 +64,21 @@ checks = [
         "const safeId = escapeHTML(assignment.id);" in read(
             "src/js/render/assignmentList.js"
         ),
+    ),
+    (
+        "student ids are escaped",
+        "const safeId = escapeHTML(student.id);" in read("src/js/render/students.js"),
+    ),
+    (
+        "roster id matching uses strings",
+        "oldMap.get(String(entry.id))" in read("src/js/business/roster.js"),
+    ),
+    (
+        "non-history save keeps history entries",
+        "if (!history)" in read("src/js/state.js")
+        and "historyEntries.length = historyIndex + 1;" in read("src/js/state.js").split(
+            "if (!history)"
+        )[1],
     ),
     (
         "successful import closes confirmation",

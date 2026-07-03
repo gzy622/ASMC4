@@ -126,13 +126,21 @@ export function bindAssignmentEvents() {
       renameSettled = true;
       const trimmed = quickRenameInput.value.trim();
       const assignment = getCurrentAssignment();
-      if (trimmed && trimmed !== assignment.title) {
-        assignment.title = trimmed;
-        assignment.updatedAt = new Date().toISOString();
-        saveAppState({ label: `重命名为「${trimmed}」` });
+      if (!trimmed) {
         render();
-        announce("已重命名", { action: "undo" });
+        return;
       }
+
+      if (trimmed === assignment.title) {
+        if (quickRenameInput.value !== assignment.title) render();
+        return;
+      }
+
+      assignment.title = trimmed;
+      assignment.updatedAt = new Date().toISOString();
+      saveAppState({ label: `重命名为「${trimmed}」` });
+      render();
+      announce("已重命名", { action: "undo" });
     }
     function cancelRename() {
       if (renameSettled) return;
@@ -140,7 +148,6 @@ export function bindAssignmentEvents() {
       render();
     }
     quickRenameInput.addEventListener("blur", () => {
-      renameSettled = false;
       commitRename();
     });
     quickRenameInput.addEventListener("keydown", e => {

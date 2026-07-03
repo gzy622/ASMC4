@@ -19,9 +19,10 @@ export async function closeRosterEditor() {
 export function renderRosterRows(roster) {
   rosterEditorList.innerHTML = roster.map((entry, index) => {
     const serial = String(index + 1).padStart(2, "0");
+    const safeId = escapeHTML(entry.id);
     const nonEnglishChecked = entry.nonEnglish ? "checked" : "";
     return `
-      <div class="roster-row" data-id="${entry.id}">
+      <div class="roster-row" data-id="${safeId}">
         <span class="roster-row-handle">&#x2261; ${serial}</span>
         <input class="roster-row-input roster-row-name" type="text" value="${escapeHTML(entry.name)}" placeholder="姓名" maxlength="10" />
         <label class="roster-row-nonenglish">
@@ -78,7 +79,7 @@ function refreshRowIndices() {
   rows.forEach((row, i) => {
     const serial = String(i + 1).padStart(2, "0");
     const handle = row.querySelector(".roster-row-handle");
-    if (handle) handle.innerHTML = "&#x2261; " + serial;
+    if (handle) handle.textContent = `≡ ${serial}`;
   });
 }
 

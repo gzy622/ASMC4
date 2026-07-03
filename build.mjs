@@ -61,10 +61,6 @@ async function build() {
 
   let html = readFileSync(join(__dirname, "index.html"), "utf-8");
 
-  html = html.replace(/<link rel="modulepreload"[^>]*\/>\n?/g, "");
-
-  html = html.replace(/<script src="src\/js\/bootstrap\.js"><\/script>\s*/g, "");
-
   html = html.replace(
     /<link rel="stylesheet" href="src\/css\/[^"]*\.css" \/>\s*/g,
     ""

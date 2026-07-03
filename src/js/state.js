@@ -56,19 +56,20 @@ export function saveAppState({ history = true, label = "" } = {}) {
   const currentSerialized = JSON.stringify(appState);
   if (currentSerialized === lastSerialized) return;
 
-  historyEntries.length = historyIndex + 1;
-
-  if (history) {
-    historyEntries.push({
-      label: label || "未命名操作",
-      timestamp: Date.now(),
-      snapshot: currentSerialized
-    });
-    historyIndex++;
-    trimHistoryEntries();
-  } else {
-    historyEntries[historyIndex].snapshot = currentSerialized;
+  if (!history) {
+    lastSerialized = currentSerialized;
+    persistSerialized(currentSerialized);
+    return;
   }
+
+  historyEntries.length = historyIndex + 1;
+  historyEntries.push({
+    label: label || "未命名操作",
+    timestamp: Date.now(),
+    snapshot: currentSerialized
+  });
+  historyIndex++;
+  trimHistoryEntries();
 
   lastSerialized = currentSerialized;
   persistSerialized(currentSerialized);

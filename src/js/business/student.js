@@ -14,7 +14,7 @@ export function toggleStudent(student, cardEl) {
 
   student.status = student.status === STATUS.SUBMITTED ? STATUS.NORMAL : STATUS.SUBMITTED;
 
-  if (student.badgeType === "submit") {
+  if (student.status !== STATUS.SUBMITTED && (student.badgeType === "submit" || student.badgeType === "score")) {
     student.badge = "";
     student.badgeType = "";
   }

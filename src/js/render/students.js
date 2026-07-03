@@ -6,6 +6,7 @@ export function renderStudents(state, assignment) {
   grid.innerHTML = assignment.students.map((student, index) => {
     const stateClass = getStateClass(student, assignment);
     const displayName = getDisplayName(student, index);
+    const safeId = escapeHTML(student.id);
 
     const badgeHTML = student.badge
       ? `<div class="badge">${escapeHTML(student.badge)}</div>`
@@ -15,7 +16,7 @@ export function renderStudents(state, assignment) {
       <button
         class="student-card ${stateClass}"
         type="button"
-        data-id="${student.id}"
+        data-id="${safeId}"
         aria-label="${escapeHTML(getCardAriaLabel(student, index, assignment))}"
       >
         <div class="serial">${escapeHTML(student.serial)}</div>

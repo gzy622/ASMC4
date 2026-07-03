@@ -17,10 +17,10 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/native-shim.js`: Android 原生桥接垫片
 - `src/js/events/`: 事件
 - `src/js/business/`: 修改
-- `src/js/render/`: 渲染（含 7 个模块）
-- `src/js/ui/`: 面板（含 7 个模块）
+- `src/js/render/`: 渲染（含 8 个模块）
+- `src/js/ui/`: 面板（含 8 个模块）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势（含 8 个模块）
+- `src/js/gestures/`: 手势（含 9 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域

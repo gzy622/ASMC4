@@ -6,10 +6,10 @@ export function applyRosterToAllAssignments(newRoster) {
 
   state.assignments.forEach(assignment => {
     const oldMap = new Map();
-    assignment.students.forEach(s => oldMap.set(s.id, s));
+    assignment.students.forEach(s => oldMap.set(String(s.id), s));
 
     assignment.students = newRoster.map(entry => {
-      const old = oldMap.get(entry.id);
+      const old = oldMap.get(String(entry.id));
       if (old) {
         old.serial = entry.serial;
         old.name = entry.name;
