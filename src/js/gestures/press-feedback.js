@@ -1,4 +1,4 @@
-import { phoneEl } from "../dom-refs.js";
+import { appShell } from "../dom-refs.js";
 
 const PRESSABLE = [
   ".student-card",
@@ -73,32 +73,32 @@ function armAutoRelease(pointerId) {
   }, 600));
 }
 
-phoneEl.addEventListener("pointerdown", (e) => {
-  if (e.button && e.button !== 0) return;
-  const el = resolve(e.target);
+appShell.addEventListener("pointerdown", (event) => {
+  if (event.button && event.button !== 0) return;
+  const el = resolve(event.target);
   if (!el || el.disabled) return;
-  clear(e.pointerId);
+  clear(event.pointerId);
   clearElement(el);
   el.classList.add("is-pressed");
-  pressed.set(e.pointerId, el);
-  pressStarts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  armAutoRelease(e.pointerId);
+  pressed.set(event.pointerId, el);
+  pressStarts.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  armAutoRelease(event.pointerId);
 });
 
-phoneEl.addEventListener("pointermove", (e) => {
-  const start = pressStarts.get(e.pointerId);
+appShell.addEventListener("pointermove", (event) => {
+  const start = pressStarts.get(event.pointerId);
   if (!start) return;
-  const dx = e.clientX - start.x;
-  const dy = e.clientY - start.y;
+  const dx = event.clientX - start.x;
+  const dy = event.clientY - start.y;
   if (Math.hypot(dx, dy) >= MOVE_CANCEL_DISTANCE) {
-    clear(e.pointerId);
+    clear(event.pointerId);
   }
 });
 
-phoneEl.addEventListener("pointerleave", (e) => clear(e.pointerId));
-window.addEventListener("pointerup", (e) => clear(e.pointerId), true);
-window.addEventListener("pointercancel", (e) => clear(e.pointerId), true);
-window.addEventListener("lostpointercapture", (e) => clear(e.pointerId), true);
+appShell.addEventListener("pointerleave", (event) => clear(event.pointerId));
+window.addEventListener("pointerup", (event) => clear(event.pointerId), true);
+window.addEventListener("pointercancel", (event) => clear(event.pointerId), true);
+window.addEventListener("lostpointercapture", (event) => clear(event.pointerId), true);
 window.addEventListener("blur", clearAll);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) clearAll();

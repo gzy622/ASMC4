@@ -1,7 +1,7 @@
 import { getState, saveAppState, getCurrentAssignment, defaultStudents } from "../state.js";
 import { MAX_ASSIGNMENTS, STATUS, SUBJECT_OPTIONS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
-import { newAssignmentInput, newAssignmentSubjectInput } from "../dom-refs.js";
+import { newAssignmentTitleInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
@@ -20,7 +20,7 @@ export function createAssignmentFromDialog() {
     return;
   }
 
-  const inputValue = clampAssignmentTitle(newAssignmentInput.value.trim());
+  const inputValue = clampAssignmentTitle(newAssignmentTitleInput.value.trim());
   const title = inputValue || makeDefaultAssignmentTitle();
   const subject = clampSubject((newAssignmentSubjectInput && newAssignmentSubjectInput.value.trim()) || "");
 
@@ -110,9 +110,9 @@ export function deleteAssignmentFromDrawer(assignmentId) {
     onConfirm: function() {
       const wasCurrent = String(state.currentAssignmentId) === String(assignmentId);
 
-      const idx = state.assignments.findIndex(item => String(item.id) === String(assignmentId));
-      if (idx >= 0) {
-        state.assignments.splice(idx, 1);
+      const assignmentIndex = state.assignments.findIndex(item => String(item.id) === String(assignmentId));
+      if (assignmentIndex >= 0) {
+        state.assignments.splice(assignmentIndex, 1);
       }
 
       if (state.assignments.length === 0) {
@@ -125,7 +125,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
         state.assignments.push(fallback);
         state.currentAssignmentId = fallback.id;
       } else if (wasCurrent) {
-        const nextIndex = Math.max(0, idx - 1);
+        const nextIndex = Math.max(0, assignmentIndex - 1);
         state.currentAssignmentId = state.assignments[nextIndex].id;
       }
 
@@ -243,33 +243,33 @@ export function renameAssignment(assignmentId) {
     render();
   }
 
-  input.addEventListener("blur", function(e) {
-    if (e.relatedTarget && e.relatedTarget.closest(".assignment-edit-subject")) return;
+  input.addEventListener("blur", function(event) {
+    if (event.relatedTarget && event.relatedTarget.closest(".assignment-edit-subject")) return;
     commit();
   });
 
-  input.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
+  input.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
       input.blur();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      e.stopPropagation();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
       cancel();
     }
   });
 
   select.addEventListener("change", commit);
 
-  select.addEventListener("blur", function(e) {
-    if (e.relatedTarget && e.relatedTarget.closest(".assignment-edit-input")) return;
+  select.addEventListener("blur", function(event) {
+    if (event.relatedTarget && event.relatedTarget.closest(".assignment-edit-input")) return;
     commit();
   });
 
-  select.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      e.stopPropagation();
+  select.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
       cancel();
     }
   });

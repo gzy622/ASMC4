@@ -12,7 +12,7 @@ import {
   rosterEditorPanel,
   scoreSheet,
   settingsPanel,
-  phoneEl,
+  appShell,
   titleButton
 } from "../dom-refs.js";
 import { closeDrawer, openDrawer } from "../ui/drawer.js";
@@ -45,7 +45,7 @@ function anyFloatingLayerOpen() {
 }
 
 function bindEmptyAreaClose() {
-  phoneEl.addEventListener("click", event => {
+  appShell.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
     if (uiTransitionBusy) {

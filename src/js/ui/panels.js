@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { addButton, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
+import { addButton, newAssignmentPanel, newAssignmentTitleInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
@@ -25,13 +25,13 @@ export function openNewAssignmentPanel() {
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
 
-  newAssignmentInput.value = makeDefaultAssignmentTitle();
+  newAssignmentTitleInput.value = makeDefaultAssignmentTitle();
   if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");
 
   requestAnimationFrame(() => {
-    newAssignmentInput.focus();
+    newAssignmentTitleInput.focus();
   });
 }
 

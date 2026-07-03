@@ -1,8 +1,8 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
-import { scoreSheetStudent, setScoreSheetStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreTensMode, noteInputValue } from "../runtime.js";
-import { syncScoreTensUi } from "./tens-ui.js";
+import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreStep10Mode, noteInputValue } from "../runtime.js";
+import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
@@ -12,7 +12,7 @@ import { clampStudentNote } from "../utils/data-limits.js";
 let releaseScoreSheetPointerGuard = null;
 
 export function openScoreSheet(student, guardPointer = false) {
-  setScoreSheetStudent(student);
+  setCurrentScoringStudent(student);
 
   const assignment = getCurrentAssignment();
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(student.id));
@@ -28,7 +28,7 @@ export function openScoreSheet(student, guardPointer = false) {
     setScoreInputValue(existingScore || "0");
   }
 
-  syncScoreTensUi(getState().scoreTensMode);
+  syncScoreStep10Ui(getState().scoreStep10Mode);
 
   scoreNoteInput.value = noteInputValue;
   scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
@@ -44,7 +44,7 @@ export function openScoreSheet(student, guardPointer = false) {
 export function closeScoreSheet() {
   clearScoreSheetPointerGuard();
   setSuppressNextCardClick(false);
-  setScoreSheetStudent(null);
+  setCurrentScoringStudent(null);
   setScoreInputValue("0");
   setNoteInputValue("");
   scoreStudentSerial.textContent = "--";
@@ -60,26 +60,26 @@ export function updateScoreDisplay() {
 }
 
 export function confirmScore() {
-  if (!scoreSheetStudent) return;
+  if (!currentScoringStudent) return;
 
   const score = parseFloat(scoreInputValue);
   const hasScore = !(isNaN(score) || score <= 0);
   if (isNaN(score) || score <= 0) {
-    scoreSheetStudent.badge = "";
-    scoreSheetStudent.badgeType = "";
-    scoreSheetStudent.status = STATUS.NORMAL;
+    currentScoringStudent.badge = "";
+    currentScoringStudent.badgeType = "";
+    currentScoringStudent.status = STATUS.NORMAL;
   } else {
     const rounded = Math.round(score * 100) / 100;
-    scoreSheetStudent.badge = String(rounded);
-    scoreSheetStudent.badgeType = "score";
-    scoreSheetStudent.status = STATUS.SUBMITTED;
+    currentScoringStudent.badge = String(rounded);
+    currentScoringStudent.badgeType = "score";
+    currentScoringStudent.status = STATUS.SUBMITTED;
   }
 
   const trimmedNote = clampStudentNote(noteInputValue.trim());
-  scoreSheetStudent.note = trimmedNote || "";
+  currentScoringStudent.note = trimmedNote || "";
 
   hapticLight();
-  scoreSheetStudent.updatedAt = new Date().toISOString();
+  currentScoringStudent.updatedAt = new Date().toISOString();
 
   let message = "已保存备注";
   if (!hasScore && !trimmedNote) message = "已清空分数";
@@ -87,8 +87,8 @@ export function confirmScore() {
   else if (hasScore && trimmedNote) message = "已保存分数和备注";
 
   const assignment = getCurrentAssignment();
-  const studentIndex = assignment.students.findIndex(s => String(s.id) === String(scoreSheetStudent.id));
-  const displayName = getDisplayName(scoreSheetStudent, studentIndex >= 0 ? studentIndex : 0);
+  const studentIndex = assignment.students.findIndex(s => String(s.id) === String(currentScoringStudent.id));
+  const displayName = getDisplayName(currentScoringStudent, studentIndex >= 0 ? studentIndex : 0);
   saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
   render();
   closeScoreSheet();
@@ -96,10 +96,10 @@ export function confirmScore() {
   announce(message, { action: "undo", assignmentId: assignment.id });
 }
 
-export function toggleTensMode() {
-  const next = !scoreTensMode;
-  syncScoreTensUi(next);
-  getState().scoreTensMode = next;
+export function toggleScoreStep10Mode() {
+  const next = !scoreStep10Mode;
+  syncScoreStep10Ui(next);
+  getState().scoreStep10Mode = next;
   saveAppState({ history: false });
 }
 

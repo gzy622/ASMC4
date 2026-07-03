@@ -1,7 +1,7 @@
 let pendingConfirmAction = null;
-let scoreSheetStudent = null;
+let currentScoringStudent = null;
 let scoreInputValue = "0";
-let scoreTensMode = false;
+let scoreStep10Mode = false;
 let noteInputValue = "";
 const longPressTimers = new Map();
 let longPressTriggered = false;
@@ -13,9 +13,9 @@ let pointerDirectionLockId = null;
 
 export {
   pendingConfirmAction,
-  scoreSheetStudent,
+  currentScoringStudent,
   scoreInputValue,
-  scoreTensMode,
+  scoreStep10Mode,
   noteInputValue,
   longPressTimers,
   longPressTriggered,
@@ -23,27 +23,27 @@ export {
   uiTransitionBusy
 };
 
-export function setPendingConfirmAction(val) { pendingConfirmAction = val; }
-export function setScoreSheetStudent(val) { scoreSheetStudent = val; }
-export function setScoreInputValue(val) { scoreInputValue = val; }
-export function setScoreTensMode(val) { scoreTensMode = val; }
-export function setNoteInputValue(val) { noteInputValue = val; }
-export function setLongPressTimer(pointerId, val) {
-  if (val == null) longPressTimers.delete(pointerId);
-  else longPressTimers.set(pointerId, val);
+export function setPendingConfirmAction(value) { pendingConfirmAction = value; }
+export function setCurrentScoringStudent(value) { currentScoringStudent = value; }
+export function setScoreInputValue(value) { scoreInputValue = value; }
+export function setScoreStep10Mode(value) { scoreStep10Mode = value; }
+export function setNoteInputValue(value) { noteInputValue = value; }
+export function setLongPressTimer(pointerId, timerId) {
+  if (timerId == null) longPressTimers.delete(pointerId);
+  else longPressTimers.set(pointerId, timerId);
 }
 export function clearLongPressTimer(pointerId) {
-  const t = longPressTimers.get(pointerId);
-  if (t) clearTimeout(t);
+  const timerId = longPressTimers.get(pointerId);
+  if (timerId) clearTimeout(timerId);
   longPressTimers.delete(pointerId);
 }
 export function clearAllLongPressTimers() {
-  longPressTimers.forEach(t => clearTimeout(t));
+  longPressTimers.forEach(timerId => clearTimeout(timerId));
   longPressTimers.clear();
 }
-export function setLongPressTriggered(val) { longPressTriggered = val; }
-export function setSuppressNextCardClick(val) { suppressNextCardClick = val; }
-export function setUiTransitionBusy(val) { uiTransitionBusy = val; }
+export function setLongPressTriggered(value) { longPressTriggered = value; }
+export function setSuppressNextCardClick(value) { suppressNextCardClick = value; }
+export function setUiTransitionBusy(value) { uiTransitionBusy = value; }
 export function claimDirection(pointerId, dir) {
   if (pointerDirectionLockId !== null && pointerDirectionLockId !== pointerId) {
     return null;

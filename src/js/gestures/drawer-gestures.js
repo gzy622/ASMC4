@@ -1,4 +1,4 @@
-import { phoneEl, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
+import { appShell, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, uiTransitionBusy } from "../runtime.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
@@ -18,7 +18,7 @@ function shouldReleaseBySwipe(dx, velocity, direction) {
 
 /* ── Phone swipe → open drawer ── */
 
-createHorizontalDragGesture(phoneEl, {
+createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
@@ -60,7 +60,7 @@ createHorizontalDragGesture(drawer, {
 
 /* ── Empty area swipe → close drawer ── */
 
-createHorizontalDragGesture(phoneEl, {
+createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: (event) => {

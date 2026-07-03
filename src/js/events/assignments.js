@@ -5,7 +5,7 @@ import {
   deleteAssignmentButton,
   invertButton,
   newAssignmentCreateButton,
-  newAssignmentInput,
+  newAssignmentTitleInput,
   quickRenameInput,
   quickSubjectSelect
 } from "../dom-refs.js";
@@ -38,7 +38,7 @@ function selectAssignmentFromDrawer(assignmentId) {
 
 export function bindAssignmentEvents() {
   newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
-  newAssignmentInput.addEventListener("keydown", event => {
+  newAssignmentTitleInput.addEventListener("keydown", event => {
     if (event.key === "Enter") createAssignmentFromDialog();
   });
 

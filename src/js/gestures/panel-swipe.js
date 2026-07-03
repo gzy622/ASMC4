@@ -2,7 +2,7 @@ import {
   confirmPanel,
   drawer,
   newAssignmentPanel,
-  phoneEl,
+  appShell,
   quickPanel,
   quickPanelHead,
   quickPanelHandleZone,
@@ -57,7 +57,7 @@ function bindTopSheetCloseGesture(panel) {
     onClose: closeFloatingPanels,
   });
 
-  createVerticalDragGesture(phoneEl, {
+  createVerticalDragGesture(appShell, {
     closeDirection: -1,
     targetEl: panel,
     shouldStart: (event) => {
@@ -112,7 +112,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     });
   }
 
-  createVerticalDragGesture(phoneEl, {
+  createVerticalDragGesture(appShell, {
     closeDirection: -1,
     targetEl: quickPanel,
     onDragStart: prepareQuickPanelCloseDrag,

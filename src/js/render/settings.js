@@ -3,7 +3,7 @@ import {
   quickShowRealNameSwitch,
   quickScoringModeSwitch,
   scoringModeSwitch,
-  scoreTensModeSwitch,
+  scoreStep10ModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
   hapticsEnabledSwitch
@@ -59,8 +59,8 @@ export function renderSettingsState(state) {
   );
 
   syncSwitch(
-    scoreTensModeSwitch,
-    state.scoreTensMode,
+    scoreStep10ModeSwitch,
+    state.scoreStep10Mode,
     "×10模式已开启，点击关闭",
     "×10模式已关闭，点击开启"
   );

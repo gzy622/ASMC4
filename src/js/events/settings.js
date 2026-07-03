@@ -2,7 +2,7 @@ import {
   settingsBtn,
   settingsCloseButton,
   scoringModeSwitch,
-  scoreTensModeSwitch,
+  scoreStep10ModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
   hapticsEnabledSwitch,
@@ -14,7 +14,7 @@ import {
   rosterEditorPanel
 } from "../dom-refs.js";
 import { getState, saveAppState } from "../state.js";
-import { setScoreTensMode } from "../runtime.js";
+import { setScoreStep10Mode } from "../runtime.js";
 import { toggleScoringMode } from "../business/student.js";
 import { openSettings, closeSettings } from "../ui/settings.js";
 import { renderRosterRows } from "../ui/roster.js";
@@ -47,14 +47,14 @@ export function bindSettingsEvents() {
     announce(state.showBarStats !== false ? "已交人数已显示" : "已交人数已隐藏");
   });
 
-  scoreTensModeSwitch.addEventListener("click", () => {
+  scoreStep10ModeSwitch.addEventListener("click", () => {
     hapticSelection();
     const state = getState();
-    state.scoreTensMode = !state.scoreTensMode;
-    setScoreTensMode(state.scoreTensMode);
+    state.scoreStep10Mode = !state.scoreStep10Mode;
+    setScoreStep10Mode(state.scoreStep10Mode);
     saveAppState({ history: false });
     render();
-    announce(state.scoreTensMode ? "×10 已开启" : "×10 已关闭");
+    announce(state.scoreStep10Mode ? "×10 已开启" : "×10 已关闭");
   });
 
   hapticsEnabledSwitch?.addEventListener("click", () => {

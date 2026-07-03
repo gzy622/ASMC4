@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer, phoneEl } from "../dom-refs.js";
+import { drawer, appShell } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -17,7 +17,7 @@ function clearDocumentSelection() {
 function getDrawerExpandScale() {
   const drawerWidth = drawer.offsetWidth;
   if (!drawerWidth) return 1;
-  return phoneEl.clientWidth / drawerWidth;
+  return appShell.clientWidth / drawerWidth;
 }
 
 function setDrawerExpandScale() {

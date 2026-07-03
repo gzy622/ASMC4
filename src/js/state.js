@@ -352,7 +352,7 @@ function loadAppState() {
   const fallback = {
     showRealNames: true,
     scoringMode: false,
-    scoreTensMode: false,
+    scoreStep10Mode: false,
     showBarScoringToggle: true,
     showBarStats: true,
     hapticsEnabled: true,
@@ -387,7 +387,7 @@ function loadAppState() {
     const nextState = {
       showRealNames: parsed.showRealNames !== false,
       scoringMode: Boolean(parsed.scoringMode),
-      scoreTensMode: Boolean(parsed.scoreTensMode),
+      scoreStep10Mode: Boolean(parsed.scoreStep10Mode ?? parsed.scoreTensMode),
       showBarScoringToggle: parsed.showBarScoringToggle !== false,
       showBarStats: parsed.showBarStats !== false,
       hapticsEnabled: parsed.hapticsEnabled !== false,
