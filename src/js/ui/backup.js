@@ -24,8 +24,8 @@ export async function exportBackup() {
   try {
     const state = getState();
     const nonEnglishStudents = state.roster
-      .filter(function(e) { return e.nonEnglish; })
-      .map(function(e) { return { id: e.id, serial: e.serial, name: e.name }; });
+      .filter(function(entry) { return entry.nonEnglish; })
+      .map(function(entry) { return { id: entry.id, serial: entry.serial, name: entry.name }; });
     const backupData = Object.assign({}, state, { nonEnglishStudents: nonEnglishStudents });
     const json = JSON.stringify(backupData, null, 2);
     const fileName = timestampName();
@@ -69,9 +69,9 @@ export function importBackup(file) {
   }
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function(event) {
     try {
-      const data = JSON.parse(e.target.result);
+      const data = JSON.parse(event.target.result);
 
       if (!data || !Array.isArray(data.assignments)) {
         alert("备份文件格式无效：缺少 assignments 数组");
@@ -101,7 +101,7 @@ export function importBackup(file) {
             const nextState = {
               showRealNames: data.showRealNames !== false,
               scoringMode: Boolean(data.scoringMode),
-              scoreTensMode: Boolean(data.scoreTensMode),
+              scoreStep10Mode: Boolean(data.scoreStep10Mode ?? data.scoreTensMode),
               showBarScoringToggle: data.showBarScoringToggle !== false,
               showBarStats: data.showBarStats !== false,
               hapticsEnabled: data.hapticsEnabled !== false,
@@ -119,7 +119,7 @@ export function importBackup(file) {
             const state = getState();
             state.showRealNames = nextState.showRealNames;
             state.scoringMode = nextState.scoringMode;
-            state.scoreTensMode = nextState.scoreTensMode;
+            state.scoreStep10Mode = nextState.scoreStep10Mode;
             state.showBarScoringToggle = nextState.showBarScoringToggle;
             state.showBarStats = nextState.showBarStats;
             state.hapticsEnabled = nextState.hapticsEnabled;

@@ -1,9 +1,9 @@
-import { scoreTensBtn, scoreNumpad } from "../dom-refs.js";
-import { setScoreTensMode } from "../runtime.js";
+import { scoreStep10Button, scoreNumpad } from "../dom-refs.js";
+import { setScoreStep10Mode } from "../runtime.js";
 
-export function syncScoreTensUi(enabled) {
-  setScoreTensMode(enabled);
-  scoreTensBtn.classList.toggle("is-on", enabled);
+export function syncScoreStep10Ui(enabled) {
+  setScoreStep10Mode(enabled);
+  scoreStep10Button.classList.toggle("is-on", enabled);
 
   scoreNumpad.querySelectorAll(".numpad-btn").forEach(btn => {
     if (btn.dataset.action) return;

@@ -10,7 +10,7 @@ import {
 import {
   noteInputValue,
   scoreInputValue,
-  scoreTensMode,
+  scoreStep10Mode,
   setNoteInputValue,
   setScoreInputValue
 } from "../runtime.js";
@@ -18,7 +18,7 @@ import { hapticSelection } from "../utils/haptics.js";
 import {
   closeScoreSheet,
   confirmScore,
-  toggleTensMode,
+  toggleScoreStep10Mode,
   updateScoreDisplay
 } from "../score-sheet/index.js";
 
@@ -52,7 +52,7 @@ export function bindScoreEvents() {
     const { value, action } = button.dataset;
 
     if (value !== undefined) {
-      if (scoreTensMode) {
+      if (scoreStep10Mode) {
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
         confirmScore();
         return;
@@ -68,11 +68,11 @@ export function bindScoreEvents() {
         setScoreInputValue(scoreInputValue + value);
       }
     } else if (action === "decimal") {
-      if (!scoreTensMode && !scoreInputValue.includes(".")) {
+      if (!scoreStep10Mode && !scoreInputValue.includes(".")) {
         setScoreInputValue(scoreInputValue + ".");
       }
     } else if (action === "tens") {
-      toggleTensMode();
+      toggleScoreStep10Mode();
     }
 
     updateScoreDisplay();

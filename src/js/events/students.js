@@ -1,5 +1,5 @@
 import {
-  grid,
+  studentGrid,
   showRealNameSwitch,
   quickShowRealNameSwitch,
   quickScoringModeSwitch,
@@ -25,7 +25,7 @@ import { hapticSelection } from "../utils/haptics.js";
 export function bindStudentEvents() {
   scoringToggle.addEventListener("click", toggleScoringMode);
 
-  grid.addEventListener("click", event => {
+  studentGrid.addEventListener("click", event => {
     const card = event.target.closest(".student-card");
     if (!card) return;
 
@@ -82,15 +82,15 @@ export function bindStudentEvents() {
     toggleScoringMode
   );
 
-  grid.addEventListener("pointerdown", handleLongPressStart);
-  grid.addEventListener("pointermove", handleLongPressMove);
-  grid.addEventListener("pointerup", handleLongPressEnd);
-  grid.addEventListener("pointercancel", handleLongPressEnd);
-  grid.addEventListener("pointerleave", handleLongPressEnd);
-  grid.addEventListener("selectstart", event => {
+  studentGrid.addEventListener("pointerdown", handleLongPressStart);
+  studentGrid.addEventListener("pointermove", handleLongPressMove);
+  studentGrid.addEventListener("pointerup", handleLongPressEnd);
+  studentGrid.addEventListener("pointercancel", handleLongPressEnd);
+  studentGrid.addEventListener("pointerleave", handleLongPressEnd);
+  studentGrid.addEventListener("selectstart", event => {
     if (event.target.closest(".student-card")) event.preventDefault();
   });
-  grid.addEventListener("contextmenu", event => {
+  studentGrid.addEventListener("contextmenu", event => {
     if (longPressTimers.size > 0 || longPressTriggered) event.preventDefault();
   });
 }

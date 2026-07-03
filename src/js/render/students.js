@@ -1,9 +1,9 @@
 import { escapeHTML } from "../utils/escapeHTML.js";
 import { getStateClass, getDisplayName, getCardAriaLabel, isStudentForceNone } from "../utils/display.js";
-import { grid } from "../dom-refs.js";
+import { studentGrid } from "../dom-refs.js";
 
 export function renderStudents(state, assignment) {
-  grid.innerHTML = assignment.students.map((student, index) => {
+  studentGrid.innerHTML = assignment.students.map((student, index) => {
     const stateClass = getStateClass(student, assignment);
     const displayName = getDisplayName(student, index);
     const safeId = escapeHTML(student.id);

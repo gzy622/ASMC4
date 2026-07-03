@@ -1,4 +1,4 @@
-import { confirmPanel, phoneEl, scoreSheet } from "../dom-refs.js";
+import { confirmPanel, appShell, scoreSheet } from "../dom-refs.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { createVerticalDragGesture } from "./drag-gesture.js";
 import { uiTransitionBusy } from "../runtime.js";
@@ -8,7 +8,7 @@ createVerticalDragGesture(scoreSheet, {
   onClose: closeScoreSheet,
 });
 
-createVerticalDragGesture(phoneEl, {
+createVerticalDragGesture(appShell, {
   closeDirection: +1,
   targetEl: scoreSheet,
   shouldStart: (event) => {

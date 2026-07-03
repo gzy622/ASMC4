@@ -9,7 +9,7 @@ import "./native-shim.js";
 import "./utils/back-guard.js";
 import { fillSubjectSelect } from "./utils/subject-select.js";
 import { BUILD_VERSION } from "./build-version.js";
-import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion, bootMask, grid } from "./dom-refs.js";
+import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion, bootMask, studentGrid } from "./dom-refs.js";
 import { setThemeColor } from "./utils/dom.js";
 
 setThemeColor("#f4f4f4");
@@ -36,8 +36,8 @@ if (bootMask) {
 
   const checkStable = () => {
     if (disposed) return;
-    if (!grid) { reveal(); return; }
-    const { width, height } = grid.getBoundingClientRect();
+    if (!studentGrid) { reveal(); return; }
+    const { width, height } = studentGrid.getBoundingClientRect();
     const key = `${width},${height}`;
     stableCount = key === prevKey ? stableCount + 1 : 0;
     prevKey = key;

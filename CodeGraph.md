@@ -41,16 +41,18 @@ index.html -> src/js/app.js -> bindEvents() + render()
 {
   showRealNames,
   scoringMode,
-  scoreTensMode,
+  scoreStep10Mode,
   currentAssignmentId,
   assignments: [{ id, title, createdAt, subject, students: [{ id, serial, name, status, badge, badgeType, note, updatedAt }] }],
   roster: [{ id, serial, name, nonEnglish }]
 }
 ```
 
+旧备份中的 `scoreTensMode` 读取时会迁移到 `scoreStep10Mode`。
+
 ### 运行时（`runtime.js`，不持久化）
 
-- `pendingConfirmAction`, `scoreSheetStudent`, `scoreInputValue`, `scoreTensMode`
+- `pendingConfirmAction`, `currentScoringStudent`, `scoreInputValue`, `scoreStep10Mode`
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
 - `uiTransitionBusy`, `pointerDirectionLock`
 
@@ -80,13 +82,13 @@ DOM（`index.html` + `dom-refs.js`）：
 |------|---------|------|
 | 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `blocksQuickPanelPull()` 为 false |
 | 上滑关闭（面板内） | `#quickPanelHead`、`#quickPanelHandleZone`、`#quickActionGrid` | `#quickPanel.is-open`；`#quickActionGrid` 排除 `button/input` |
-| 上滑关闭（面板外） | `phoneEl`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
+| 上滑关闭（面板外） | `appShell`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
 下拉打开的 `onPrepare` 调 `refreshQuickPanelContent()`（`render/quickPanel.js`），按当前 view 刷新标题与内容。
 
 `closeFloatingPanels()`（`ui/panels.js`）须 `teardownQuickPanelDrag()`（清 `is-dragging` + abort 下拉预览）并 `resetQuickPanelView()`，避免残留 `is-dragging` 或历史 view 与点标题打开不一致。
 
-面板下方空白与学生列表同在 `.scroll-container` 内。**`phoneEl` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
+面板下方空白与学生列表同在 `.scroll-container` 内。**`appShell` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
 
 ### 浮层状态（勿混用）
 
