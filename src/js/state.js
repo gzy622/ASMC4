@@ -1,9 +1,8 @@
-import { STORAGE_KEY, STATUS } from "./constants.js";
+import { MAX_HISTORY, STORAGE_KEY, STATUS } from "./constants.js";
 import { normalizeAssignment, normalizeRosterFromBackup } from "./utils/normalize.js";
 import { clone } from "./utils/clone.js";
 import { defaultStudents, defaultAssignment } from "./data/defaults.js";
-
-const MAX_HISTORY = 50;
+import { getAppStateLimitError } from "./utils/data-limits.js";
 
 let appState = loadAppState();
 let lastSerialized = JSON.stringify(appState);
@@ -112,9 +111,18 @@ export function getHistoryEntries(assignmentId) {
 
 function persistSerialized(serialized) {
   try {
+    const limitError = getAppStateLimitError(appState);
+    if (limitError) {
+      console.warn("保存失败：数据超出限制");
+      alert(limitError);
+      return false;
+    }
     localStorage.setItem(STORAGE_KEY, serialized);
+    return true;
   } catch (error) {
     console.warn("保存失败：localStorage 可能已满", error);
+    alert("保存失败：本地存储空间不足，请先导出备份并清理部分数据。");
+    return false;
   }
 }
 
@@ -129,12 +137,21 @@ function trimHistoryEntries() {
 
 export function saveAppState({ history = true, label = "", assignmentId = null } = {}) {
   const currentSerialized = JSON.stringify(appState);
-  if (currentSerialized === lastSerialized) return;
+  if (currentSerialized === lastSerialized) return true;
+
+  const limitError = getAppStateLimitError(appState);
+  if (limitError) {
+    console.warn("保存失败：数据超出限制");
+    alert(limitError);
+    return false;
+  }
 
   if (!history) {
-    lastSerialized = currentSerialized;
-    persistSerialized(currentSerialized);
-    return;
+    if (persistSerialized(currentSerialized)) {
+      lastSerialized = currentSerialized;
+      return true;
+    }
+    return false;
   }
 
   // 旧实现是 historyEntries.length = historyIndex + 1;，现在改为按作业各自截断未来记录。
@@ -157,8 +174,11 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
   assignmentHistory.index++;
   trimHistoryEntries();
 
-  lastSerialized = currentSerialized;
-  persistSerialized(currentSerialized);
+  if (persistSerialized(currentSerialized)) {
+    lastSerialized = currentSerialized;
+    return true;
+  }
+  return false;
 }
 
 function applyAssignmentHistoryEntry(assignmentId, entry) {
@@ -306,7 +326,7 @@ function loadAppState() {
 
     const roster = normalizeRosterFromBackup(parsed, assignments[0].students);
 
-    return {
+    const nextState = {
       showRealNames: parsed.showRealNames !== false,
       scoringMode: Boolean(parsed.scoringMode),
       scoreTensMode: Boolean(parsed.scoreTensMode),
@@ -317,6 +337,14 @@ function loadAppState() {
       assignments,
       roster
     };
+
+    const limitError = getAppStateLimitError(nextState);
+    if (limitError) {
+      console.warn("读取存储失败，数据超出限制");
+      return fallback;
+    }
+
+    return nextState;
   } catch (error) {
     console.warn("读取存储失败，使用默认数据", error);
     return fallback;

@@ -1,13 +1,14 @@
-import { STATUS } from "../constants.js";
+import { MAX_ROSTER_SIZE, STATUS } from "../constants.js";
 import { makeId } from "./id.js";
+import { clampAssignmentTitle, clampStudentName, clampStudentNote, clampSubject } from "./data-limits.js";
 
 export function normalizeAssignment(assignment, assignmentIndex) {
   return {
     id: String(assignment.id || makeId(`assignment-${assignmentIndex}`)),
-    title: String(assignment.title || "未命名作业"),
-    subject: String(assignment.subject || ""),
+    title: clampAssignmentTitle(assignment.title || "未命名作业") || "未命名作业",
+    subject: clampSubject(assignment.subject || ""),
     createdAt: assignment.createdAt || new Date().toISOString(),
-    students: assignment.students.map(normalizeStudent)
+    students: assignment.students.slice(0, MAX_ROSTER_SIZE).map(normalizeStudent)
   };
 }
 
@@ -17,25 +18,25 @@ export function normalizeStudent(student, index) {
   return {
     id: Number(student.id) || index + 1,
     serial: String(student.serial || fallbackSerial).padStart(2, "0"),
-    name: String(student.name || "未命名"),
+    name: clampStudentName(student.name || "未命名") || "未命名",
     status: [STATUS.NORMAL, STATUS.SUBMITTED, STATUS.NONE].includes(student.status)
       ? student.status
       : STATUS.NORMAL,
     badge: String(student.badge || ""),
     badgeType: String(student.badgeType || ""),
-    note: String(student.note || ""),
+    note: clampStudentNote(student.note || ""),
     updatedAt: student.updatedAt || ""
   };
 }
 
 export function createFreshStudentsFrom(students) {
-  return students.map((student, index) => {
+  return students.slice(0, MAX_ROSTER_SIZE).map((student, index) => {
     const isNoRegistration = student.status === STATUS.NONE;
 
     return {
       id: Number(student.id) || index + 1,
       serial: String(student.serial || index + 1).padStart(2, "0"),
-      name: String(student.name || "未命名"),
+      name: clampStudentName(student.name || "未命名") || "未命名",
       status: isNoRegistration ? STATUS.NONE : STATUS.NORMAL,
       badge: "",
       badgeType: "",
@@ -50,14 +51,14 @@ export function normalizeRosterEntry(entry, index) {
   return {
     id: Number(entry.id) || index + 1,
     serial: String(entry.serial || fallbackSerial).padStart(2, "0"),
-    name: String(entry.name || "").trim() || "未命名",
+    name: clampStudentName(String(entry.name || "").trim()) || "未命名",
     nonEnglish: Boolean(entry.nonEnglish)
   };
 }
 
 export function normalizeRosterFromBackup(data, fallbackStudents) {
   const sourceRoster = Array.isArray(data?.roster) ? data.roster : fallbackStudents;
-  const roster = sourceRoster.map(normalizeRosterEntry);
+  const roster = sourceRoster.slice(0, MAX_ROSTER_SIZE).map(normalizeRosterEntry);
   const nonEnglishIds = new Set(
     Array.isArray(data?.nonEnglishStudents)
       ? data.nonEnglishStudents.map(item => String(item && item.id))

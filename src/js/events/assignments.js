@@ -23,6 +23,7 @@ import { closeDrawer } from "../ui/drawer.js";
 import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
 import { announce } from "../utils/dom.js";
+import { clampAssignmentTitle } from "../utils/data-limits.js";
 
 function selectAssignment(assignmentId) {
   getState().currentAssignmentId = assignmentId;
@@ -125,7 +126,7 @@ export function bindAssignmentEvents() {
     function commitRename() {
       if (renameSettled) return;
       renameSettled = true;
-      const trimmed = quickRenameInput.value.trim();
+      const trimmed = clampAssignmentTitle(quickRenameInput.value.trim());
       const assignment = getCurrentAssignment();
       if (!trimmed) {
         render();
@@ -138,6 +139,7 @@ export function bindAssignmentEvents() {
       }
 
       assignment.title = trimmed;
+      quickRenameInput.value = trimmed;
       assignment.updatedAt = new Date().toISOString();
       saveAppState({ label: `重命名为「${trimmed}」`, assignmentId: assignment.id });
       render();

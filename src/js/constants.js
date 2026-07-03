@@ -1,4 +1,13 @@
 export const STORAGE_KEY = "asmc4_assignments_v1";
+export const MAX_HISTORY = 50;
+export const MAX_ASSIGNMENTS = 500;
+export const MAX_ROSTER_SIZE = 100;
+export const MAX_ASSIGNMENT_TITLE_LENGTH = 24;
+export const MAX_SUBJECT_LENGTH = 12;
+export const MAX_STUDENT_NAME_LENGTH = 10;
+export const MAX_STUDENT_NOTE_LENGTH = 20;
+export const MAX_STATE_BYTES = 4 * 1024 * 1024;
+export const MAX_BACKUP_FILE_BYTES = 6 * 1024 * 1024;
 
 export const STATUS = {
   NORMAL: "normal",

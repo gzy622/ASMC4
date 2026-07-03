@@ -1,5 +1,5 @@
 import { getState, saveAppState, getCurrentAssignment, defaultStudents } from "../state.js";
-import { STATUS, SUBJECT_OPTIONS } from "../constants.js";
+import { MAX_ASSIGNMENTS, STATUS, SUBJECT_OPTIONS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
 import { newAssignmentInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { render } from "../render/index.js";
@@ -11,11 +11,18 @@ import { assignmentList } from "../dom-refs.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { closeFloatingPanels } from "../ui/panels.js";
+import { clampAssignmentTitle, clampSubject } from "../utils/data-limits.js";
 
 export function createAssignmentFromDialog() {
-  const inputValue = newAssignmentInput.value.trim();
+  const state = getState();
+  if (state.assignments.length >= MAX_ASSIGNMENTS) {
+    announce(`最多只能保留 ${MAX_ASSIGNMENTS} 个作业`);
+    return;
+  }
+
+  const inputValue = clampAssignmentTitle(newAssignmentInput.value.trim());
   const title = inputValue || makeDefaultAssignmentTitle();
-  const subject = (newAssignmentSubjectInput && newAssignmentSubjectInput.value.trim()) || "";
+  const subject = clampSubject((newAssignmentSubjectInput && newAssignmentSubjectInput.value.trim()) || "");
 
   const current = getCurrentAssignment();
 
@@ -27,7 +34,6 @@ export function createAssignmentFromDialog() {
     students: createFreshStudentsFrom(current.students)
   };
 
-  const state = getState();
   state.assignments.unshift(nextAssignment);
   state.currentAssignmentId = nextAssignment.id;
 
@@ -189,8 +195,8 @@ export function renameAssignment(assignmentId) {
     if (settled) return;
     settled = true;
 
-    const trimmed = input.value.trim();
-    const newSubject = select.value;
+    const trimmed = clampAssignmentTitle(input.value.trim());
+    const newSubject = clampSubject(select.value);
 
     if (!trimmed) {
       render();
@@ -202,6 +208,7 @@ export function renameAssignment(assignmentId) {
 
     if (titleChanged) {
       assignment.title = trimmed;
+      input.value = trimmed;
     }
 
     if (subjectChanged) {

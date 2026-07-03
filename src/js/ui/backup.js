@@ -6,6 +6,8 @@ import { normalizeAssignment, normalizeRosterFromBackup } from "../utils/normali
 import { announce } from "../utils/dom.js";
 import { importBackupInput } from "../dom-refs.js";
 import { isNativePlatform } from "../utils/native.js";
+import { MAX_BACKUP_FILE_BYTES } from "../constants.js";
+import { getAppStateLimitError } from "../utils/data-limits.js";
 
 function timestampName() {
   const now = new Date();
@@ -60,6 +62,12 @@ export async function exportBackup() {
 }
 
 export function importBackup(file) {
+  if (file.size > MAX_BACKUP_FILE_BYTES) {
+    alert("备份文件过大，请先精简作业或名单后再导入。");
+    importBackupInput.value = "";
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -90,16 +98,34 @@ export function importBackup(file) {
               return String(item.id) === String(data.currentAssignmentId);
             }) || assignments[0];
 
+            const nextState = {
+              showRealNames: data.showRealNames !== false,
+              scoringMode: Boolean(data.scoringMode),
+              scoreTensMode: Boolean(data.scoreTensMode),
+              showBarScoringToggle: data.showBarScoringToggle !== false,
+              showBarStats: data.showBarStats !== false,
+              hapticsEnabled: data.hapticsEnabled !== false,
+              currentAssignmentId: currentAssignment.id,
+              assignments,
+              roster: normalizeRosterFromBackup(data, assignments[0].students)
+            };
+
+            const limitError = getAppStateLimitError(nextState);
+            if (limitError) {
+              alert(limitError);
+              return;
+            }
+
             const state = getState();
-            state.showRealNames = data.showRealNames !== false;
-            state.scoringMode = Boolean(data.scoringMode);
-            state.scoreTensMode = Boolean(data.scoreTensMode);
-            state.showBarScoringToggle = data.showBarScoringToggle !== false;
-            state.showBarStats = data.showBarStats !== false;
-            state.hapticsEnabled = data.hapticsEnabled !== false;
-            state.currentAssignmentId = currentAssignment.id;
-            state.assignments = assignments;
-            state.roster = normalizeRosterFromBackup(data, assignments[0].students);
+            state.showRealNames = nextState.showRealNames;
+            state.scoringMode = nextState.scoringMode;
+            state.scoreTensMode = nextState.scoreTensMode;
+            state.showBarScoringToggle = nextState.showBarScoringToggle;
+            state.showBarStats = nextState.showBarStats;
+            state.hapticsEnabled = nextState.hapticsEnabled;
+            state.currentAssignmentId = nextState.currentAssignmentId;
+            state.assignments = nextState.assignments;
+            state.roster = nextState.roster;
 
             saveAppState({ history: false });
             render();

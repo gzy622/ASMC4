@@ -7,6 +7,7 @@ import { getDisplayName } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
+import { clampStudentNote } from "../utils/data-limits.js";
 
 let releaseScoreSheetPointerGuard = null;
 
@@ -74,7 +75,7 @@ export function confirmScore() {
     scoreSheetStudent.status = STATUS.SUBMITTED;
   }
 
-  const trimmedNote = noteInputValue.trim();
+  const trimmedNote = clampStudentNote(noteInputValue.trim());
   scoreSheetStudent.note = trimmedNote || "";
 
   hapticLight();

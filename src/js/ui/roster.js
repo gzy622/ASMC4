@@ -6,11 +6,13 @@ import { openConfirm, closeConfirm } from "./confirm.js";
 import { announce } from "../utils/dom.js";
 import { escapeHTML } from "../utils/escapeHTML.js";
 import { normalizeRosterEntry } from "../utils/normalize.js";
+import { MAX_ROSTER_SIZE } from "../constants.js";
 import {
   rosterEditorPanel,
   rosterEditorList
 } from "../dom-refs.js";
 import { closeDrawerFullscreenPanel } from "./drawer-fullscreen.js";
+import { clampStudentName } from "../utils/data-limits.js";
 
 export async function closeRosterEditor() {
   return closeDrawerFullscreenPanel(rosterEditorPanel);
@@ -40,6 +42,10 @@ export function renderRosterRows(roster) {
 export function addEmptyRow() {
   const addBtn = rosterEditorList.querySelector(".roster-add-row");
   const existingRows = rosterEditorList.querySelectorAll(".roster-row");
+  if (existingRows.length >= MAX_ROSTER_SIZE) {
+    announce(`最多只能保留 ${MAX_ROSTER_SIZE} 名学生`);
+    return;
+  }
   const lastDomId = existingRows.length > 0
     ? Math.max(...Array.from(existingRows).map(r => Number(r.dataset.id)))
     : 0;
@@ -159,7 +165,7 @@ export function collectRosterFromEditor() {
   rows.forEach((row, i) => {
     const id = Number(row.dataset.id) || i + 1;
     const nameInput = row.querySelector(".roster-row-name");
-    const name = nameInput.value.trim();
+    const name = clampStudentName(nameInput.value.trim());
     const nonEnglishInput = row.querySelector(".roster-row-nonenglish-input");
 
     if (!name) {
@@ -169,6 +175,7 @@ export function collectRosterFromEditor() {
       return;
     }
     nameInput.style.borderColor = "";
+    nameInput.value = name;
 
     roster.push({
       id: id,
