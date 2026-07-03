@@ -25,7 +25,7 @@ export function toggleStudent(student, cardEl) {
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(student.id));
   const displayName = getDisplayName(student, studentIndex >= 0 ? studentIndex : 0);
   const statusLabel = student.status === STATUS.SUBMITTED ? "已交" : "未交";
-  saveAppState({ label: `${student.serial}号 ${displayName} 设为${statusLabel}` });
+  saveAppState({ label: `${student.serial}号 ${displayName} 设为${statusLabel}`, assignmentId: assignment.id });
   hapticLight();
 
   const state = getState();
@@ -38,7 +38,7 @@ export function toggleStudent(student, cardEl) {
   renderProgress(state, assignment);
   renderScoringMode(state);
   renderHistoryButtons();
-  announce(student.status === STATUS.SUBMITTED ? "已设为已交" : "已设为未交", { action: "undo" });
+  announce(student.status === STATUS.SUBMITTED ? "已设为已交" : "已设为未交", { action: "undo", assignmentId: assignment.id });
 }
 
 export function toggleScoringMode() {

@@ -805,7 +805,8 @@
       margin-bottom: 8px;
     }
 
-    #historyPanelButton {
+    #historyPanelButton,
+    #deleteAssignmentButton {
       width: 100%;
       margin-bottom: 8px;
     }

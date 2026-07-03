@@ -4,6 +4,8 @@ const FADE_DURATION = 180;
 const HEIGHT_DURATION = 280;
 
 let switching = false;
+let pendingTargetView = null;
+let activeSwitchPromise = null;
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -43,9 +45,6 @@ function clearHistoryViewHeight() {
 }
 
 async function switchView(fromEl, toEl) {
-  if (switching || toEl.hidden === false) return;
-  switching = true;
-
   const startHeight = quickPanelBody.getBoundingClientRect().height;
   const targetHeight = measureHeightWithView(fromEl, toEl);
 
@@ -70,17 +69,51 @@ async function switchView(fromEl, toEl) {
   await wait(Math.max(HEIGHT_DURATION - FADE_DURATION, FADE_DURATION));
 
   clearQuickPanelBodySwitchingState();
-  switching = false;
+}
+
+function getActiveView() {
+  return quickPanelHistoryView.hidden ? quickPanelMainView : quickPanelHistoryView;
+}
+
+function requestViewSwitch(toEl) {
+  pendingTargetView = toEl;
+
+  if (switching) return activeSwitchPromise;
+
+  switching = true;
+  activeSwitchPromise = (async () => {
+    while (pendingTargetView) {
+      const targetEl = pendingTargetView;
+      pendingTargetView = null;
+
+      if (targetEl === quickPanelHistoryView) {
+        lockHistoryViewHeight();
+      }
+
+      const fromEl = getActiveView();
+      if (fromEl !== targetEl) {
+        await switchView(fromEl, targetEl);
+      }
+
+      if (targetEl === quickPanelMainView) {
+        clearHistoryViewHeight();
+      }
+    }
+  })().finally(() => {
+    switching = false;
+    pendingTargetView = null;
+    activeSwitchPromise = null;
+  });
+
+  return activeSwitchPromise;
 }
 
 export function switchToHistoryView() {
-  lockHistoryViewHeight();
-  return switchView(quickPanelMainView, quickPanelHistoryView);
+  return requestViewSwitch(quickPanelHistoryView);
 }
 
 export function switchToMainView() {
-  return switchView(quickPanelHistoryView, quickPanelMainView)
-    .finally(clearHistoryViewHeight);
+  return requestViewSwitch(quickPanelMainView);
 }
 
 export function resetQuickPanelView() {
@@ -94,6 +127,8 @@ export function resetQuickPanelView() {
   quickPanelMainView.classList.remove("is-view-fading");
 
   switching = false;
+  pendingTargetView = null;
+  activeSwitchPromise = null;
 }
 
 export function isHistoryViewActive() {

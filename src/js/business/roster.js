@@ -30,5 +30,5 @@ export function applyRosterToAllAssignments(newRoster) {
   });
 
   state.roster = newRoster;
-  saveAppState({ label: "更新学生名单" });
+  saveAppState({ history: false });
 }

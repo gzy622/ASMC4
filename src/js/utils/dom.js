@@ -24,6 +24,7 @@ function hideToastAfterGesture() {
   appToast.hidden = true;
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
+  delete appToastAction.dataset.assignmentId;
   void appToast.offsetWidth;
   appToast.style.transition = "";
   appToast.style.transform = "";
@@ -48,6 +49,7 @@ export function hideToast() {
   appToast.hidden = true;
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
+  delete appToastAction.dataset.assignmentId;
 }
 
 export function setThemeColor(color) {
@@ -64,17 +66,23 @@ function showToast(message, options = {}) {
   appToastMessage.textContent = message;
 
   const action = options.action;
-  if (action === "undo" && canUndo()) {
+  const assignmentId = options.assignmentId;
+  if (action === "undo" && canUndo(assignmentId)) {
     appToastAction.textContent = "撤回";
     appToastAction.hidden = false;
     appToastAction.dataset.action = "undo";
-  } else if (action === "redo" && canRedo()) {
+    if (assignmentId != null) appToastAction.dataset.assignmentId = String(assignmentId);
+    else delete appToastAction.dataset.assignmentId;
+  } else if (action === "redo" && canRedo(assignmentId)) {
     appToastAction.textContent = "重做";
     appToastAction.hidden = false;
     appToastAction.dataset.action = "redo";
+    if (assignmentId != null) appToastAction.dataset.assignmentId = String(assignmentId);
+    else delete appToastAction.dataset.assignmentId;
   } else {
     appToastAction.hidden = true;
     delete appToastAction.dataset.action;
+    delete appToastAction.dataset.assignmentId;
   }
 
   appToast.hidden = false;

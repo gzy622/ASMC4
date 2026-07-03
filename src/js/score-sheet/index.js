@@ -88,11 +88,11 @@ export function confirmScore() {
   const assignment = getCurrentAssignment();
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(scoreSheetStudent.id));
   const displayName = getDisplayName(scoreSheetStudent, studentIndex >= 0 ? studentIndex : 0);
-  saveAppState({ label: `${displayName}：${message}` });
+  saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
   render();
   closeScoreSheet();
 
-  announce(message, { action: "undo" });
+  announce(message, { action: "undo", assignmentId: assignment.id });
 }
 
 export function toggleTensMode() {
