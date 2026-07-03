@@ -12,7 +12,10 @@ function toastDismissDistance(el) {
 const { abortRelease } = createVerticalDragGesture(appToast, {
   closeDirection: 1,
   threshold: TOAST_DISMISS_THRESHOLD,
-  shouldStart: () => appToast.classList.contains("is-visible") && !appToast.hidden,
+  shouldStart: (event) => {
+    event.stopPropagation();
+    return appToast.classList.contains("is-visible") && !appToast.hidden;
+  },
   onDragStart: () => setToastSwipeDismissing(true),
   getCloseTargetPx: toastDismissDistance,
   getReleaseSecondary: ({ targetDelta, delta }) => {
@@ -28,6 +31,10 @@ const { abortRelease } = createVerticalDragGesture(appToast, {
   },
   onClose: hideToast,
 });
+
+appToast.addEventListener("pointermove", event => event.stopPropagation());
+appToast.addEventListener("pointerup", event => event.stopPropagation());
+appToast.addEventListener("pointercancel", event => event.stopPropagation());
 
 registerToastDismissAbort(() => {
   setToastSwipeDismissing(false);

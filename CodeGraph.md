@@ -104,9 +104,10 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。
 - 关闭位移须与 CSS `translateY(calc(100% + 24px))` 对齐：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
-- `showToast` / `hideToast` 先 `abortToastDismiss()`（`registerToastDismissAbort` ← `abortRelease`），再 `clearToastInlineStyles()`，避免连续操作残留内联样式或过期 `onClose`。
+- `showToast` 先 `abortToastDismiss()`（`registerToastDismissAbort` ← `abortRelease`），再 `clearToastInlineStyles()`，避免连续操作残留内联样式或过期 `onClose`。
+- `hideToast()` 来自手势关闭时不再 abort 当前 release，避免 WAAPI 关闭动画重入；非手势关闭才先 abort。
 - `hideToast()` 改状态前 `transition: none`，避免 CSS 与 WAAPI 分段动画；关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
-- 可见态 `.app-toast.is-visible` 设 `touch-action: none`，减轻与原生滚动冲突。
+- 可见态 `.app-toast.is-visible` 设 `touch-action: none`，toast 指针事件须阻止冒泡，避免穿透到底层 sheet 手势。
 
 ### 改手势后手动测
 

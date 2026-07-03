@@ -48,7 +48,6 @@ function hideToastAfterGesture() {
 export function hideToast() {
   clearTimeout(toastTimer);
   toastTimer = null;
-  abortToastDismiss();
 
   const prunableAssignmentId = appToastAction.dataset.assignmentId;
   const fromGesture = toastSwipeDismissing;
@@ -59,6 +58,7 @@ export function hideToast() {
     return;
   }
 
+  abortToastDismiss();
   clearToastInlineStyles();
   appToast.classList.remove("is-visible");
   appToast.hidden = true;
