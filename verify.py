@@ -12,10 +12,17 @@ def read(relative_path):
 
 index_html = read("index.html")
 build_script = read("build.mjs")
+dom_refs = read("src/js/dom-refs.js")
 html_stylesheets = re.findall(r'<link rel="stylesheet" href="([^"]+)"\s*/>', index_html)
 html_module_scripts = re.findall(r'<script type="module" src="([^"]+)"></script>', index_html)
+html_ids = set(re.findall(r'\bid="([^"]+)"', index_html))
+dom_ref_ids = set(re.findall(r'querySelector\("#([^"]+)"\)', dom_refs))
 
 checks = [
+    (
+        "dom id refs exist",
+        dom_ref_ids.issubset(html_ids),
+    ),
     (
         "html stylesheet refs exist",
         bool(html_stylesheets)

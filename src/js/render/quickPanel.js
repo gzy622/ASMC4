@@ -33,6 +33,3 @@ export function renderHistoryButtons() {
   if (undoButton) undoButton.disabled = !canUndo();
   if (redoButton) redoButton.disabled = !canRedo();
 }
-
-// Alias for backward compat during migration
-export { renderQuickPanel as renderQuickAssignmentList };
