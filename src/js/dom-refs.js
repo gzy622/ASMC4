@@ -25,6 +25,7 @@ export const redoButton = document.querySelector("#redoButton");
 export const deleteAssignmentButton = document.querySelector("#deleteAssignmentButton");
 export const titleButton = document.querySelector("#titleButton");
 export const quickPanel = document.querySelector("#quickPanel");
+export const quickPanelTitle = document.querySelector("#quickPanelTitle");
 export const quickPanelCloseButton = document.querySelector("#quickPanelCloseButton");
 export const quickRenameInput = document.querySelector("#quickRenameInput");
 export const quickSubjectSelect = document.querySelector("#quickSubjectSelect");

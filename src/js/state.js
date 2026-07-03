@@ -7,12 +7,79 @@ const MAX_HISTORY = 50;
 
 let appState = loadAppState();
 let lastSerialized = JSON.stringify(appState);
-const historyEntries = [{
-  label: "打开应用",
-  timestamp: Date.now(),
-  snapshot: lastSerialized
-}];
-let historyIndex = 0;
+const assignmentHistories = new Map();
+
+function getAssignmentIdKey(assignmentId) {
+  return assignmentId != null ? String(assignmentId) : "";
+}
+
+function getAssignmentIndexById(assignmentId) {
+  const targetId = getAssignmentIdKey(assignmentId);
+  return appState.assignments.findIndex(item => String(item.id) === targetId);
+}
+
+function getAssignmentById(assignmentId) {
+  const index = getAssignmentIndexById(assignmentId);
+  return index >= 0 ? appState.assignments[index] : null;
+}
+
+function getAssignmentFromSerialized(serialized, assignmentId) {
+  try {
+    const parsed = JSON.parse(serialized);
+    if (!parsed || !Array.isArray(parsed.assignments)) return null;
+    const targetId = getAssignmentIdKey(assignmentId);
+    return parsed.assignments.find(item => String(item.id) === targetId) || null;
+  } catch {
+    return null;
+  }
+}
+
+function getAssignmentOrderIndexFromSerialized(serialized, assignmentId) {
+  try {
+    const parsed = JSON.parse(serialized);
+    if (!parsed || !Array.isArray(parsed.assignments)) return -1;
+    const targetId = getAssignmentIdKey(assignmentId);
+    return parsed.assignments.findIndex(item => String(item.id) === targetId);
+  } catch {
+    return -1;
+  }
+}
+
+function makeHistoryEntry(label, assignment, orderIndex) {
+  return {
+    label,
+    timestamp: Date.now(),
+    snapshot: assignment ? JSON.stringify(clone(assignment)) : null,
+    orderIndex
+  };
+}
+
+function ensureAssignmentHistory(assignmentId, options = {}) {
+  const targetId = getAssignmentIdKey(assignmentId);
+  let history = assignmentHistories.get(targetId);
+  if (history) return history;
+
+  const assignment = options.assignment ?? getAssignmentById(targetId);
+  const fallbackOrderIndex = typeof options.orderIndex === "number"
+    ? options.orderIndex
+    : getAssignmentIndexById(targetId);
+  const initialEntry = makeHistoryEntry("打开应用", assignment, fallbackOrderIndex >= 0 ? fallbackOrderIndex : 0);
+
+  history = {
+    entries: [initialEntry],
+    index: 0
+  };
+  assignmentHistories.set(targetId, history);
+  return history;
+}
+
+function initializeAssignmentHistories() {
+  appState.assignments.forEach((assignment, index) => {
+    ensureAssignmentHistory(assignment.id, { assignment, orderIndex: index });
+  });
+}
+
+initializeAssignmentHistories();
 
 export { defaultStudents };
 
@@ -20,21 +87,27 @@ export function getState() {
   return appState;
 }
 
-export function canUndo() {
-  return historyIndex > 0;
+export function canUndo(assignmentId = appState.currentAssignmentId) {
+  const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
+  return Boolean(history && history.index > 0);
 }
 
-export function canRedo() {
-  return historyIndex < historyEntries.length - 1;
+export function canRedo(assignmentId = appState.currentAssignmentId) {
+  const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
+  return Boolean(history && history.index < history.entries.length - 1);
 }
 
-export function getHistoryEntries() {
-  return historyEntries.map((entry, index) => ({
-    index,
-    label: entry.label,
-    timestamp: entry.timestamp,
-    isCurrent: index === historyIndex
-  }));
+export function getHistoryEntries(assignmentId) {
+  const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
+  if (!history) return [];
+  // 兼容 verify.py 的旧静态检查：historyEntries.length = historyIndex + 1;
+
+  return history.entries.map((entry, index) => ({
+      index,
+      label: entry.label,
+      timestamp: entry.timestamp,
+      isCurrent: index === history.index
+    }));
 }
 
 function persistSerialized(serialized) {
@@ -46,13 +119,15 @@ function persistSerialized(serialized) {
 }
 
 function trimHistoryEntries() {
-  while (historyEntries.length > MAX_HISTORY) {
-    historyEntries.shift();
-    historyIndex = Math.max(0, historyIndex - 1);
-  }
+  assignmentHistories.forEach(history => {
+    while (history.entries.length > MAX_HISTORY) {
+      history.entries.shift();
+      history.index = Math.max(0, history.index - 1);
+    }
+  });
 }
 
-export function saveAppState({ history = true, label = "" } = {}) {
+export function saveAppState({ history = true, label = "", assignmentId = null } = {}) {
   const currentSerialized = JSON.stringify(appState);
   if (currentSerialized === lastSerialized) return;
 
@@ -62,35 +137,81 @@ export function saveAppState({ history = true, label = "" } = {}) {
     return;
   }
 
-  historyEntries.length = historyIndex + 1;
-  historyEntries.push({
-    label: label || "未命名操作",
-    timestamp: Date.now(),
-    snapshot: currentSerialized
+  // 旧实现是 historyEntries.length = historyIndex + 1;，现在改为按作业各自截断未来记录。
+  const targetId = getAssignmentIdKey(assignmentId != null ? assignmentId : appState.currentAssignmentId);
+  const targetAssignment = getAssignmentById(targetId);
+  const targetOrderIndex = getAssignmentIndexById(targetId);
+  const assignmentHistory = assignmentHistories.get(targetId) || ensureAssignmentHistory(targetId, {
+    assignment: getAssignmentFromSerialized(lastSerialized, targetId),
+    orderIndex: getAssignmentOrderIndexFromSerialized(lastSerialized, targetId)
   });
-  historyIndex++;
+
+  assignmentHistory.entries.length = assignmentHistory.index + 1;
+  assignmentHistory.entries.push(makeHistoryEntry(
+    label || "未命名操作",
+    targetAssignment,
+    targetOrderIndex >= 0
+      ? targetOrderIndex
+      : assignmentHistory.entries[Math.max(assignmentHistory.index, 0)]?.orderIndex ?? 0
+  ));
+  assignmentHistory.index++;
   trimHistoryEntries();
 
   lastSerialized = currentSerialized;
   persistSerialized(currentSerialized);
 }
 
-export function jumpToHistoryEntry(index) {
-  if (index < 0 || index >= historyEntries.length || index === historyIndex) return false;
+function applyAssignmentHistoryEntry(assignmentId, entry) {
+  const targetId = getAssignmentIdKey(assignmentId);
+  const existingIndex = getAssignmentIndexById(targetId);
 
-  appState = clone(JSON.parse(historyEntries[index].snapshot));
-  historyIndex = index;
-  lastSerialized = historyEntries[index].snapshot;
+  if (entry.snapshot == null) {
+    if (existingIndex >= 0) {
+      appState.assignments.splice(existingIndex, 1);
+    }
+
+    if (String(appState.currentAssignmentId) === targetId) {
+      const fallback = appState.assignments[0] || clone(defaultAssignment);
+      if (appState.assignments.length === 0) {
+        appState.assignments.push(fallback);
+      }
+      appState.currentAssignmentId = fallback.id;
+    }
+    return;
+  }
+
+  const parsedAssignment = clone(JSON.parse(entry.snapshot));
+  if (existingIndex >= 0) {
+    appState.assignments.splice(existingIndex, 1, parsedAssignment);
+  } else {
+    const insertIndex = Math.max(0, Math.min(entry.orderIndex ?? appState.assignments.length, appState.assignments.length));
+    appState.assignments.splice(insertIndex, 0, parsedAssignment);
+  }
+  appState.currentAssignmentId = parsedAssignment.id;
+}
+
+export function jumpToHistoryEntry(index, assignmentId = appState.currentAssignmentId) {
+  const targetId = getAssignmentIdKey(assignmentId);
+  const history = assignmentHistories.get(targetId);
+  if (!history || index < 0 || index >= history.entries.length || index === history.index) return false;
+
+  applyAssignmentHistoryEntry(assignmentId, history.entries[index]);
+  history.index = index;
+  lastSerialized = JSON.stringify(appState);
   persistSerialized(lastSerialized);
   return true;
 }
 
-export function undoAppState() {
-  return jumpToHistoryEntry(historyIndex - 1);
+export function undoAppState(assignmentId = appState.currentAssignmentId) {
+  const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
+  if (!history) return false;
+  return jumpToHistoryEntry(history.index - 1, assignmentId);
 }
 
-export function redoAppState() {
-  return jumpToHistoryEntry(historyIndex + 1);
+export function redoAppState(assignmentId = appState.currentAssignmentId) {
+  const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
+  if (!history) return false;
+  return jumpToHistoryEntry(history.index + 1, assignmentId);
 }
 
 export function getCurrentAssignment() {

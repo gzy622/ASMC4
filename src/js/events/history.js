@@ -1,7 +1,8 @@
-import { undoAppState, redoAppState, jumpToHistoryEntry } from "../state.js";
+import { undoAppState, redoAppState, jumpToHistoryEntry, getCurrentAssignment } from "../state.js";
 import { undoButton, redoButton, appToastAction, historyPanelButton, historyBackButton, historyList } from "../dom-refs.js";
 import { render } from "../render/index.js";
 import { renderHistoryList } from "../render/history.js";
+import { renderQuickPanelHeader } from "../render/quickPanel.js";
 import { announce, hideToast } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
@@ -20,22 +21,22 @@ function closeTransientEditing() {
   closeConfirm();
 }
 
-export function performUndo() {
-  if (!undoAppState()) return;
+export function performUndo(assignmentId = getCurrentAssignment().id) {
+  if (!undoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
   render();
   hideToast();
-  announce("已撤回", { action: "redo", showToast: true });
+  announce("已撤回", { action: "redo", assignmentId, showToast: true });
 }
 
-export function performRedo() {
-  if (!redoAppState()) return;
+export function performRedo(assignmentId = getCurrentAssignment().id) {
+  if (!redoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
   render();
   hideToast();
-  announce("已重做", { action: "undo", showToast: true });
+  announce("已重做", { action: "undo", assignmentId, showToast: true });
 }
 
 export function bindHistoryEvents() {
@@ -45,11 +46,13 @@ export function bindHistoryEvents() {
   historyPanelButton?.addEventListener("click", () => {
     hapticSelection();
     renderHistoryList();
+    renderQuickPanelHeader(true);
     switchToHistoryView();
   });
 
   historyBackButton?.addEventListener("click", () => {
     hapticSelection();
+    renderQuickPanelHeader(false);
     switchToMainView();
   });
 
@@ -59,8 +62,9 @@ export function bindHistoryEvents() {
 
     const index = Number(entry.dataset.index);
     if (!Number.isInteger(index)) return;
+    const assignmentId = getCurrentAssignment().id;
 
-    if (!jumpToHistoryEntry(index)) return;
+    if (!jumpToHistoryEntry(index, assignmentId)) return;
     hapticSelection();
     closeTransientEditing();
     render();
@@ -69,8 +73,9 @@ export function bindHistoryEvents() {
 
   appToastAction?.addEventListener("click", () => {
     const { action } = appToastAction.dataset;
-    if (action === "undo") performUndo();
-    else if (action === "redo") performRedo();
+    const assignmentId = appToastAction.dataset.assignmentId;
+    if (action === "undo") performUndo(assignmentId);
+    else if (action === "redo") performRedo(assignmentId);
   });
 
   document.addEventListener("keydown", event => {

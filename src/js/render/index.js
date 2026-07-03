@@ -3,7 +3,7 @@ import { titleNode, quickPanel } from "../dom-refs.js";
 import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
-import { renderQuickPanel, renderHistoryButtons } from "./quickPanel.js";
+import { renderQuickPanel, renderHistoryButtons, renderQuickPanelHeader } from "./quickPanel.js";
 import { renderHistoryList } from "./history.js";
 import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
@@ -18,6 +18,7 @@ export function render() {
   renderStudents(state, assignment);
   renderAssignmentList(state);
   if (quickPanel.classList.contains("is-open")) {
+    renderQuickPanelHeader(isHistoryViewActive());
     if (isHistoryViewActive()) {
       renderHistoryList();
     } else {
