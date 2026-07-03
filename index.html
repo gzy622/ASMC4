@@ -162,34 +162,43 @@
       </div>
 
       <div class="panel-body">
-        <div class="quick-edit-card">
-          <input class="quick-edit-name" id="quickRenameInput" type="text" maxlength="24" placeholder="作业名称" aria-label="修改当前作业名称" />
-          <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目"></select>
-        </div>
-
-        <div class="quick-settings-card">
-          <div class="quick-setting-row">
-            <span class="quick-setting-label">显示真实姓名</span>
-            <button class="switch" id="quickShowRealNameSwitch" type="button" aria-label="切换是否显示真实姓名">
-              <span class="switch-knob"></span>
-            </button>
+        <div class="quick-panel-view" id="quickPanelMainView">
+          <div class="quick-edit-card">
+            <input class="quick-edit-name" id="quickRenameInput" type="text" maxlength="24" placeholder="作业名称" aria-label="修改当前作业名称" />
+            <select class="subject-select" id="quickSubjectSelect" aria-label="修改当前作业科目"></select>
           </div>
-          <div class="quick-setting-row">
-            <span class="quick-setting-label">打分模式</span>
-            <button class="switch" id="quickScoringModeSwitch" type="button" aria-label="切换打分模式">
-              <span class="switch-knob"></span>
-            </button>
+
+          <div class="quick-settings-card">
+            <div class="quick-setting-row">
+              <span class="quick-setting-label">显示真实姓名</span>
+              <button class="switch" id="quickShowRealNameSwitch" type="button" aria-label="切换是否显示真实姓名">
+                <span class="switch-knob"></span>
+              </button>
+            </div>
+            <div class="quick-setting-row">
+              <span class="quick-setting-label">打分模式</span>
+              <button class="switch" id="quickScoringModeSwitch" type="button" aria-label="切换打分模式">
+                <span class="switch-knob"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="quick-history-row">
+            <button class="quick-action-btn" id="undoButton" type="button" title="撤回上一步（Ctrl+Z）" disabled>撤回</button>
+            <button class="quick-action-btn" id="redoButton" type="button" title="重做（Ctrl+Y）" disabled>重做</button>
+          </div>
+
+          <button class="quick-action-btn" id="historyPanelButton" type="button" title="查看操作历史">历史记录</button>
+
+          <div class="quick-action-grid">
+            <button class="quick-action-btn" id="invertButton" type="button" title="已交与未交状态互相切换">反选提交</button>
+            <button class="quick-action-btn danger" id="deleteAssignmentButton" type="button" title="删除当前作业；若只剩一项会自动新建空白作业">删除作业</button>
           </div>
         </div>
 
-        <div class="quick-history-row">
-          <button class="quick-action-btn" id="undoButton" type="button" title="撤回上一步（Ctrl+Z）" disabled>撤回</button>
-          <button class="quick-action-btn" id="redoButton" type="button" title="重做（Ctrl+Y）" disabled>重做</button>
-        </div>
-
-        <div class="quick-action-grid">
-          <button class="quick-action-btn" id="invertButton" type="button" title="已交与未交状态互相切换">反选提交</button>
-          <button class="quick-action-btn danger" id="deleteAssignmentButton" type="button" title="删除当前作业；若只剩一项会自动新建空白作业">删除作业</button>
+        <div class="quick-panel-view" id="quickPanelHistoryView" hidden>
+          <div id="historyList"></div>
+          <button class="quick-action-btn" id="historyBackButton" type="button">返回</button>
         </div>
       </div>
       <div class="top-sheet-handle-zone" aria-hidden="true">

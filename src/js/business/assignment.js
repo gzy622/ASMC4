@@ -31,7 +31,7 @@ export function createAssignmentFromDialog() {
   state.assignments.unshift(nextAssignment);
   state.currentAssignmentId = nextAssignment.id;
 
-  saveAppState();
+  saveAppState({ label: `新建作业「${title}」` });
   render();
   closeFloatingPanels();
   announce("已新建作业", { action: "undo" });
@@ -58,7 +58,7 @@ export function invertCurrentAssignmentSubmission() {
     student.status = STATUS.SUBMITTED;
   });
 
-  saveAppState();
+  saveAppState({ label: `反选提交状态「${assignment.title}」` });
   render();
 }
 
@@ -66,6 +66,7 @@ export function deleteCurrentAssignment() {
   const state = getState();
   const currentId = state.currentAssignmentId;
   const currentIndex = state.assignments.findIndex(item => item.id === currentId);
+  const deletedTitle = currentIndex >= 0 ? state.assignments[currentIndex].title : "作业";
 
   if (currentIndex >= 0) {
     state.assignments.splice(currentIndex, 1);
@@ -86,7 +87,7 @@ export function deleteCurrentAssignment() {
     state.currentAssignmentId = state.assignments[nextIndex].id;
   }
 
-  saveAppState();
+  saveAppState({ label: `删除作业「${deletedTitle}」` });
   render();
 }
 
@@ -122,7 +123,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
         state.currentAssignmentId = state.assignments[nextIndex].id;
       }
 
-      saveAppState();
+      saveAppState({ label: `删除作业「${assignment.title}」` });
       render();
       closeConfirm();
       announce("已删除作业", { action: "undo" });
@@ -209,7 +210,15 @@ export function renameAssignment(assignmentId) {
 
     if (titleChanged || subjectChanged) {
       assignment.updatedAt = new Date().toISOString();
-      saveAppState();
+      let historyLabel = "";
+      if (titleChanged && subjectChanged) {
+        historyLabel = `重命名为「${trimmed}」，科目改为「${newSubject || "无"}」`;
+      } else if (titleChanged) {
+        historyLabel = `重命名为「${trimmed}」`;
+      } else {
+        historyLabel = newSubject ? `修改科目为「${newSubject}」` : "清除科目";
+      }
+      saveAppState({ label: historyLabel });
       render();
       if (titleChanged) {
         announce("已重命名", { action: "undo" });

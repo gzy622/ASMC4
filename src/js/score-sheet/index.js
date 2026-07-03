@@ -79,14 +79,18 @@ export function confirmScore() {
 
   hapticLight();
   scoreSheetStudent.updatedAt = new Date().toISOString();
-  saveAppState();
-  render();
-  closeScoreSheet();
 
   let message = "已保存备注";
   if (!hasScore && !trimmedNote) message = "已清空分数";
   else if (hasScore && !trimmedNote) message = "已保存分数";
   else if (hasScore && trimmedNote) message = "已保存分数和备注";
+
+  const assignment = getCurrentAssignment();
+  const studentIndex = assignment.students.findIndex(s => String(s.id) === String(scoreSheetStudent.id));
+  const displayName = getDisplayName(scoreSheetStudent, studentIndex >= 0 ? studentIndex : 0);
+  saveAppState({ label: `${displayName}：${message}` });
+  render();
+  closeScoreSheet();
 
   announce(message, { action: "undo" });
 }

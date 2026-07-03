@@ -4,6 +4,7 @@ import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
+import { showQuickPanelMainView } from "./history.js";
 
 export function openNewAssignmentPanel() {
   closeScoreSheet();
@@ -53,6 +54,7 @@ export function openQuickPanel({ focusName = false } = {}) {
   closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
+  showQuickPanelMainView();
   renderQuickPanel();
 
   quickPanel.classList.add("is-open");

@@ -4,9 +4,11 @@ import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
 import { renderQuickPanel, renderHistoryButtons } from "./quickPanel.js";
+import { renderHistoryList } from "./history.js";
 import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
 import { syncScoreTensUi } from "../score-sheet/tens-ui.js";
+import { isHistoryViewActive } from "../ui/history.js";
 
 export function render() {
   const state = getState();
@@ -16,7 +18,11 @@ export function render() {
   renderStudents(state, assignment);
   renderAssignmentList(state);
   if (quickPanel.classList.contains("is-open")) {
-    renderQuickPanel();
+    if (isHistoryViewActive()) {
+      renderHistoryList();
+    } else {
+      renderQuickPanel();
+    }
   }
   renderSettingsState(state);
   renderScoringMode(state);

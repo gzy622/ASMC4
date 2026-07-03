@@ -129,7 +129,7 @@ export function bindAssignmentEvents() {
       if (trimmed && trimmed !== assignment.title) {
         assignment.title = trimmed;
         assignment.updatedAt = new Date().toISOString();
-        saveAppState();
+        saveAppState({ label: `重命名为「${trimmed}」` });
         render();
         announce("已重命名", { action: "undo" });
       }
@@ -162,7 +162,8 @@ export function bindAssignmentEvents() {
     quickSubjectSelect.addEventListener("change", () => {
       const assignment = getCurrentAssignment();
       assignment.subject = quickSubjectSelect.value;
-      saveAppState();
+      const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";
+      saveAppState({ label: subjectLabel });
       render();
       announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo" });
     });

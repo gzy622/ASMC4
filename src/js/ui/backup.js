@@ -101,7 +101,7 @@ export function importBackup(file) {
             state.assignments = assignments;
             state.roster = normalizeRosterFromBackup(data, assignments[0].students);
 
-            saveAppState();
+            saveAppState({ label: "导入备份数据" });
             render();
             closeDrawer();
             closeConfirm();

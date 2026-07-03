@@ -7,8 +7,12 @@ const MAX_HISTORY = 50;
 
 let appState = loadAppState();
 let lastSerialized = JSON.stringify(appState);
-const undoStack = [];
-const redoStack = [];
+const historyEntries = [{
+  label: "打开应用",
+  timestamp: Date.now(),
+  snapshot: lastSerialized
+}];
+let historyIndex = 0;
 
 export { defaultStudents };
 
@@ -17,11 +21,20 @@ export function getState() {
 }
 
 export function canUndo() {
-  return undoStack.length > 0;
+  return historyIndex > 0;
 }
 
 export function canRedo() {
-  return redoStack.length > 0;
+  return historyIndex < historyEntries.length - 1;
+}
+
+export function getHistoryEntries() {
+  return historyEntries.map((entry, index) => ({
+    index,
+    label: entry.label,
+    timestamp: entry.timestamp,
+    isCurrent: index === historyIndex
+  }));
 }
 
 function persistSerialized(serialized) {
@@ -32,38 +45,51 @@ function persistSerialized(serialized) {
   }
 }
 
-export function saveAppState({ history = true } = {}) {
+function trimHistoryEntries() {
+  while (historyEntries.length > MAX_HISTORY) {
+    historyEntries.shift();
+    historyIndex = Math.max(0, historyIndex - 1);
+  }
+}
+
+export function saveAppState({ history = true, label = "" } = {}) {
   const currentSerialized = JSON.stringify(appState);
   if (currentSerialized === lastSerialized) return;
 
+  historyEntries.length = historyIndex + 1;
+
   if (history) {
-    undoStack.push(JSON.parse(lastSerialized));
-    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+    historyEntries.push({
+      label: label || "未命名操作",
+      timestamp: Date.now(),
+      snapshot: currentSerialized
+    });
+    historyIndex++;
+    trimHistoryEntries();
+  } else {
+    historyEntries[historyIndex].snapshot = currentSerialized;
   }
-  redoStack.length = 0;
 
   lastSerialized = currentSerialized;
   persistSerialized(currentSerialized);
 }
 
-export function undoAppState() {
-  if (!canUndo()) return false;
+export function jumpToHistoryEntry(index) {
+  if (index < 0 || index >= historyEntries.length || index === historyIndex) return false;
 
-  redoStack.push(clone(appState));
-  appState = clone(undoStack.pop());
-  lastSerialized = JSON.stringify(appState);
+  appState = clone(JSON.parse(historyEntries[index].snapshot));
+  historyIndex = index;
+  lastSerialized = historyEntries[index].snapshot;
   persistSerialized(lastSerialized);
   return true;
 }
 
-export function redoAppState() {
-  if (!canRedo()) return false;
+export function undoAppState() {
+  return jumpToHistoryEntry(historyIndex - 1);
+}
 
-  undoStack.push(clone(appState));
-  appState = clone(redoStack.pop());
-  lastSerialized = JSON.stringify(appState);
-  persistSerialized(lastSerialized);
-  return true;
+export function redoAppState() {
+  return jumpToHistoryEntry(historyIndex + 1);
 }
 
 export function getCurrentAssignment() {

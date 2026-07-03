@@ -1,6 +1,6 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
-import { isStudentForceNone, getStateClass } from "../utils/display.js";
+import { isStudentForceNone, getStateClass, getDisplayName } from "../utils/display.js";
 import { render } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { renderScoringMode } from "../render/scoringMode.js";
@@ -20,11 +20,15 @@ export function toggleStudent(student, cardEl) {
   }
 
   student.updatedAt = new Date().toISOString();
-  saveAppState();
+
+  const assignment = getCurrentAssignment();
+  const studentIndex = assignment.students.findIndex(s => String(s.id) === String(student.id));
+  const displayName = getDisplayName(student, studentIndex >= 0 ? studentIndex : 0);
+  const statusLabel = student.status === STATUS.SUBMITTED ? "已交" : "未交";
+  saveAppState({ label: `${student.serial}号 ${displayName} 设为${statusLabel}` });
   hapticLight();
 
   const state = getState();
-  const assignment = getCurrentAssignment();
   const newClass = getStateClass(student, assignment);
 
   if (cardEl) {
