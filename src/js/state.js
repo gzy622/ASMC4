@@ -253,6 +253,7 @@ export function jumpToHistoryEntry(index, assignmentId = appState.currentAssignm
   history.index = index;
   lastSerialized = JSON.stringify(appState);
   persistSerialized(lastSerialized);
+  pruneOrphanAssignmentHistories();
   return true;
 }
 
@@ -292,7 +293,7 @@ export function redoAppState(assignmentId = appState.currentAssignmentId) {
 }
 
 export function getCurrentAssignment() {
-  let assignment = appState.assignments.find(item => item.id === appState.currentAssignmentId);
+  let assignment = appState.assignments.find(item => String(item.id) === String(appState.currentAssignmentId));
 
   if (!assignment) {
     assignment = appState.assignments[0] || clone(defaultAssignment);

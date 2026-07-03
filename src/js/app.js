@@ -10,8 +10,9 @@ import "./utils/back-guard.js";
 import { fillSubjectSelect } from "./utils/subject-select.js";
 import { BUILD_VERSION } from "./build-version.js";
 import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion, bootMask, grid } from "./dom-refs.js";
+import { setThemeColor } from "./utils/dom.js";
 
-document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
+setThemeColor("#f4f4f4");
 
 fillSubjectSelect(quickSubjectSelect);
 fillSubjectSelect(newAssignmentSubjectInput);

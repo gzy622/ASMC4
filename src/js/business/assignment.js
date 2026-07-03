@@ -71,7 +71,7 @@ export function invertCurrentAssignmentSubmission() {
 export function deleteCurrentAssignment() {
   const state = getState();
   const currentId = state.currentAssignmentId;
-  const currentIndex = state.assignments.findIndex(item => item.id === currentId);
+  const currentIndex = state.assignments.findIndex(item => String(item.id) === String(currentId));
   const deletedTitle = currentIndex >= 0 ? state.assignments[currentIndex].title : "作业";
 
   if (currentIndex >= 0) {
@@ -99,7 +99,7 @@ export function deleteCurrentAssignment() {
 
 export function deleteAssignmentFromDrawer(assignmentId) {
   const state = getState();
-  const assignment = state.assignments.find(item => item.id === assignmentId);
+  const assignment = state.assignments.find(item => String(item.id) === String(assignmentId));
   if (!assignment) return;
 
   openConfirm({
@@ -108,9 +108,9 @@ export function deleteAssignmentFromDrawer(assignmentId) {
     okText: "确认删除",
     danger: true,
     onConfirm: function() {
-      const wasCurrent = state.currentAssignmentId === assignmentId;
+      const wasCurrent = String(state.currentAssignmentId) === String(assignmentId);
 
-      const idx = state.assignments.findIndex(item => item.id === assignmentId);
+      const idx = state.assignments.findIndex(item => String(item.id) === String(assignmentId));
       if (idx >= 0) {
         state.assignments.splice(idx, 1);
       }
@@ -139,7 +139,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
 
 export function renameAssignment(assignmentId) {
   const state = getState();
-  const assignment = state.assignments.find(item => item.id === assignmentId);
+  const assignment = state.assignments.find(item => String(item.id) === String(assignmentId));
   if (!assignment) return;
 
   if (assignmentList.querySelector(".assignment-edit-input")) return;

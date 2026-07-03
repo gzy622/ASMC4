@@ -1,5 +1,6 @@
 import { getCurrentAssignment, getAssignmentStats, canUndo, canRedo } from "../state.js";
-import { quickRenameInput, quickSubjectSelect, quickCurrentSummary, quickCurrentSubject, quickCurrentStats, undoButton, redoButton, quickPanel, quickPanelCloseButton, quickPanelTitle } from "../dom-refs.js";
+import { quickRenameInput, quickSubjectSelect, quickCurrentSubject, quickCurrentStats, undoButton, redoButton, quickPanel, quickPanelCloseButton, quickPanelTitle } from "../dom-refs.js";
+import { isHistoryViewActive } from "../ui/history.js";
 import { renderHistoryList } from "./history.js";
 
 export function renderQuickPanelHeader(historyViewActive = false) {
@@ -38,14 +39,6 @@ export function renderQuickPanel() {
     quickCurrentStats.textContent = `${stats.submitted}/${stats.total} 已交`;
   }
 
-  if (quickCurrentSummary) {
-    const subject = current.subject?.trim() || "";
-    const summary = subject
-      ? `${subject}，${stats.submitted}/${stats.total} 已交`
-      : `${stats.submitted}/${stats.total} 已交`;
-    quickCurrentSummary.setAttribute("aria-label", summary);
-  }
-
   if (quickRenameInput && document.activeElement !== quickRenameInput) {
     quickRenameInput.value = current.title || "";
   }
@@ -67,4 +60,10 @@ export function refreshQuickPanelContent(historyViewActive = false) {
   } else {
     renderQuickPanel();
   }
+}
+
+export function refreshOpenQuickPanel() {
+  renderHistoryButtons();
+  if (!quickPanel?.classList.contains("is-open")) return;
+  refreshQuickPanelContent(isHistoryViewActive());
 }

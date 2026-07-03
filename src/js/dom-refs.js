@@ -1,5 +1,6 @@
 export const grid = document.querySelector("#studentGrid");
 export const bootMask = document.querySelector("#bootMask");
+export const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 export const scrollContainer = document.querySelector(".scroll-container");
 export const titleNode = document.querySelector("#assignmentTitle");
 export const liveStatus = document.querySelector("#liveStatus");
@@ -30,7 +31,6 @@ export const quickPanelTitle = document.querySelector("#quickPanelTitle");
 export const quickPanelCloseButton = document.querySelector("#quickPanelCloseButton");
 export const quickRenameInput = document.querySelector("#quickRenameInput");
 export const quickSubjectSelect = document.querySelector("#quickSubjectSelect");
-export const quickCurrentSummary = document.querySelector("#quickCurrentSummary");
 export const quickCurrentSubject = document.querySelector("#quickCurrentSubject");
 export const quickCurrentStats = document.querySelector("#quickCurrentStats");
 export const newAssignmentPanel = document.querySelector("#newAssignmentPanel");

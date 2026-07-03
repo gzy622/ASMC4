@@ -1,12 +1,17 @@
-import { liveStatus, appToast, appToastMessage, appToastAction } from "../dom-refs.js";
+import { liveStatus, appToast, appToastMessage, appToastAction, themeColorMeta } from "../dom-refs.js";
 import { canUndo, canRedo, pruneAssignmentHistoryIfOrphan } from "../state.js";
 
 const TOAST_DURATION_MS = 4000;
 let toastTimer = null;
 let abortToastDismiss = () => {};
+let toastSwipeDismissing = false;
 
 export function registerToastDismissAbort(fn) {
   abortToastDismiss = fn;
+}
+
+export function setToastSwipeDismissing(active) {
+  toastSwipeDismissing = active;
 }
 
 function clearToastInlineStyles() {
@@ -46,14 +51,15 @@ export function hideToast() {
   abortToastDismiss();
 
   const prunableAssignmentId = appToastAction.dataset.assignmentId;
-  const fromGesture =
-    appToast.style.transform !== "" || appToast.style.opacity !== "";
+  const fromGesture = toastSwipeDismissing;
+  toastSwipeDismissing = false;
 
   if (fromGesture) {
     hideToastAfterGesture();
     return;
   }
 
+  clearToastInlineStyles();
   appToast.classList.remove("is-visible");
   appToast.hidden = true;
   appToastAction.hidden = true;
@@ -63,9 +69,8 @@ export function hideToast() {
 }
 
 export function setThemeColor(color) {
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) {
-    meta.setAttribute("content", color);
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute("content", color);
   }
 }
 

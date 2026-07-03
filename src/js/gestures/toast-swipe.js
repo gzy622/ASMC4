@@ -1,5 +1,5 @@
 import { appToast } from "../dom-refs.js";
-import { hideToast, registerToastDismissAbort } from "../utils/dom.js";
+import { hideToast, registerToastDismissAbort, setToastSwipeDismissing } from "../utils/dom.js";
 import { createVerticalDragGesture } from "./drag-gesture.js";
 
 const TOAST_DISMISS_THRESHOLD = 48;
@@ -13,6 +13,7 @@ const { abortRelease } = createVerticalDragGesture(appToast, {
   closeDirection: 1,
   threshold: TOAST_DISMISS_THRESHOLD,
   shouldStart: () => appToast.classList.contains("is-visible") && !appToast.hidden,
+  onDragStart: () => setToastSwipeDismissing(true),
   getCloseTargetPx: toastDismissDistance,
   getReleaseSecondary: ({ targetDelta, delta }) => {
     if (!targetDelta) return null;
@@ -28,4 +29,7 @@ const { abortRelease } = createVerticalDragGesture(appToast, {
   onClose: hideToast,
 });
 
-registerToastDismissAbort(abortRelease);
+registerToastDismissAbort(() => {
+  setToastSwipeDismissing(false);
+  abortRelease();
+});
