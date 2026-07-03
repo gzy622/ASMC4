@@ -562,8 +562,7 @@
     #quickPanel .panel-body {
       flex: 0 1 auto;
       min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow-y: hidden;
       touch-action: pan-y;
     }
     #quickPanelBody.is-view-switching {
