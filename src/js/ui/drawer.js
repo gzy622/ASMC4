@@ -7,6 +7,13 @@ import { uiTransitionBusy, setUiTransitionBusy, setSuppressNextCardClick } from 
 
 const DRAWER_TRANSITION_MS = 320;
 
+function clearDocumentSelection() {
+  const selection = window.getSelection?.();
+  if (selection && !selection.isCollapsed) {
+    selection.removeAllRanges();
+  }
+}
+
 function getDrawerExpandScale() {
   const drawerWidth = drawer.offsetWidth;
   if (!drawerWidth) return 1;
@@ -24,6 +31,7 @@ function clearDrawerExpandScale() {
 export function openDrawer({ withTransitionLock = true } = {}) {
   if (uiTransitionBusy) return;
   closeScoreSheet();
+  clearDocumentSelection();
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");

@@ -10,7 +10,7 @@ import {
   settingsPanel
 } from "../dom-refs.js";
 import { renderHistoryList } from "../render/history.js";
-import { renderQuickPanel } from "../render/quickPanel.js";
+import { renderQuickPanel, renderQuickPanelHeader } from "../render/quickPanel.js";
 import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 import { isHistoryViewActive } from "../ui/history.js";
 import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
@@ -135,7 +135,9 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   canPull: canPullQuickPanel,
   onPrepare: () => {
-    if (isHistoryViewActive()) {
+    const historyViewActive = isHistoryViewActive();
+    renderQuickPanelHeader(historyViewActive);
+    if (historyViewActive) {
       renderHistoryList();
     } else {
       renderQuickPanel();

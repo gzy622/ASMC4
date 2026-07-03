@@ -10,6 +10,18 @@ import { renderProgress } from "./progress.js";
 import { syncScoreTensUi } from "../score-sheet/tens-ui.js";
 import { isHistoryViewActive } from "../ui/history.js";
 
+export function renderOpenQuickPanel() {
+  if (!quickPanel.classList.contains("is-open")) return;
+
+  const historyViewActive = isHistoryViewActive();
+  renderQuickPanelHeader(historyViewActive);
+  if (historyViewActive) {
+    renderHistoryList();
+  } else {
+    renderQuickPanel();
+  }
+}
+
 export function render() {
   const state = getState();
   const assignment = getCurrentAssignment();
@@ -17,14 +29,7 @@ export function render() {
   document.title = "ASMC4";
   renderStudents(state, assignment);
   renderAssignmentList(state);
-  if (quickPanel.classList.contains("is-open")) {
-    renderQuickPanelHeader(isHistoryViewActive());
-    if (isHistoryViewActive()) {
-      renderHistoryList();
-    } else {
-      renderQuickPanel();
-    }
-  }
+  renderOpenQuickPanel();
   renderSettingsState(state);
   renderScoringMode(state);
   syncScoreTensUi(state.scoreTensMode);

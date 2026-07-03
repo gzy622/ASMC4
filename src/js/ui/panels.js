@@ -2,7 +2,7 @@ import { closeScoreSheet } from "../score-sheet/index.js";
 import { addButton, newAssignmentPanel, newAssignmentInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
-import { renderQuickPanel } from "../render/quickPanel.js";
+import { renderQuickPanel, renderQuickPanelHeader } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView } from "./history.js";
 
@@ -55,6 +55,7 @@ export function openQuickPanel({ focusName = false } = {}) {
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
   resetQuickPanelView();
+  renderQuickPanelHeader(false);
   renderQuickPanel();
 
   quickPanel.classList.add("is-open");

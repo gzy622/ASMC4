@@ -1,7 +1,7 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
 import { isStudentForceNone, getStateClass, getDisplayName } from "../utils/display.js";
-import { render } from "../render/index.js";
+import { render, renderOpenQuickPanel } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { renderScoringMode } from "../render/scoringMode.js";
 import { renderHistoryButtons } from "../render/quickPanel.js";
@@ -38,6 +38,7 @@ export function toggleStudent(student, cardEl) {
   renderProgress(state, assignment);
   renderScoringMode(state);
   renderHistoryButtons();
+  renderOpenQuickPanel();
   announce(student.status === STATUS.SUBMITTED ? "已设为已交" : "已设为未交", { action: "undo", assignmentId: assignment.id });
 }
 
