@@ -6,7 +6,7 @@ import { announce, hideToast } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeConfirm } from "../ui/confirm.js";
-import { showHistoryView, showQuickPanelMainView } from "../ui/history.js";
+import { switchToHistoryView, switchToMainView } from "../ui/history.js";
 
 function isEditableTarget(element) {
   if (!element) return false;
@@ -44,13 +44,13 @@ export function bindHistoryEvents() {
 
   historyPanelButton?.addEventListener("click", () => {
     hapticSelection();
-    showHistoryView();
     renderHistoryList();
+    switchToHistoryView();
   });
 
   historyBackButton?.addEventListener("click", () => {
     hapticSelection();
-    showQuickPanelMainView();
+    switchToMainView();
   });
 
   historyList?.addEventListener("click", event => {

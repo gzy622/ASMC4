@@ -562,6 +562,16 @@
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
     }
+    #quickPanelBody.is-view-switching {
+      overflow: hidden;
+    }
+    .quick-panel-view {
+      opacity: 1;
+      transition: opacity 180ms ease;
+    }
+    .quick-panel-view.is-view-fading {
+      opacity: 0;
+    }
     .top-sheet::after {
       content: "";
       position: absolute;

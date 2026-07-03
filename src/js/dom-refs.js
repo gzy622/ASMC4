@@ -79,3 +79,4 @@ export const historyBackButton = document.querySelector("#historyBackButton");
 export const historyList = document.querySelector("#historyList");
 export const quickPanelMainView = document.querySelector("#quickPanelMainView");
 export const quickPanelHistoryView = document.querySelector("#quickPanelHistoryView");
+export const quickPanelBody = document.querySelector("#quickPanelBody");
