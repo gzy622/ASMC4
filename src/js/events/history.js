@@ -1,8 +1,7 @@
 import { undoAppState, redoAppState, jumpToHistoryEntry, getCurrentAssignment } from "../state.js";
 import { undoButton, redoButton, appToastAction, historyPanelButton, historyBackButton, historyList } from "../dom-refs.js";
 import { render } from "../render/index.js";
-import { renderHistoryList } from "../render/history.js";
-import { renderQuickPanel, renderQuickPanelHeader } from "../render/quickPanel.js";
+import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { announce, hideToast } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
@@ -45,15 +44,13 @@ export function bindHistoryEvents() {
 
   historyPanelButton?.addEventListener("click", () => {
     hapticSelection();
-    renderHistoryList();
-    renderQuickPanelHeader(true);
+    refreshQuickPanelContent(true);
     switchToHistoryView();
   });
 
   historyBackButton?.addEventListener("click", () => {
     hapticSelection();
-    renderQuickPanel();
-    renderQuickPanelHeader(false);
+    refreshQuickPanelContent(false);
     switchToMainView();
   });
 

@@ -3,8 +3,7 @@ import { titleNode, quickPanel } from "../dom-refs.js";
 import { renderStudents } from "./students.js";
 import { renderAssignmentList } from "./assignmentList.js";
 import { renderSettingsState } from "./settings.js";
-import { renderQuickPanel, renderHistoryButtons, renderQuickPanelHeader } from "./quickPanel.js";
-import { renderHistoryList } from "./history.js";
+import { renderQuickPanel, renderHistoryButtons, refreshQuickPanelContent } from "./quickPanel.js";
 import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
 import { syncScoreTensUi } from "../score-sheet/tens-ui.js";
@@ -12,14 +11,7 @@ import { isHistoryViewActive } from "../ui/history.js";
 
 export function renderOpenQuickPanel() {
   if (!quickPanel.classList.contains("is-open")) return;
-
-  const historyViewActive = isHistoryViewActive();
-  renderQuickPanelHeader(historyViewActive);
-  if (historyViewActive) {
-    renderHistoryList();
-  } else {
-    renderQuickPanel();
-  }
+  refreshQuickPanelContent(isHistoryViewActive());
 }
 
 export function render() {

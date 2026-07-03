@@ -1,5 +1,5 @@
 import { liveStatus, appToast, appToastMessage, appToastAction } from "../dom-refs.js";
-import { canUndo, canRedo } from "../state.js";
+import { canUndo, canRedo, pruneAssignmentHistoryIfOrphan } from "../state.js";
 
 const TOAST_DURATION_MS = 4000;
 let toastTimer = null;
@@ -18,7 +18,14 @@ function clearToastInlineStyles() {
   appToast.style.transition = "";
 }
 
+function finalizeToastDismiss(prunableAssignmentId) {
+  if (prunableAssignmentId) {
+    pruneAssignmentHistoryIfOrphan(prunableAssignmentId);
+  }
+}
+
 function hideToastAfterGesture() {
+  const prunableAssignmentId = appToastAction.dataset.assignmentId;
   appToast.style.transition = "none";
   appToast.classList.remove("is-visible");
   appToast.hidden = true;
@@ -30,6 +37,7 @@ function hideToastAfterGesture() {
   appToast.style.transform = "";
   appToast.style.willChange = "";
   appToast.style.opacity = "";
+  finalizeToastDismiss(prunableAssignmentId);
 }
 
 export function hideToast() {
@@ -37,6 +45,7 @@ export function hideToast() {
   toastTimer = null;
   abortToastDismiss();
 
+  const prunableAssignmentId = appToastAction.dataset.assignmentId;
   const fromGesture =
     appToast.style.transform !== "" || appToast.style.opacity !== "";
 
@@ -50,6 +59,7 @@ export function hideToast() {
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
   delete appToastAction.dataset.assignmentId;
+  finalizeToastDismiss(prunableAssignmentId);
 }
 
 export function setThemeColor(color) {

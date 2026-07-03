@@ -1,4 +1,5 @@
 export const grid = document.querySelector("#studentGrid");
+export const bootMask = document.querySelector("#bootMask");
 export const scrollContainer = document.querySelector(".scroll-container");
 export const titleNode = document.querySelector("#assignmentTitle");
 export const liveStatus = document.querySelector("#liveStatus");
@@ -81,3 +82,6 @@ export const historyList = document.querySelector("#historyList");
 export const quickPanelMainView = document.querySelector("#quickPanelMainView");
 export const quickPanelHistoryView = document.querySelector("#quickPanelHistoryView");
 export const quickPanelBody = document.querySelector("#quickPanelBody");
+export const quickPanelHead = document.querySelector("#quickPanelHead");
+export const quickPanelHandleZone = document.querySelector("#quickPanelHandleZone");
+export const quickActionGrid = document.querySelector("#quickActionGrid");

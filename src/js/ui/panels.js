@@ -6,6 +6,17 @@ import { renderQuickPanel, renderQuickPanelHeader } from "../render/quickPanel.j
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView } from "./history.js";
 
+let abortQuickPanelOpenDrag = () => {};
+
+export function registerQuickPanelOpenDragAbort(fn) {
+  abortQuickPanelOpenDrag = fn;
+}
+
+function teardownQuickPanelDrag() {
+  abortQuickPanelOpenDrag();
+  quickPanel.classList.remove("is-dragging");
+}
+
 export function openNewAssignmentPanel() {
   closeScoreSheet();
   closeDrawer();
@@ -36,6 +47,8 @@ export function closeFloatingPanels({ restoreFocus = true } = {}) {
 
   blurTopSheetFocus();
   closeScoreSheet();
+  teardownQuickPanelDrag();
+  resetQuickPanelView();
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -54,7 +67,6 @@ export function openQuickPanel({ focusName = false } = {}) {
   closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
-  resetQuickPanelView();
   renderQuickPanelHeader(false);
   renderQuickPanel();
 

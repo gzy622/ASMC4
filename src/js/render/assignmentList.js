@@ -5,7 +5,7 @@ import { assignmentList } from "../dom-refs.js";
 export function renderAssignmentList(state) {
   assignmentList.innerHTML = state.assignments.map(assignment => {
     const stats = getAssignmentStats(assignment);
-    const activeClass = assignment.id === state.currentAssignmentId ? "is-active" : "";
+    const activeClass = String(assignment.id) === String(state.currentAssignmentId) ? "is-active" : "";
     const safeId = escapeHTML(assignment.id);
     const safeTitle = escapeHTML(assignment.title);
     const subjectTag = assignment.subject

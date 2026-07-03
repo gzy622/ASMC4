@@ -79,10 +79,12 @@ DOM（`index.html` + `dom-refs.js`）：
 | 方向 | 绑定元素 | 条件 |
 |------|---------|------|
 | 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `blocksQuickPanelPull()` 为 false |
-| 上滑关闭（面板内） | `.panel-head`、`.top-sheet-handle-zone`、`.quick-action-grid` | `#quickPanel.is-open` |
+| 上滑关闭（面板内） | `#quickPanelHead`、`#quickPanelHandleZone`、`#quickActionGrid` | `#quickPanel.is-open`；`#quickActionGrid` 排除 `button/input` |
 | 上滑关闭（面板外） | `phoneEl`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
-下拉打开的 `onPrepare` 会先同步 quick panel 标题，再按当前 quick panel view 刷新内容：历史 view 保持打开时刷新 `#historyList`，否则刷新当前作业主视图。
+下拉打开的 `onPrepare` 调 `refreshQuickPanelContent()`（`render/quickPanel.js`），按当前 view 刷新标题与内容。
+
+`closeFloatingPanels()`（`ui/panels.js`）须 `teardownQuickPanelDrag()`（清 `is-dragging` + abort 下拉预览）并 `resetQuickPanelView()`，避免残留 `is-dragging` 或历史 view 与点标题打开不一致。
 
 面板下方空白与学生列表同在 `.scroll-container` 内。**`phoneEl` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
 
@@ -103,7 +105,7 @@ DOM（`index.html` + `dom-refs.js`）：
 - 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。
 - 关闭位移须与 CSS `translateY(calc(100% + 24px))` 对齐：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
 - `showToast` / `hideToast` 先 `abortToastDismiss()`（`registerToastDismissAbort` ← `abortRelease`），再 `clearToastInlineStyles()`，避免连续操作残留内联样式或过期 `onClose`。
-- `hideToast()` 改状态前 `transition: none`，避免 CSS 与 WAAPI 分段动画。
+- `hideToast()` 改状态前 `transition: none`，避免 CSS 与 WAAPI 分段动画；关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
 - 可见态 `.app-toast.is-visible` 设 `touch-action: none`，减轻与原生滚动冲突。
 
 ### 改手势后手动测

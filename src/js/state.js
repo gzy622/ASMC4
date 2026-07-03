@@ -58,7 +58,9 @@ function ensureAssignmentHistory(assignmentId, options = {}) {
   let history = assignmentHistories.get(targetId);
   if (history) return history;
 
-  const assignment = options.assignment ?? getAssignmentById(targetId);
+  const assignment = "assignment" in options
+    ? options.assignment
+    : getAssignmentById(targetId);
   const fallbackOrderIndex = typeof options.orderIndex === "number"
     ? options.orderIndex
     : getAssignmentIndexById(targetId);
@@ -76,6 +78,12 @@ function initializeAssignmentHistories() {
   appState.assignments.forEach((assignment, index) => {
     ensureAssignmentHistory(assignment.id, { assignment, orderIndex: index });
   });
+}
+
+export function resetAssignmentHistories() {
+  assignmentHistories.clear();
+  initializeAssignmentHistories();
+  pruneOrphanAssignmentHistories();
 }
 
 initializeAssignmentHistories();
@@ -135,6 +143,24 @@ function trimHistoryEntries() {
   });
 }
 
+function pruneOrphanAssignmentHistories() {
+  const activeIds = new Set(appState.assignments.map(item => String(item.id)));
+
+  for (const id of assignmentHistories.keys()) {
+    if (activeIds.has(id)) continue;
+    const history = assignmentHistories.get(id);
+    if (!history || history.index === 0) {
+      assignmentHistories.delete(id);
+    }
+  }
+}
+
+export function pruneAssignmentHistoryIfOrphan(assignmentId) {
+  const targetId = getAssignmentIdKey(assignmentId);
+  if (!targetId || getAssignmentById(targetId)) return;
+  assignmentHistories.delete(targetId);
+}
+
 export function saveAppState({ history = true, label = "", assignmentId = null } = {}) {
   const currentSerialized = JSON.stringify(appState);
   if (currentSerialized === lastSerialized) return true;
@@ -149,6 +175,7 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
   if (!history) {
     if (persistSerialized(currentSerialized)) {
       lastSerialized = currentSerialized;
+      pruneOrphanAssignmentHistories();
       return true;
     }
     return false;
@@ -163,6 +190,9 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
     orderIndex: getAssignmentOrderIndexFromSerialized(lastSerialized, targetId)
   });
 
+  const prevIndex = assignmentHistory.index;
+  const prevEntriesLength = assignmentHistory.entries.length;
+
   assignmentHistory.entries.length = assignmentHistory.index + 1;
   assignmentHistory.entries.push(makeHistoryEntry(
     label || "未命名操作",
@@ -176,8 +206,12 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
 
   if (persistSerialized(currentSerialized)) {
     lastSerialized = currentSerialized;
+    pruneOrphanAssignmentHistories();
     return true;
   }
+
+  assignmentHistory.entries.length = prevEntriesLength;
+  assignmentHistory.index = prevIndex;
   return false;
 }
 
@@ -222,10 +256,33 @@ export function jumpToHistoryEntry(index, assignmentId = appState.currentAssignm
   return true;
 }
 
+function pruneDeleteFallbackBeforeRestore(restoreEntry) {
+  if (!restoreEntry?.snapshot || appState.assignments.length !== 1) return;
+
+  let restoredId;
+  try {
+    restoredId = String(JSON.parse(restoreEntry.snapshot).id);
+  } catch {
+    return;
+  }
+
+  if (String(appState.assignments[0].id) === restoredId) return;
+  appState.assignments.splice(0, 1);
+}
+
 export function undoAppState(assignmentId = appState.currentAssignmentId) {
   const history = assignmentHistories.get(getAssignmentIdKey(assignmentId));
   if (!history) return false;
-  return jumpToHistoryEntry(history.index - 1, assignmentId);
+
+  const targetIndex = history.index - 1;
+  if (targetIndex < 0) return false;
+
+  const currentEntry = history.entries[history.index];
+  if (currentEntry?.snapshot == null) {
+    pruneDeleteFallbackBeforeRestore(history.entries[targetIndex]);
+  }
+
+  return jumpToHistoryEntry(targetIndex, assignmentId);
 }
 
 export function redoAppState(assignmentId = appState.currentAssignmentId) {

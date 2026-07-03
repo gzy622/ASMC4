@@ -9,7 +9,7 @@ import "./native-shim.js";
 import "./utils/back-guard.js";
 import { fillSubjectSelect } from "./utils/subject-select.js";
 import { BUILD_VERSION } from "./build-version.js";
-import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion } from "./dom-refs.js";
+import { quickSubjectSelect, newAssignmentSubjectInput, drawerVersion, bootMask, grid } from "./dom-refs.js";
 
 document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#f4f4f4");
 
@@ -21,7 +21,6 @@ if (drawerVersion) drawerVersion.textContent = BUILD_VERSION;
 bindEvents();
 render();
 
-const bootMask = document.getElementById("bootMask");
 if (bootMask) {
   let disposed = false;
   let prevKey = null;
@@ -36,7 +35,6 @@ if (bootMask) {
 
   const checkStable = () => {
     if (disposed) return;
-    const grid = document.getElementById("studentGrid");
     if (!grid) { reveal(); return; }
     const { width, height } = grid.getBoundingClientRect();
     const key = `${width},${height}`;

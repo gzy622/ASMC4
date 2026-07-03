@@ -1,4 +1,4 @@
-import { saveAppState, getState } from "../state.js";
+import { saveAppState, getState, resetAssignmentHistories } from "../state.js";
 import { render } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
@@ -127,6 +127,7 @@ export function importBackup(file) {
             state.assignments = nextState.assignments;
             state.roster = nextState.roster;
 
+            resetAssignmentHistories();
             saveAppState({ history: false });
             render();
             closeDrawer();

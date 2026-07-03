@@ -228,9 +228,9 @@ export function renameAssignment(assignmentId) {
       saveAppState({ label: historyLabel, assignmentId });
       render();
       if (titleChanged) {
-        announce("已重命名", { action: "undo" });
+        announce("已重命名", { action: "undo", assignmentId });
       } else {
-        announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo" });
+        announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId });
       }
     } else {
       render();

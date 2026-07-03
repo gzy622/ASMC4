@@ -4,16 +4,18 @@ import {
   newAssignmentPanel,
   phoneEl,
   quickPanel,
+  quickPanelHead,
+  quickPanelHandleZone,
+  quickActionGrid,
   rosterEditorPanel,
   scoreSheet,
   scrollContainer,
   settingsPanel
 } from "../dom-refs.js";
-import { renderHistoryList } from "../render/history.js";
-import { renderQuickPanel, renderQuickPanelHeader } from "../render/quickPanel.js";
+import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 import { isHistoryViewActive } from "../ui/history.js";
-import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
+import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
 function anyFloatingLayerOpen() {
@@ -85,9 +87,9 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     onDragStart: prepareQuickPanelCloseDrag,
   };
 
-  const panelHead = quickPanel.querySelector(".panel-head");
-  const handleZone = quickPanel.querySelector(".top-sheet-handle-zone");
-  const actionGrid = quickPanel.querySelector(".quick-action-grid");
+  const panelHead = quickPanelHead;
+  const handleZone = quickPanelHandleZone;
+  const actionGrid = quickActionGrid;
 
   if (panelHead) {
     createVerticalDragGesture(panelHead, {
@@ -105,7 +107,8 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
   if (actionGrid) {
     createVerticalDragGesture(actionGrid, {
       ...closeOpts,
-      shouldStart: () => quickPanel.classList.contains("is-open"),
+      shouldStart: event => quickPanel.classList.contains("is-open")
+        && !event.target.closest("button, input, select, textarea"),
     });
   }
 
@@ -135,13 +138,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   canPull: canPullQuickPanel,
   onPrepare: () => {
-    const historyViewActive = isHistoryViewActive();
-    renderQuickPanelHeader(historyViewActive);
-    if (historyViewActive) {
-      renderHistoryList();
-    } else {
-      renderQuickPanel();
-    }
+    refreshQuickPanelContent(isHistoryViewActive());
     quickPanel.classList.add("is-dragging");
   },
   onOpen: finishTopSheetOpen,
@@ -149,4 +146,8 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
 });
 
 bindQuickPanelCloseGesture(quickPanelOpenGesture.abortRelease);
+registerQuickPanelOpenDragAbort(() => {
+  quickPanelOpenGesture.abortRelease();
+  cancelTopSheetOpen();
+});
 bindTopSheetCloseGesture(newAssignmentPanel);

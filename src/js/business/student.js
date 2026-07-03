@@ -3,8 +3,9 @@ import { STATUS } from "../constants.js";
 import { isStudentForceNone, getStateClass, getDisplayName } from "../utils/display.js";
 import { render, renderOpenQuickPanel } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
-import { renderScoringMode } from "../render/scoringMode.js";
 import { renderHistoryButtons } from "../render/quickPanel.js";
+import { renderStudents } from "../render/students.js";
+import { renderAssignmentList } from "../render/assignmentList.js";
 import { announce } from "../utils/dom.js";
 import { hapticLight, hapticSelection } from "../utils/haptics.js";
 
@@ -29,16 +30,11 @@ export function toggleStudent(student, cardEl) {
   hapticLight();
 
   const state = getState();
-  const newClass = getStateClass(student, assignment);
-
-  if (cardEl) {
-    cardEl.className = `student-card ${newClass}`;
-  }
-
+  renderStudents(state, assignment);
   renderProgress(state, assignment);
-  renderScoringMode(state);
   renderHistoryButtons();
   renderOpenQuickPanel();
+  renderAssignmentList(state);
   announce(student.status === STATUS.SUBMITTED ? "已设为已交" : "已设为未交", { action: "undo", assignmentId: assignment.id });
 }
 
