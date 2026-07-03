@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer } from "../dom-refs.js";
+import { drawer, phoneEl } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -7,13 +7,29 @@ import { uiTransitionBusy, setUiTransitionBusy, setSuppressNextCardClick } from 
 
 const DRAWER_TRANSITION_MS = 320;
 
+function getDrawerExpandScale() {
+  const drawerWidth = drawer.offsetWidth;
+  if (!drawerWidth) return 1;
+  return phoneEl.clientWidth / drawerWidth;
+}
+
+function setDrawerExpandScale() {
+  drawer.style.setProperty("--drawer-expand-scale", String(getDrawerExpandScale()));
+}
+
+function clearDrawerExpandScale() {
+  drawer.style.removeProperty("--drawer-expand-scale");
+}
+
 export function openDrawer({ withTransitionLock = true } = {}) {
   if (uiTransitionBusy) return;
   closeScoreSheet();
-  renderAssignmentList(getState());
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
+  requestAnimationFrame(() => {
+    renderAssignmentList(getState());
+  });
   if (withTransitionLock) {
     setUiTransitionBusy(true);
     setTimeout(() => setUiTransitionBusy(false), DRAWER_TRANSITION_MS);
@@ -25,6 +41,7 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   drawer.classList.remove("is-open");
   drawer.classList.remove("is-expanding");
   drawer.style.transform = "";
+  clearDrawerExpandScale();
   drawer.setAttribute("aria-hidden", "true");
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
@@ -34,6 +51,7 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
 }
 
 export function expandDrawer() {
+  setDrawerExpandScale();
   drawer.classList.add("is-expanding");
 }
 
@@ -46,12 +64,14 @@ export function snapResetDrawer() {
   drawer.classList.add("no-anim");
   drawer.classList.remove("is-expanding");
   drawer.classList.remove("is-open");
+  clearDrawerExpandScale();
   drawer.setAttribute("aria-hidden", "true");
   void drawer.offsetHeight;
   drawer.classList.remove("no-anim");
 }
 
 export function snapPrepareDrawer() {
+  setDrawerExpandScale();
   drawer.classList.add("no-anim");
   drawer.classList.add("is-open");
   drawer.classList.add("is-expanding");

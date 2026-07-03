@@ -74,6 +74,7 @@ export async function closeDrawerFullscreenPanel(panel) {
 
   renderAssignmentList(getState());
 
+  await new Promise(resolve => requestAnimationFrame(resolve));
   contractDrawer();
   await wait(EXPAND_DURATION);
 

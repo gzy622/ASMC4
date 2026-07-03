@@ -178,11 +178,11 @@
       z-index: 40;
       will-change: transform;
       transform: translateX(-120%);
+      transform-origin: left center;
       display: flex;
       flex-direction: column;
       transition:
         transform 320ms var(--motion),
-        width 280ms var(--motion),
         border-color 280ms var(--motion),
         box-shadow 280ms var(--motion);
       touch-action: none;
@@ -197,9 +197,13 @@
     }
 
     .drawer.is-expanding {
-      width: 100%;
+      transform: translateX(0) scaleX(var(--drawer-expand-scale, 1));
       border-right-color: transparent;
       box-shadow: none;
+      transition:
+        transform 280ms var(--motion),
+        border-color 280ms var(--motion),
+        box-shadow 280ms var(--motion);
     }
 
     .drawer-head,
@@ -807,8 +811,28 @@
     }
 
     #quickPanelHistoryView #historyBackButton {
+      flex-shrink: 0;
       width: 100%;
       margin-top: 4px;
+    }
+
+    #quickPanelHistoryView {
+      height: var(--quick-history-view-height, auto);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #quickPanelHistoryView[hidden] {
+      display: none !important;
+    }
+
+    #quickPanelHistoryView #historyList {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 2px;
     }
 
     .quick-action-btn:disabled {

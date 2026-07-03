@@ -12,12 +12,34 @@ function wait(ms) {
 function measureHeightWithView(fromEl, toEl) {
   const originalFromHidden = fromEl.hidden;
   const originalToHidden = toEl.hidden;
+
   fromEl.hidden = true;
   toEl.hidden = false;
-  const height = quickPanelBody.scrollHeight;
+  void quickPanelBody.offsetHeight;
+
+  const height = quickPanelBody.getBoundingClientRect().height;
+
   fromEl.hidden = originalFromHidden;
   toEl.hidden = originalToHidden;
+
   return height;
+}
+
+function clearQuickPanelBodySwitchingState() {
+  quickPanelBody.style.height = "";
+  quickPanelBody.style.transition = "";
+  quickPanelBody.classList.remove("is-view-switching");
+}
+
+function lockHistoryViewHeight() {
+  const height = quickPanelMainView.getBoundingClientRect().height;
+  if (height > 0) {
+    quickPanelBody.style.setProperty("--quick-history-view-height", `${height}px`);
+  }
+}
+
+function clearHistoryViewHeight() {
+  quickPanelBody.style.removeProperty("--quick-history-view-height");
 }
 
 async function switchView(fromEl, toEl) {
@@ -25,19 +47,17 @@ async function switchView(fromEl, toEl) {
   switching = true;
 
   const startHeight = quickPanelBody.getBoundingClientRect().height;
-  const endHeight = measureHeightWithView(fromEl, toEl);
+  const targetHeight = measureHeightWithView(fromEl, toEl);
 
   quickPanelBody.classList.add("is-view-switching");
   quickPanelBody.style.height = `${startHeight}px`;
+  quickPanelBody.style.transition = `height ${HEIGHT_DURATION}ms var(--motion)`;
   void quickPanelBody.offsetHeight;
 
   fromEl.classList.add("is-view-fading");
-
   requestAnimationFrame(() => {
-    quickPanelBody.style.transition = `height ${HEIGHT_DURATION}ms var(--motion)`;
-    quickPanelBody.style.height = `${endHeight}px`;
+    quickPanelBody.style.height = `${targetHeight}px`;
   });
-
   await wait(FADE_DURATION);
 
   fromEl.hidden = true;
@@ -46,28 +66,26 @@ async function switchView(fromEl, toEl) {
   toEl.hidden = false;
   toEl.classList.add("is-view-fading");
   void toEl.offsetHeight;
-  toEl.classList.remove("is-view-fading");
+  requestAnimationFrame(() => toEl.classList.remove("is-view-fading"));
+  await wait(Math.max(HEIGHT_DURATION - FADE_DURATION, FADE_DURATION));
 
-  await wait(Math.max(0, HEIGHT_DURATION - FADE_DURATION));
-
-  quickPanelBody.style.height = "";
-  quickPanelBody.style.transition = "";
-  quickPanelBody.classList.remove("is-view-switching");
+  clearQuickPanelBodySwitchingState();
   switching = false;
 }
 
 export function switchToHistoryView() {
+  lockHistoryViewHeight();
   return switchView(quickPanelMainView, quickPanelHistoryView);
 }
 
 export function switchToMainView() {
-  return switchView(quickPanelHistoryView, quickPanelMainView);
+  return switchView(quickPanelHistoryView, quickPanelMainView)
+    .finally(clearHistoryViewHeight);
 }
 
 export function resetQuickPanelView() {
-  quickPanelBody.style.height = "";
-  quickPanelBody.style.transition = "";
-  quickPanelBody.classList.remove("is-view-switching");
+  clearQuickPanelBodySwitchingState();
+  clearHistoryViewHeight();
 
   quickPanelHistoryView.hidden = true;
   quickPanelHistoryView.classList.remove("is-view-fading");

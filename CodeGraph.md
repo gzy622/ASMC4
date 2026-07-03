@@ -82,6 +82,8 @@ DOM（`index.html` + `dom-refs.js`）：
 | 上滑关闭（面板内） | `.panel-head`、`.top-sheet-handle-zone`、`.quick-action-grid` | `#quickPanel.is-open` |
 | 上滑关闭（面板外） | `phoneEl`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
+下拉打开的 `onPrepare` 会按当前 quick panel view 刷新内容：历史 view 保持打开时刷新 `#historyList`，否则刷新当前作业主视图。
+
 面板下方空白与学生列表同在 `.scroll-container` 内。**`phoneEl` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
 
 ### 浮层状态（勿混用）

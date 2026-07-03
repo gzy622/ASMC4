@@ -9,8 +9,10 @@ import {
   scrollContainer,
   settingsPanel
 } from "../dom-refs.js";
+import { renderHistoryList } from "../render/history.js";
 import { renderQuickPanel } from "../render/quickPanel.js";
 import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
+import { isHistoryViewActive } from "../ui/history.js";
 import { closeFloatingPanels, commitQuickPanelOpen } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
@@ -133,7 +135,11 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   canPull: canPullQuickPanel,
   onPrepare: () => {
-    renderQuickPanel();
+    if (isHistoryViewActive()) {
+      renderHistoryList();
+    } else {
+      renderQuickPanel();
+    }
     quickPanel.classList.add("is-dragging");
   },
   onOpen: finishTopSheetOpen,
