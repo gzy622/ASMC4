@@ -101,11 +101,11 @@ export function importBackup(file) {
             state.assignments = assignments;
             state.roster = normalizeRosterFromBackup(data, assignments[0].students);
 
-            saveAppState({ label: "导入备份数据" });
+            saveAppState({ history: false });
             render();
             closeDrawer();
             closeConfirm();
-            announce("备份已导入", { action: "undo" });
+            announce("备份已导入");
           } catch (err) {
             alert("导入失败：" + err.message);
           }

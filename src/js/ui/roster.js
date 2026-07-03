@@ -193,7 +193,7 @@ export function saveRoster() {
   applyRosterToAllAssignments(roster);
   render();
   closeRosterEditor();
-  announce("名单已更新", { action: "undo" });
+  announce("名单已更新");
 }
 
 export function resetRoster() {
@@ -213,7 +213,7 @@ export function resetRoster() {
       render();
       closeRosterEditor();
       closeConfirm();
-      announce("名单已重置", { action: "undo" });
+      announce("名单已重置");
     }
   });
 }

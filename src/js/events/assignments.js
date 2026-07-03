@@ -100,6 +100,7 @@ export function bindAssignmentEvents() {
 
   deleteAssignmentButton.addEventListener("click", () => {
     const assignment = getCurrentAssignment();
+    const assignmentId = assignment.id;
     openConfirm({
       title: "删除当前作业",
       message: `确认删除“${assignment.title}”？该作业中的提交状态、分数和备注会一并删除。`,
@@ -109,7 +110,7 @@ export function bindAssignmentEvents() {
         deleteCurrentAssignment();
         closeConfirm();
         closeFloatingPanels();
-        announce("已删除作业", { action: "undo" });
+        announce("已删除作业", { action: "undo", assignmentId });
       }
     });
   });
@@ -138,9 +139,9 @@ export function bindAssignmentEvents() {
 
       assignment.title = trimmed;
       assignment.updatedAt = new Date().toISOString();
-      saveAppState({ label: `重命名为「${trimmed}」` });
+      saveAppState({ label: `重命名为「${trimmed}」`, assignmentId: assignment.id });
       render();
-      announce("已重命名", { action: "undo" });
+      announce("已重命名", { action: "undo", assignmentId: assignment.id });
     }
     function cancelRename() {
       if (renameSettled) return;
@@ -170,9 +171,9 @@ export function bindAssignmentEvents() {
       const assignment = getCurrentAssignment();
       assignment.subject = quickSubjectSelect.value;
       const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";
-      saveAppState({ label: subjectLabel });
+      saveAppState({ label: subjectLabel, assignmentId: assignment.id });
       render();
-      announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo" });
+      announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId: assignment.id });
     });
   }
 }

@@ -31,10 +31,10 @@ export function createAssignmentFromDialog() {
   state.assignments.unshift(nextAssignment);
   state.currentAssignmentId = nextAssignment.id;
 
-  saveAppState({ label: `新建作业「${title}」` });
+  saveAppState({ label: `新建作业「${title}」`, assignmentId: nextAssignment.id });
   render();
   closeFloatingPanels();
-  announce("已新建作业", { action: "undo" });
+  announce("已新建作业", { action: "undo", assignmentId: nextAssignment.id });
 }
 
 export function invertCurrentAssignmentSubmission() {
@@ -58,7 +58,7 @@ export function invertCurrentAssignmentSubmission() {
     student.status = STATUS.SUBMITTED;
   });
 
-  saveAppState({ label: `反选提交状态「${assignment.title}」` });
+  saveAppState({ label: `反选提交状态「${assignment.title}」`, assignmentId: assignment.id });
   render();
 }
 
@@ -87,7 +87,7 @@ export function deleteCurrentAssignment() {
     state.currentAssignmentId = state.assignments[nextIndex].id;
   }
 
-  saveAppState({ label: `删除作业「${deletedTitle}」` });
+  saveAppState({ label: `删除作业「${deletedTitle}」`, assignmentId: currentId });
   render();
 }
 
@@ -123,10 +123,10 @@ export function deleteAssignmentFromDrawer(assignmentId) {
         state.currentAssignmentId = state.assignments[nextIndex].id;
       }
 
-      saveAppState({ label: `删除作业「${assignment.title}」` });
+      saveAppState({ label: `删除作业「${assignment.title}」`, assignmentId });
       render();
       closeConfirm();
-      announce("已删除作业", { action: "undo" });
+      announce("已删除作业", { action: "undo", assignmentId });
     }
   });
 }
@@ -218,7 +218,7 @@ export function renameAssignment(assignmentId) {
       } else {
         historyLabel = newSubject ? `修改科目为「${newSubject}」` : "清除科目";
       }
-      saveAppState({ label: historyLabel });
+      saveAppState({ label: historyLabel, assignmentId });
       render();
       if (titleChanged) {
         announce("已重命名", { action: "undo" });

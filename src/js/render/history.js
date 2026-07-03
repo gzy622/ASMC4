@@ -1,4 +1,4 @@
-import { getHistoryEntries } from "../state.js";
+import { getHistoryEntries, getCurrentAssignment } from "../state.js";
 import { historyList } from "../dom-refs.js";
 import { escapeHTML } from "../utils/escapeHTML.js";
 
@@ -13,7 +13,7 @@ function formatHistoryTime(timestamp) {
 export function renderHistoryList() {
   if (!historyList) return;
 
-  const entries = getHistoryEntries();
+  const entries = getHistoryEntries(getCurrentAssignment().id);
   if (entries.length === 0) {
     historyList.innerHTML = `<p class="history-empty">暂无操作记录</p>`;
     return;

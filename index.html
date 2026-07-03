@@ -148,7 +148,7 @@
     <section class="top-sheet" id="quickPanel" aria-label="当前作业" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-head-main">
-          <div class="panel-title">当前作业</div>
+          <div class="panel-title" id="quickPanelTitle">当前作业</div>
           <div class="quick-current-summary" id="quickCurrentSummary" aria-live="polite">
             <span class="assignment-subject-tag" id="quickCurrentSubject" hidden></span>
             <span class="quick-current-stats" id="quickCurrentStats"></span>
@@ -188,11 +188,11 @@
             <button class="quick-action-btn" id="redoButton" type="button" title="重做（Ctrl+Y）" disabled>重做</button>
           </div>
 
-          <button class="quick-action-btn" id="historyPanelButton" type="button" title="查看操作历史">历史记录</button>
+          <button class="quick-action-btn danger" id="deleteAssignmentButton" type="button" title="删除当前作业；若只剩一项会自动新建空白作业">删除作业</button>
 
           <div class="quick-action-grid">
             <button class="quick-action-btn" id="invertButton" type="button" title="已交与未交状态互相切换">反选提交</button>
-            <button class="quick-action-btn danger" id="deleteAssignmentButton" type="button" title="删除当前作业；若只剩一项会自动新建空白作业">删除作业</button>
+            <button class="quick-action-btn" id="historyPanelButton" type="button" title="查看操作记录">操作记录</button>
           </div>
         </div>
 
