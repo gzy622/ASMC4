@@ -913,15 +913,17 @@
 
     .quick-edit-name {
       width: 100%;
-      height: 36px;
-      padding: 0 10px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
+      border: 0;
+      outline: 0;
+      border-radius: 16px;
       background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 14px 14px;
       font: inherit;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--text);
-      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
       box-sizing: border-box;
     }
 
@@ -932,8 +934,7 @@
     }
 
     .quick-edit-name:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-focus);
+      box-shadow: var(--shadow), 0 0 0 2px var(--accent-focus);
     }
 
     .quick-edit-card .subject-select {
