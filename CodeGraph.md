@@ -49,6 +49,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 ```
 
 旧备份中的 `scoreTensMode` 读取时会迁移到 `scoreStep10Mode`。
+学生/花名册 `id` 经 `utils/normalize.js` 一律为字符串（旧 Number 静默迁移为同值字符串，不重编号）。
 
 ### 运行时（`runtime.js`，不持久化）
 
@@ -102,6 +103,22 @@ DOM（`index.html` + `dom-refs.js`）：
 - `panel-swipe.js` 内 `blocksQuickPanelPull()` 复用 `ui/floating-layers.js` 的 `anyFloatingLayerOpen()`；`shouldStart` 里对 `#confirmPanel` 的单独判断保留。
 - `blocksQuickPanelPull()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算浮层占用）。
 - 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
+
+### 手势 `shouldStart` 边界（勿与关闭栈混用）
+
+关闭栈（`closeTopmostFloatingLayer`）只管 Esc/后退/返回键的**逐层 pop**；各拖动手势的 `shouldStart` 须按场景单独判断——打开/关闭方向不同、可见态类名不同（toast 用 `is-visible`）、shell 关闭须排除面板自身 DOM，且部分实例只拦 confirm 而不拦其它浮层。
+
+| 模块 | 手势 | `shouldStart` / `canStart` 主要检查 |
+|------|------|-------------------------------------|
+| `panel-swipe.js` | quickPanel 下拉打开 | `blocksQuickPanelPull()`（`anyFloatingLayerOpen()` + `is-dragging`）；排除非 `.student-card` 的 button/input/select/textarea |
+| `panel-swipe.js` | quickPanel 壳关闭 | `!isUiTransitionBusy("panel")`；`#confirmPanel.is-open` → false；`#quickPanel.is-open`；触点不在 `#quickPanel`；排除 drawer/score-sheet/fullscreen/nav/icon/title-wrap；排除 `#newAssignmentPanel`、`#confirmPanel`、`#rosterEditorPanel`、`#settingsPanel` |
+| `panel-swipe.js` | newAssignment 壳关闭 | 同 quickPanel 壳：`#confirmPanel.is-open`；面板 `is-open`；排除其它浮层 DOM |
+| `drawer-gestures.js` | 边缘左滑打开 | 排除 drawer/score-sheet/top-sheet/modal/fullscreen/nav/icon/title-wrap；`!isUiTransitionBusy("drawer")`；`quickPanel` / `newAssignmentPanel` / `scoreSheet` 任一 `is-open` → false |
+| `drawer-gestures.js` | 侧栏内/壳关闭 | `!isUiTransitionBusy("drawer")`；壳关闭须 `drawer.is-open`；排除 `.drawer-filter`（搜索/科目筛选） |
+| `score-swipe.js` | 打分 sheet 壳关闭 | `!isUiTransitionBusy("sheet")`；`#confirmPanel.is-open` → false；`scoreSheet.is-open`；排除 score-sheet 自身与其它浮层 DOM |
+| `toast-swipe.js` | toast 下滑关闭 | `#appToast.is-visible` 且非 `hidden`（**不用** `is-open` / 关闭栈）；`stopPropagation` 防穿透 sheet |
+
+**为何不能统一成关闭栈或单一 `isConfirmOpen()`：** 打开手势（下拉 quickPanel、边缘开 drawer）与关闭栈方向相反；toast 不在 `FLOATING_LAYER_ELS`；shell 关闭须允许 `.scroll-container` 空白上滑关 panel 但禁止在 panel 内重复绑定；confirm 仅阻断部分 shell 手势，侧栏/ toast 有独立规则。改手势前先对照上表，勿把 `anyFloatingLayerOpen()` 塞进所有 `shouldStart`。
 
 ### 侧栏与触摸
 

@@ -16,11 +16,11 @@ import {
   deleteAssignmentFromDrawer,
   deleteCurrentAssignment,
   invertCurrentAssignmentSubmission,
-  renameAssignment,
   renameCurrentAssignmentTitle,
   selectAssignment,
   updateCurrentAssignmentSubject
 } from "../business/assignment.js";
+import { startDrawerAssignmentEdit } from "../ui/assignment-edit.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
@@ -60,7 +60,7 @@ export function bindAssignmentEvents() {
       const { action, assignmentId } = actionButton.dataset;
       if (action === "edit") {
         traceEvent("assignment.rename", { assignmentId: String(assignmentId) });
-        renameAssignment(assignmentId);
+        startDrawerAssignmentEdit(assignmentId);
       }
       if (action === "delete") {
         traceEvent("assignment.delete", { assignmentId: String(assignmentId) });

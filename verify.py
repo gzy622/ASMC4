@@ -64,7 +64,7 @@ checks = [
     ),
     (
         "rename cancellation is guarded",
-        "let settled = false;" in read("src/js/business/assignment.js"),
+        "let settled = false;" in read("src/js/ui/assignment-edit.js"),
     ),
     (
         "assignment ids are escaped",

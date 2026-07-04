@@ -2,6 +2,13 @@ import { MAX_ROSTER_SIZE, STATUS } from "../constants.js";
 import { makeId } from "./id.js";
 import { clampAssignmentTitle, clampStudentName, clampStudentNote, clampSubject } from "./data-limits.js";
 
+function normalizeNumericId(rawId, index) {
+  const numericId = Number(rawId);
+  return Number.isFinite(numericId) && numericId > 0
+    ? String(numericId)
+    : String(index + 1);
+}
+
 export function normalizeAssignment(assignment, assignmentIndex) {
   return {
     id: String(assignment.id || makeId(`assignment-${assignmentIndex}`)),
@@ -16,7 +23,7 @@ export function normalizeStudent(student, index) {
   const fallbackSerial = String(index + 1).padStart(2, "0");
 
   return {
-    id: Number(student.id) || index + 1,
+    id: normalizeNumericId(student.id, index),
     serial: String(student.serial || fallbackSerial).padStart(2, "0"),
     name: clampStudentName(student.name || "未命名") || "未命名",
     status: [STATUS.NORMAL, STATUS.SUBMITTED, STATUS.NONE].includes(student.status)
@@ -34,7 +41,7 @@ export function createFreshStudentsFrom(students) {
     const isNoRegistration = student.status === STATUS.NONE;
 
     return {
-      id: Number(student.id) || index + 1,
+      id: normalizeNumericId(student.id, index),
       serial: String(student.serial || index + 1).padStart(2, "0"),
       name: clampStudentName(student.name || "未命名") || "未命名",
       status: isNoRegistration ? STATUS.NONE : STATUS.NORMAL,
@@ -49,7 +56,7 @@ export function createFreshStudentsFrom(students) {
 export function normalizeRosterEntry(entry, index) {
   const fallbackSerial = String(index + 1).padStart(2, "0");
   return {
-    id: Number(entry.id) || index + 1,
+    id: normalizeNumericId(entry.id, index),
     serial: String(entry.serial || fallbackSerial).padStart(2, "0"),
     name: clampStudentName(String(entry.name || "").trim()) || "未命名",
     nonEnglish: Boolean(entry.nonEnglish)

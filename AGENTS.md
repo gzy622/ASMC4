@@ -11,14 +11,15 @@
 
 整理后默认落点（详见 [docs/code-unification-plan.md](docs/code-unification-plan.md)）：
 
-- `business/assignment.js`：作业切换、新建、删除、重命名、科目。
+- `business/assignment.js`：作业切换、新建、删除、重命名、科目（纯数据）。
+- `ui/assignment-edit.js`：侧栏作业项 inline 编辑（DOM + 事件，提交走 business）。
 - `business/settings.js`：偏好开关（打分模式、×10、`setScoreStep10ModeEnabled` 等）。
 - `business/student.js`：学生提交状态切换。
 - `business/roster.js`：花名册写入。
 - 持久字段只在 `state.js`；临时 UI 态在 `runtime.js`（如打分输入，**不含** `scoreStep10Mode`）。
 - 偏好 switch：`events/settings.js` 绑定，用 `ui/switch-bind.js` 的 `bindSettingSwitch()`。
 - 浮层关闭栈：只用 `ui/floating-layers.js` 的 `closeTopmostFloatingLayer()`，勿复制顺序。
-- 状态变更后优先 `scheduleRender()`；business 尽量不 import `render/` 子模块（侧栏 inline 编辑等历史例外除外）。
+- 状态变更后优先 `scheduleRender()`；business 尽量不 import `render/` 子模块。
 
 ## 验证
 

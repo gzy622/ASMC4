@@ -1,14 +1,12 @@
 import { getState, saveAppState, getCurrentAssignment, defaultStudents } from "../state.js";
-import { MAX_ASSIGNMENTS, STATUS, SUBJECT_OPTIONS } from "../constants.js";
+import { MAX_ASSIGNMENTS, STATUS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
 import { newAssignmentTitleInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { scheduleRender } from "../render/index.js";
-import { invalidateAssignmentListCache } from "../render/assignmentList.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
 import { createFreshStudentsFrom } from "../utils/normalize.js";
 import { isStudentForceNone } from "../utils/display.js";
-import { assignmentList } from "../dom-refs.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { closeFloatingPanels } from "../ui/panels.js";
@@ -178,145 +176,47 @@ export function deleteAssignmentFromDrawer(assignmentId) {
   });
 }
 
-export function renameAssignment(assignmentId) {
+export function updateAssignmentFromDrawerEdit(assignmentId, rawTitle, subjectValue) {
   const state = getState();
   const assignment = state.assignments.find(item => String(item.id) === String(assignmentId));
-  if (!assignment) return;
+  if (!assignment) return { saved: false };
 
-  if (assignmentList.querySelector(".assignment-edit-input")) return;
+  const trimmed = clampAssignmentTitle(rawTitle.trim());
+  const newSubject = clampSubject(subjectValue);
 
-  const nameSpan = Array.from(
-    assignmentList.querySelectorAll(".assignment-name")
-  ).find(node => node.dataset.assignmentId === String(assignmentId));
-  if (!nameSpan) return;
-
-  const item = nameSpan.closest(".assignment-item");
-  if (!item) return;
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "assignment-edit-input";
-  input.value = assignment.title;
-  input.setAttribute("aria-label", "编辑作业名称");
-  input.maxLength = 24;
-
-  nameSpan.replaceWith(input);
-  input.focus();
-  input.select();
-
-  const select = document.createElement("select");
-  select.className = "assignment-edit-subject";
-  select.setAttribute("aria-label", "修改作业科目");
-  SUBJECT_OPTIONS.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.value;
-    opt.textContent = s.label;
-    if (s.value === assignment.subject) opt.selected = true;
-    select.appendChild(opt);
-  });
-  if (assignment.subject && !SUBJECT_OPTIONS.some(s => s.value === assignment.subject)) {
-    const opt = document.createElement("option");
-    opt.value = assignment.subject;
-    opt.textContent = assignment.subject;
-    opt.selected = true;
-    select.insertBefore(opt, select.firstChild);
+  if (!trimmed) {
+    return { saved: false };
   }
 
-  const meta = item.querySelector(".assignment-meta");
-  const subjectTag = meta.querySelector(".assignment-subject-tag");
-  if (subjectTag) {
-    subjectTag.replaceWith(select);
+  const titleChanged = trimmed !== assignment.title;
+  const subjectChanged = newSubject !== assignment.subject;
+
+  if (!titleChanged && !subjectChanged) {
+    return { saved: false };
+  }
+
+  if (titleChanged) {
+    assignment.title = trimmed;
+  }
+  if (subjectChanged) {
+    assignment.subject = newSubject;
+  }
+
+  assignment.updatedAt = new Date().toISOString();
+  let historyLabel = "";
+  if (titleChanged && subjectChanged) {
+    historyLabel = `重命名为「${trimmed}」，科目改为「${newSubject || "无"}」`;
+  } else if (titleChanged) {
+    historyLabel = `重命名为「${trimmed}」`;
   } else {
-    meta.insertBefore(select, meta.firstChild);
+    historyLabel = newSubject ? `修改科目为「${newSubject}」` : "清除科目";
   }
-
-  let settled = false;
-
-  function exitEditMode() {
-    invalidateAssignmentListCache();
-    scheduleRender();
+  saveAppState({ label: historyLabel, assignmentId });
+  scheduleRender();
+  if (titleChanged) {
+    announce("已重命名", { action: "undo", assignmentId });
+  } else {
+    announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId });
   }
-
-  function commit() {
-    if (settled) return;
-    settled = true;
-
-    const trimmed = clampAssignmentTitle(input.value.trim());
-    const newSubject = clampSubject(select.value);
-
-    if (!trimmed) {
-      exitEditMode();
-      return;
-    }
-
-    const titleChanged = trimmed !== assignment.title;
-    const subjectChanged = newSubject !== assignment.subject;
-
-    if (titleChanged) {
-      assignment.title = trimmed;
-      input.value = trimmed;
-    }
-
-    if (subjectChanged) {
-      assignment.subject = newSubject;
-    }
-
-    if (titleChanged || subjectChanged) {
-      assignment.updatedAt = new Date().toISOString();
-      let historyLabel = "";
-      if (titleChanged && subjectChanged) {
-        historyLabel = `重命名为「${trimmed}」，科目改为「${newSubject || "无"}」`;
-      } else if (titleChanged) {
-        historyLabel = `重命名为「${trimmed}」`;
-      } else {
-        historyLabel = newSubject ? `修改科目为「${newSubject}」` : "清除科目";
-      }
-      saveAppState({ label: historyLabel, assignmentId });
-      scheduleRender();
-      if (titleChanged) {
-        announce("已重命名", { action: "undo", assignmentId });
-      } else {
-        announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId });
-      }
-    } else {
-      exitEditMode();
-    }
-  }
-
-  function cancel() {
-    if (settled) return;
-    settled = true;
-    exitEditMode();
-  }
-
-  input.addEventListener("blur", function(event) {
-    if (event.relatedTarget && event.relatedTarget.closest(".assignment-edit-subject")) return;
-    commit();
-  });
-
-  input.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      input.blur();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      cancel();
-    }
-  });
-
-  select.addEventListener("change", commit);
-
-  select.addEventListener("blur", function(event) {
-    if (event.relatedTarget && event.relatedTarget.closest(".assignment-edit-input")) return;
-    commit();
-  });
-
-  select.addEventListener("keydown", function(event) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      cancel();
-    }
-  });
+  return { saved: true };
 }

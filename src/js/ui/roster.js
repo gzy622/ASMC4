@@ -54,7 +54,7 @@ export function addEmptyRow() {
 
   const row = document.createElement("div");
   row.className = "roster-row";
-  row.dataset.id = newId;
+  row.dataset.id = String(newId);
   row.innerHTML = `
     <span class="roster-row-handle">&#x2261; ${String(newIndex + 1).padStart(2, "0")}</span>
     <input class="roster-row-input roster-row-name" type="text" value="" placeholder="姓名" maxlength="10" />
@@ -190,7 +190,11 @@ export function collectRosterFromEditor() {
   let hasEmptyName = false;
 
   rows.forEach((row, i) => {
-    const id = Number(row.dataset.id) || i + 1;
+    const rawId = row.dataset.id;
+    const numericId = Number(rawId);
+    const id = Number.isFinite(numericId) && numericId > 0
+      ? String(numericId)
+      : String(i + 1);
     const nameInput = row.querySelector(".roster-row-name");
     const name = clampStudentName(nameInput.value.trim());
     const nonEnglishInput = row.querySelector(".roster-row-nonenglish-input");
