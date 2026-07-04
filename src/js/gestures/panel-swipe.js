@@ -4,9 +4,6 @@ import {
   newAssignmentPanel,
   appShell,
   quickPanel,
-  quickPanelHead,
-  quickPanelHandleZone,
-  quickActionGrid,
   rosterEditorPanel,
   scoreSheet,
   scrollContainer,
@@ -87,36 +84,18 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     onDragStart: prepareQuickPanelCloseDrag,
   };
 
-  const panelHead = quickPanelHead;
-  const handleZone = quickPanelHandleZone;
-  const actionGrid = quickActionGrid;
-
-  if (panelHead) {
-    createVerticalDragGesture(panelHead, {
-      ...closeOpts,
-      shouldStart: event => quickPanel.classList.contains("is-open")
-        && !event.target.closest(".panel-close"),
-    });
-  }
-  if (handleZone) {
-    createVerticalDragGesture(handleZone, {
-      ...closeOpts,
-      shouldStart: () => quickPanel.classList.contains("is-open"),
-    });
-  }
-  if (actionGrid) {
-    createVerticalDragGesture(actionGrid, {
-      ...closeOpts,
-      shouldStart: event => quickPanel.classList.contains("is-open")
-        && !event.target.closest("button, input, select, textarea"),
-    });
-  }
+  createVerticalDragGesture(quickPanel, {
+    ...closeOpts,
+    shouldStart: event => quickPanel.classList.contains("is-open")
+      && !event.target.closest("#quickPanelHistoryView"),
+  });
 
   createVerticalDragGesture(appShell, {
     closeDirection: -1,
     targetEl: quickPanel,
     onDragStart: prepareQuickPanelCloseDrag,
     shouldStart: (event) => {
+      if (uiTransitionBusy) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!quickPanel.classList.contains("is-open")) return false;
       if (event.target.closest("#quickPanel")) return false;

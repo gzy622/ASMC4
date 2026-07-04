@@ -81,7 +81,7 @@ DOM（`index.html` + `dom-refs.js`）：
 | 方向 | 绑定元素 | 条件 |
 |------|---------|------|
 | 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `blocksQuickPanelPull()` 为 false |
-| 上滑关闭（面板内） | `#quickPanelHead`、`#quickPanelHandleZone`、`#quickActionGrid` | `#quickPanel.is-open`；`#quickActionGrid` 排除 `button/input` |
+| 上滑关闭（面板内） | `#quickPanel` | `#quickPanel.is-open` 且不在 `#quickPanelHistoryView` 内 |
 | 上滑关闭（面板外） | `appShell`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
 下拉打开的 `onPrepare` 调 `refreshQuickPanelContent()`（`render/quickPanel.js`），按当前 view 刷新标题与内容。
