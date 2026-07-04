@@ -1,6 +1,6 @@
 import { appShell, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
-import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, uiTransitionBusy } from "../runtime.js";
+import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
@@ -24,7 +24,7 @@ createHorizontalDragGesture(appShell, {
   getBasePx: drawerClosedPx,
   shouldStart: (event) => {
     if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) return false;
-    if (uiTransitionBusy) return false;
+    if (isUiTransitionBusy("drawer")) return false;
     if (quickPanel.classList.contains("is-open")) return false;
     if (newAssignmentPanel.classList.contains("is-open")) return false;
     if (scoreSheet.classList.contains("is-open")) return false;
@@ -52,7 +52,7 @@ createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: (event) => {
-    if (uiTransitionBusy) return false;
+    if (isUiTransitionBusy("drawer")) return false;
     if (event.target.closest(".drawer-filter")) return false;
     return true;
   },
@@ -68,7 +68,7 @@ createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   shouldStart: (event) => {
-    if (uiTransitionBusy) return false;
+    if (isUiTransitionBusy("drawer")) return false;
     if (!drawer.classList.contains("is-open")) return false;
     return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap");
   },

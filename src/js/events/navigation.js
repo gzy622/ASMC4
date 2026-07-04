@@ -26,7 +26,7 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
-import { setSuppressNextCardClick, uiTransitionBusy } from "../runtime.js";
+import { setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
 import { getState } from "../state.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 
@@ -51,7 +51,7 @@ function bindEmptyAreaClose() {
   appShell.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
-    if (uiTransitionBusy) {
+    if (isUiTransitionBusy()) {
       if (anyFloatingLayerOpen()) consumeFloatingLayerEmptyClick(event);
       return;
     }
@@ -122,7 +122,7 @@ export function bindNavigationEvents() {
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
-    if (uiTransitionBusy) return;
+    if (isUiTransitionBusy()) return;
     event.preventDefault();
 
     if (confirmPanel.classList.contains("is-open")) {

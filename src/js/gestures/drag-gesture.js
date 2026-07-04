@@ -7,6 +7,7 @@ import {
 } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
+import { parseTransformAxis } from "../utils/transform.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -19,6 +20,7 @@ export function createVerticalDragGesture(el, {
   onProgress,
   getReleaseSecondary,
   getCloseTargetPx,
+  busyKey = "gesture",
 }) {
   let startY = null;
   let startX = null;
@@ -32,6 +34,7 @@ export function createVerticalDragGesture(el, {
   let activeRelease = null;
   let pendingTransform = null;
   let rafId = null;
+  let dragBaseDelta = 0;
 
   function scheduleTransform(value) {
     pendingTransform = value;
@@ -110,6 +113,11 @@ export function createVerticalDragGesture(el, {
     lastMoveAt = now;
   }
 
+  function readCurrentDelta() {
+    const transform = targetEl.style.transform || getComputedStyle(targetEl).transform;
+    return parseTransformAxis(transform, "Y");
+  }
+
   function abortRelease() {
     releaseGeneration += 1;
     activeRelease?.cancel();
@@ -121,18 +129,38 @@ export function createVerticalDragGesture(el, {
     startX = null;
     dragging = false;
     currentDelta = 0;
+    dragBaseDelta = 0;
     activePointerId = null;
     lastMoveAt = 0;
     lastVelocity = 0;
     if (releaseAnimating) {
       releaseAnimating = false;
-      setUiTransitionBusy(false);
+      setUiTransitionBusy(false, busyKey);
       clearDragStyles();
     }
   }
 
+  function interruptRelease() {
+    if (!releaseAnimating) return;
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    flushTransform();
+    dragBaseDelta = readCurrentDelta();
+    currentDelta = dragBaseDelta;
+    releaseAnimating = false;
+    setUiTransitionBusy(false, busyKey);
+    targetEl.style.transition = "none";
+    targetEl.style.willChange = "transform";
+    targetEl.style.transform = `translateY(${dragBaseDelta}px)`;
+  }
+
   function handlePointerDown(event) {
-    if (releaseAnimating) return;
+    const interrupted = releaseAnimating;
+    if (releaseAnimating) {
+      if (!shouldStart(event)) return;
+      interruptRelease();
+    }
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
@@ -140,7 +168,10 @@ export function createVerticalDragGesture(el, {
     releaseDirection(event.pointerId);
     startY = event.clientY;
     startX = event.clientX;
-    currentDelta = 0;
+    if (!interrupted) {
+      dragBaseDelta = 0;
+    }
+    currentDelta = dragBaseDelta;
     lastMoveAt = performance.now();
     lastVelocity = 0;
   }
@@ -172,15 +203,15 @@ export function createVerticalDragGesture(el, {
       capturePointer(event);
       targetEl.style.transition = "none";
       targetEl.style.willChange = "transform";
-      currentDelta = 0;
+      currentDelta = dragBaseDelta;
       lastVelocity = 0;
     }
 
     let clamped;
     if (closeDirection < 0) {
-      clamped = Math.min(0, dy);
+      clamped = Math.min(0, dragBaseDelta + dy);
     } else {
-      clamped = Math.max(0, dy);
+      clamped = Math.max(0, dragBaseDelta + dy);
     }
 
     trackVelocity(clamped);
@@ -221,7 +252,7 @@ export function createVerticalDragGesture(el, {
 
     const generation = releaseGeneration;
     releaseAnimating = true;
-    setUiTransitionBusy(true);
+    setUiTransitionBusy(true, busyKey);
     targetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
@@ -230,7 +261,7 @@ export function createVerticalDragGesture(el, {
       activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
-      setUiTransitionBusy(false);
+      setUiTransitionBusy(false, busyKey);
       if (shouldClose) {
         onClose();
       }
@@ -243,8 +274,9 @@ export function createVerticalDragGesture(el, {
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setUiTransitionBusy(false);
+      setUiTransitionBusy(false, busyKey);
       releaseAnimating = false;
+      dragBaseDelta = 0;
       activeRelease = null;
     }
   }
@@ -282,6 +314,7 @@ export function createTopSheetOpenGesture(bindEl, {
   onProgress,
   getReleaseSecondary,
   keepSecondaryOnOpen = false,
+  busyKey = "panel",
 }) {
   let releaseGeneration = 0;
   let activeRelease = null;
@@ -295,6 +328,7 @@ export function createTopSheetOpenGesture(bindEl, {
   let releaseAnimating = false;
   let pendingTransform = null;
   let rafId = null;
+  let dragBaseDelta = 0;
 
   function closedDelta() {
     return -sheetEl.offsetHeight;
@@ -381,8 +415,32 @@ export function createTopSheetOpenGesture(bindEl, {
     lastMoveAt = now;
   }
 
+  function readCurrentDelta() {
+    const transform = sheetEl.style.transform || getComputedStyle(sheetEl).transform;
+    return parseTransformAxis(transform, "Y");
+  }
+
+  function interruptRelease() {
+    if (!releaseAnimating) return;
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    flushTransform();
+    dragBaseDelta = readCurrentDelta();
+    currentDelta = dragBaseDelta;
+    releaseAnimating = false;
+    setUiTransitionBusy(false, busyKey);
+    sheetEl.style.transition = "none";
+    sheetEl.style.willChange = "transform";
+    sheetEl.style.transform = `translateY(${dragBaseDelta}px)`;
+  }
+
   function handlePointerDown(event) {
-    if (releaseAnimating) return;
+    const interrupted = releaseAnimating;
+    if (releaseAnimating) {
+      if (!canStart(event) || !canPull(event)) return;
+      interruptRelease();
+    }
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!canStart(event)) return;
@@ -392,7 +450,10 @@ export function createTopSheetOpenGesture(bindEl, {
     startY = event.clientY;
     startX = event.clientX;
     dragging = false;
-    currentDelta = closedDelta();
+    if (!interrupted) {
+      dragBaseDelta = closedDelta();
+    }
+    currentDelta = dragBaseDelta;
     lastMoveAt = performance.now();
     lastVelocity = 0;
   }
@@ -434,13 +495,13 @@ export function createTopSheetOpenGesture(bindEl, {
       if (onPrepare) onPrepare();
       sheetEl.style.transition = "none";
       sheetEl.style.willChange = "transform";
-      currentDelta = closedDelta();
+      currentDelta = dragBaseDelta;
       lastVelocity = 0;
       event.preventDefault();
     }
 
     const minDelta = closedDelta();
-    const clamped = Math.min(0, Math.max(minDelta, minDelta + dy));
+    const clamped = Math.min(0, Math.max(minDelta, dragBaseDelta + dy));
     trackVelocity(clamped);
     scheduleTransform(`translateY(${clamped}px)`);
     if (onProgress) {
@@ -481,7 +542,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    setUiTransitionBusy(true);
+    setUiTransitionBusy(true, busyKey);
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
@@ -504,8 +565,9 @@ export function createTopSheetOpenGesture(bindEl, {
       if (secondaryTarget && !(shouldOpen && keepSecondaryOnOpen)) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setUiTransitionBusy(false);
+      setUiTransitionBusy(false, busyKey);
       releaseAnimating = false;
+      dragBaseDelta = 0;
       activeRelease = null;
     }
   }
@@ -515,7 +577,8 @@ export function createTopSheetOpenGesture(bindEl, {
     activeRelease?.cancel();
     activeRelease = null;
     releaseAnimating = false;
-    setUiTransitionBusy(false);
+    dragBaseDelta = 0;
+    setUiTransitionBusy(false, busyKey);
     clearDragStyles();
   }
 

@@ -10,7 +10,7 @@ import {
   settingsPanel
 } from "../dom-refs.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
-import { uiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
+import { isUiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 import { isHistoryViewActive } from "../ui/history.js";
 import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
@@ -32,7 +32,7 @@ function blocksQuickPanelPull() {
 }
 
 function gesturesLocked() {
-  return uiTransitionBusy && blocksQuickPanelPull();
+  return isUiTransitionBusy("panel") && blocksQuickPanelPull();
 }
 
 function canPullQuickPanel() {
@@ -52,18 +52,20 @@ function bindTopSheetCloseGesture(panel) {
   createVerticalDragGesture(panel, {
     closeDirection: -1,
     onClose: closeFloatingPanels,
+    busyKey: "panel",
   });
 
   createVerticalDragGesture(appShell, {
     closeDirection: -1,
     targetEl: panel,
     shouldStart: (event) => {
-      if (uiTransitionBusy) return false;
+      if (isUiTransitionBusy("panel")) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!panel.classList.contains("is-open")) return false;
       return !event.target.closest(".top-sheet, .modal-panel, .fullscreen-panel, .drawer, .score-sheet, .nav-button, .icon-button, .title-wrap");
     },
     onClose: closeFloatingPanels,
+    busyKey: "panel",
   });
 }
 
@@ -74,7 +76,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       commitQuickPanelOpen();
     }
     quickPanel.classList.remove("is-dragging");
-    setUiTransitionBusy(false);
+    setUiTransitionBusy(false, "panel");
   }
 
   const closeOpts = {
@@ -82,6 +84,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     targetEl: quickPanel,
     onClose: closeFloatingPanels,
     onDragStart: prepareQuickPanelCloseDrag,
+    busyKey: "panel",
   };
 
   createVerticalDragGesture(quickPanel, {
@@ -95,7 +98,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     targetEl: quickPanel,
     onDragStart: prepareQuickPanelCloseDrag,
     shouldStart: (event) => {
-      if (uiTransitionBusy) return false;
+      if (isUiTransitionBusy("panel")) return false;
       if (confirmPanel.classList.contains("is-open")) return false;
       if (!quickPanel.classList.contains("is-open")) return false;
       if (event.target.closest("#quickPanel")) return false;
@@ -105,6 +108,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
       return !event.target.closest("#newAssignmentPanel, #confirmPanel, #rosterEditorPanel, #settingsPanel");
     },
     onClose: closeFloatingPanels,
+    busyKey: "panel",
   });
 }
 
@@ -122,6 +126,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   onOpen: finishTopSheetOpen,
   onCancel: cancelTopSheetOpen,
+  busyKey: "panel",
 });
 
 bindQuickPanelCloseGesture(quickPanelOpenGesture.abortRelease);

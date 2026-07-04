@@ -14,7 +14,16 @@ import { openScoreSheet } from "./index.js";
 
 let longPressResetTimer = null;
 const longPressStarts = new Map();
+const longPressCards = new Map();
 const LONG_PRESS_MOVE_CANCEL_DISTANCE = 10;
+
+function clearLongPressVisual(pointerId) {
+  const card = longPressCards.get(pointerId);
+  if (card) {
+    card.classList.remove("is-longpressing");
+    longPressCards.delete(pointerId);
+  }
+}
 
 export function handleLongPressStart(event) {
   const card = event.target.closest(".student-card");
@@ -31,8 +40,12 @@ export function handleLongPressStart(event) {
   if (isStudentForceNone(student, assignment)) return;
 
   const pointerId = event.pointerId;
+  clearLongPressVisual(pointerId);
   longPressStarts.set(pointerId, { x: event.clientX, y: event.clientY });
+  longPressCards.set(pointerId, card);
+  card.classList.add("is-longpressing");
   setLongPressTimer(pointerId, setTimeout(() => {
+    clearLongPressVisual(pointerId);
     longPressStarts.delete(pointerId);
     setLongPressTimer(pointerId, null);
     setLongPressTriggered(true);
@@ -54,11 +67,13 @@ export function handleLongPressMove(event) {
   if (Math.hypot(dx, dy) < LONG_PRESS_MOVE_CANCEL_DISTANCE) return;
   longPressStarts.delete(event.pointerId);
   clearLongPressTimer(event.pointerId);
+  clearLongPressVisual(event.pointerId);
 }
 
 export function handleLongPressEnd(event) {
   longPressStarts.delete(event.pointerId);
   clearLongPressTimer(event.pointerId);
+  clearLongPressVisual(event.pointerId);
 
   if (longPressTriggered) {
     clearTimeout(longPressResetTimer);

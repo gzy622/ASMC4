@@ -24,9 +24,12 @@ const PRESSABLE = [
 const ASSIGNMENT_ITEM_INNER =
   ".assignment-item-actions,.assignment-item-action,.assignment-edit-input,.assignment-edit-subject";
 
+const MIN_PRESS_VISIBLE_MS = 100;
+
 const pressed = new Map();
 const releaseTimers = new Map();
 const pressStarts = new Map();
+const pressStartedAt = new Map();
 const MOVE_CANCEL_DISTANCE = 8;
 
 function resolve(target) {
@@ -54,6 +57,7 @@ function clear(pointerId) {
     pressed.delete(pointerId);
   }
   pressStarts.delete(pointerId);
+  pressStartedAt.delete(pointerId);
 
   const timer = releaseTimers.get(pointerId);
   if (timer) {
@@ -81,6 +85,19 @@ function armAutoRelease(pointerId) {
   }, 600));
 }
 
+function scheduleClear(pointerId) {
+  const startedAt = pressStartedAt.get(pointerId) ?? performance.now();
+  const elapsed = performance.now() - startedAt;
+  const delay = Math.max(0, MIN_PRESS_VISIBLE_MS - elapsed);
+
+  const timer = releaseTimers.get(pointerId);
+  if (timer) clearTimeout(timer);
+
+  releaseTimers.set(pointerId, setTimeout(() => {
+    clear(pointerId);
+  }, delay));
+}
+
 appShell.addEventListener("pointerdown", (event) => {
   if (event.button && event.button !== 0) return;
   const el = resolve(event.target);
@@ -90,6 +107,7 @@ appShell.addEventListener("pointerdown", (event) => {
   el.classList.add("is-pressed");
   pressed.set(event.pointerId, el);
   pressStarts.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  pressStartedAt.set(event.pointerId, performance.now());
   armAutoRelease(event.pointerId);
 });
 
@@ -103,10 +121,10 @@ appShell.addEventListener("pointermove", (event) => {
   }
 });
 
-appShell.addEventListener("pointerleave", (event) => clear(event.pointerId));
-window.addEventListener("pointerup", (event) => clear(event.pointerId), true);
-window.addEventListener("pointercancel", (event) => clear(event.pointerId), true);
-window.addEventListener("lostpointercapture", (event) => clear(event.pointerId), true);
+appShell.addEventListener("pointerleave", (event) => scheduleClear(event.pointerId));
+window.addEventListener("pointerup", (event) => scheduleClear(event.pointerId), true);
+window.addEventListener("pointercancel", (event) => scheduleClear(event.pointerId), true);
+window.addEventListener("lostpointercapture", (event) => scheduleClear(event.pointerId), true);
 window.addEventListener("blur", clearAll);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) clearAll();
