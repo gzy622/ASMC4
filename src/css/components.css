@@ -255,6 +255,44 @@
       transition: none !important;
     }
 
+    html.perf-diagnostics-lite .drawer,
+    html.perf-diagnostics-lite .top-sheet,
+    html.perf-diagnostics-lite .score-sheet,
+    html.perf-diagnostics-lite .modal-panel,
+    html.perf-diagnostics-lite .confirm-scrim,
+    html.perf-diagnostics-lite .fullscreen-panel {
+      box-shadow: none !important;
+    }
+
+    html.perf-diagnostics-lite .drawer::after,
+    html.perf-diagnostics-lite .top-sheet::after,
+    html.perf-diagnostics-lite .score-sheet::after,
+    html.perf-diagnostics-lite .confirm-scrim::after {
+      opacity: 0 !important;
+      box-shadow: none !important;
+      transition: none !important;
+    }
+
+    /* Drag/release only: drop shadow work while transform is animating. */
+    .drawer.is-motion-dragging::after,
+    .drawer.is-open.is-motion-dragging::after,
+    .top-sheet.is-motion-dragging::after,
+    .top-sheet.is-open.is-motion-dragging::after,
+    .score-sheet.is-motion-dragging::after,
+    .score-sheet.is-open.is-motion-dragging::after {
+      opacity: 0;
+      box-shadow: none;
+      transition: none;
+    }
+
+    .top-sheet.is-motion-dragging,
+    .top-sheet.is-open.is-motion-dragging,
+    .top-sheet.is-dragging.is-motion-dragging,
+    .score-sheet.is-motion-dragging,
+    .score-sheet.is-open.is-motion-dragging {
+      box-shadow: none;
+    }
+
     .drawer-filter {
       flex-shrink: 0;
       padding: 12px 14px;

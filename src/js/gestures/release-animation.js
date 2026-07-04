@@ -1,18 +1,19 @@
 const MIN_RELEASE_DURATION_MS = 140;
 const MAX_RELEASE_DURATION_MS = 360;
 const BASE_RELEASE_DURATION_MS = 260;
-const VELOCITY_DISTANCE_RATIO = 0.45;
-const RELEASE_EASING = "cubic-bezier(.18, .9, .2, 1)";
+const RELEASE_EASING = "cubic-bezier(.2, .25, .15, 1)";
+const RELEASE_INITIAL_SLOPE = 1.25;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function releaseDuration(distancePx, velocityPxPerMs) {
-  const velocity = Math.abs(velocityPxPerMs);
-  if (velocity <= 0.01) return BASE_RELEASE_DURATION_MS;
+function releaseDuration(distancePx, fromPx, toPx, velocityPxPerMs) {
+  const direction = Math.sign(toPx - fromPx) || 1;
+  const alignedVelocity = velocityPxPerMs * direction;
+  if (alignedVelocity <= 0.01) return BASE_RELEASE_DURATION_MS;
   return clamp(
-    Math.round(distancePx / velocity * VELOCITY_DISTANCE_RATIO),
+    Math.round(RELEASE_INITIAL_SLOPE * distancePx / alignedVelocity),
     MIN_RELEASE_DURATION_MS,
     MAX_RELEASE_DURATION_MS
   );
@@ -33,7 +34,7 @@ export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, seco
   }
 
   const distance = Math.abs(toPx - fromPx);
-  const duration = releaseDuration(distance, velocityPxPerMs);
+  const duration = releaseDuration(distance, fromPx, toPx, velocityPxPerMs);
   const animations = [];
 
   animations.push(el.animate([

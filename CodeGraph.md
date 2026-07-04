@@ -82,6 +82,12 @@ DOM（`index.html` + `dom-refs.js`）：
 
 模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
 
+### `is-motion-dragging`（渲染轻量化，勿混用）
+
+通用手势在真实拖动开始时给 `targetEl` / `sheetEl` 加 `is-motion-dragging`，释放动画结束、取消、打断后的 abort、`pointercancel` 路径移除。仅表示**正在拖拽或释放动画中**，供 CSS 临时关掉伪元素/面板阴影以降低 `DrawFn_DrawGL` 尖峰；静止 `.is-open` 仍保留原阴影。
+
+**不得**用于：浮层关闭栈、`blocksQuickPanelPull()`、quickPanel 打开态判断。那些语义继续只用 `is-open` / `is-dragging`（下拉预览占用）。
+
 ### `#quickPanel`（顶部 sheet）
 
 | 方向 | 绑定元素 | 条件 |
@@ -142,7 +148,7 @@ DOM（`index.html` + `dom-refs.js`）：
 1. 列表顶下拉打开；面板内、**面板下空白**、学生区上滑关闭。
 2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
 3. toast 显示时框内下滑关闭；轻点「撤回/重做」不误关；连续打分/撤回时 toast 仍可点、可滑、不挡点击。
-4. Android WebView：`is-dragging` 与 `pointercancel` 不闪退。
+4. Android WebView：`is-dragging` 与 `pointercancel` 不闪退；快速拖动/半途取消/释放中再触摸后无残留 `is-motion-dragging`。
 
 ## Agent 会话
 

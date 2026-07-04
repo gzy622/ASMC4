@@ -21,6 +21,7 @@ scripts/dev-device.local.json
 
 # Build output
 dist/
+traces/
 
 # Node.js dependencies
 node_modules/

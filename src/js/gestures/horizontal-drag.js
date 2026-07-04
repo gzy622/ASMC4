@@ -4,6 +4,8 @@ import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtim
 import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
 
+const MOTION_DRAGGING_CLASS = "is-motion-dragging";
+
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
   getClosedPx,
@@ -32,6 +34,10 @@ export function createHorizontalDragGesture(bindEl, {
   let rafId = null;
   let dragBasePx = 0;
 
+  function setMotionDragging(active) {
+    targetEl.classList.toggle(MOTION_DRAGGING_CLASS, active);
+  }
+
   function scheduleTransform(value) {
     pendingTransform = value;
     if (rafId === null) {
@@ -50,7 +56,10 @@ export function createHorizontalDragGesture(bindEl, {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
-    pendingTransform = null;
+    if (pendingTransform !== null) {
+      targetEl.style.transform = pendingTransform;
+      pendingTransform = null;
+    }
   }
 
   function clearDragStyles() {
@@ -59,6 +68,7 @@ export function createHorizontalDragGesture(bindEl, {
     targetEl.style.willChange = "";
     void targetEl.offsetWidth;
     targetEl.style.transition = "";
+    setMotionDragging(false);
   }
 
   function isPrimaryMouseButton(event) {
@@ -82,8 +92,9 @@ export function createHorizontalDragGesture(bindEl, {
   }
 
   function resetDragState({ restoreTarget = false } = {}) {
+    const hadMotion = targetEl.classList.contains(MOTION_DRAGGING_CLASS);
     flushTransform();
-    if (restoreTarget && dragging) {
+    if ((restoreTarget && dragging) || hadMotion) {
       clearDragStyles();
     } else if (dragging) {
       targetEl.style.willChange = "";
@@ -177,6 +188,7 @@ export function createHorizontalDragGesture(bindEl, {
           return;
         }
         dragging = true;
+        setMotionDragging(true);
         if (traceLabel) traceGesture(traceLabel, "dragStart");
         capturePointer(event);
         targetEl.style.transition = "none";
@@ -222,42 +234,48 @@ export function createHorizontalDragGesture(bindEl, {
     dragging = false;
     activePointerId = null;
 
-    if (wasDragging) {
-      if (traceLabel) {
-        traceGesture(traceLabel, "release", {
-          delta: releasedPx,
-          velocity,
-          targetPx
-        });
-      }
-      const generation = ++releaseGeneration;
-      releaseAnimating = true;
-      setUiTransitionBusy(true, busyKey);
-      targetEl.style.transform = `translateX(${releasedPx}px)`;
-      const secondaryTarget = getReleaseSecondary
-        ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
-        : null;
-      try {
-        activeRelease = animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
-        await activeRelease.finished;
-        if (generation !== releaseGeneration) return;
-        setUiTransitionBusy(false, busyKey);
-        if (onRelease) onRelease(dx, wasDragging, velocity);
-        if (traceLabel) traceGesture(traceLabel, "close");
-      } finally {
-        if (generation !== releaseGeneration) {
-          activeRelease = null;
-          return;
-        }
+    if (!wasDragging) {
+      // Interrupted release then lifted without re-dragging.
+      if (targetEl.classList.contains(MOTION_DRAGGING_CLASS)) {
         clearDragStyles();
-        if (secondaryTarget) {
-          secondaryTarget.el.style[secondaryTarget.prop] = "";
-        }
-        setUiTransitionBusy(false, busyKey);
-        releaseAnimating = false;
-        dragBasePx = 0;
-        activeRelease = null;
       }
+      return;
+    }
+
+    if (traceLabel) {
+      traceGesture(traceLabel, "release", {
+        delta: releasedPx,
+        velocity,
+        targetPx
+      });
+    }
+    const generation = ++releaseGeneration;
+    releaseAnimating = true;
+    setUiTransitionBusy(true, busyKey);
+    targetEl.style.transform = `translateX(${releasedPx}px)`;
+    const secondaryTarget = getReleaseSecondary
+      ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
+      : null;
+    try {
+      activeRelease = animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
+      await activeRelease.finished;
+      if (generation !== releaseGeneration) return;
+      setUiTransitionBusy(false, busyKey);
+      if (onRelease) onRelease(dx, wasDragging, velocity);
+      if (traceLabel) traceGesture(traceLabel, "close");
+    } finally {
+      if (generation !== releaseGeneration) {
+        activeRelease = null;
+        return;
+      }
+      clearDragStyles();
+      if (secondaryTarget) {
+        secondaryTarget.el.style[secondaryTarget.prop] = "";
+      }
+      setUiTransitionBusy(false, busyKey);
+      releaseAnimating = false;
+      dragBasePx = 0;
+      activeRelease = null;
     }
   });
 
