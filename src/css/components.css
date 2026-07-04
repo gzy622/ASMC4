@@ -196,6 +196,10 @@
       pointer-events: none;
     }
 
+    .phone:has(.drawer.is-open) .student-card {
+      pointer-events: none;
+    }
+
     .drawer.is-expanding {
       transform: translateX(0) scaleX(var(--drawer-expand-scale, 1));
       border-right-color: transparent;
@@ -206,13 +210,13 @@
         box-shadow 280ms var(--motion);
     }
 
-    .drawer-head,
+    .drawer-filter,
     .drawer-list,
     .drawer-actions {
       transition: opacity 180ms var(--motion);
     }
 
-    .drawer.is-expanding .drawer-head,
+    .drawer.is-expanding .drawer-filter,
     .drawer.is-expanding .drawer-list,
     .drawer.is-expanding .drawer-actions {
       opacity: 0;
@@ -223,32 +227,68 @@
       transition: none !important;
     }
 
-    .drawer-head {
-      height: 44px;
-      padding: 0 14px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .drawer-filter {
       flex-shrink: 0;
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      touch-action: auto;
     }
-    .is-native .drawer-head {
-      padding-top: env(safe-area-inset-top);
-      height: calc(44px + env(safe-area-inset-top));
+    .is-native .drawer-filter {
+      padding-top: calc(12px + env(safe-area-inset-top));
     }
 
-    .drawer-version {
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0.1px;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
+    .drawer-search {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      font: inherit;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+      touch-action: auto;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .drawer-search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-focus);
+    }
+
+    .drawer-search::placeholder {
+      color: var(--muted);
+    }
+
+    .drawer-subject-filter {
+      flex-shrink: 0;
+      height: 36px;
+      padding: 0 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .drawer-subject-filter:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-focus);
     }
 
     .drawer-list {
       flex: 1;
-      padding: 8px;
+      padding: 10px 14px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
@@ -261,31 +301,24 @@
 
     .drawer-actions {
       flex-shrink: 0;
-      padding: 8px 8px 12px;
+      padding: 10px 14px 14px;
       border-top: 1px solid var(--line);
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
 
     .drawer-action-btn.full {
       flex: 1 0 100%;
     }
 
-    .drawer-actions-row {
-      display: flex;
-      flex: 1 0 100%;
-      gap: 8px;
-    }
-
     .drawer-action-btn {
       flex: 1;
-      height: 42px;
-      border-radius: 12px;
+      height: 48px;
+      border-radius: 14px;
       border: 1px solid var(--line);
       background: var(--card);
       box-shadow: var(--shadow);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       color: var(--text);
@@ -301,13 +334,13 @@
 
     .assignment-item {
       width: 100%;
-      height: 56px;
+      height: 68px;
       border: 0;
-      border-radius: 14px;
+      border-radius: 16px;
       background: var(--card);
       box-shadow: var(--shadow);
-      padding: 9px 12px;
-      margin-bottom: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
       cursor: pointer;
       font: inherit;
       color: inherit;
@@ -341,14 +374,14 @@
 
     .assignment-item-actions {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
     .assignment-item-action {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       border: 1px solid var(--line);
       background: transparent;
       display: flex;
@@ -382,9 +415,9 @@
 
     .assignment-item-add {
       width: 100%;
-      height: 56px;
+      height: 68px;
       border: 1.5px dashed var(--line);
-      border-radius: 14px;
+      border-radius: 16px;
       background: transparent;
       box-shadow: none;
       padding: 9px 12px;
@@ -643,9 +676,49 @@
       touch-action: manipulation;
     }
 
+    .panel-back {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      color: var(--icon);
+      cursor: pointer;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+
     .panel-close:active,
-    .panel-close.is-pressed {
+    .panel-close.is-pressed,
+    .panel-back:active,
+    .panel-back.is-pressed {
       background: var(--button-press);
+    }
+
+    .settings-panel-head {
+      position: relative;
+      justify-content: center;
+    }
+
+    .settings-panel-head .panel-back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .is-native .settings-panel-head .panel-back {
+      top: calc(50% + env(safe-area-inset-top) / 2);
+    }
+
+    .settings-panel-title {
+      text-align: center;
+      width: 100%;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .top-sheet-handle {
@@ -1739,6 +1812,20 @@
       color: var(--muted);
       padding: 0 4px 6px;
       letter-spacing: 0.2px;
+    }
+
+    .settings-version-section {
+      margin-top: 4px;
+    }
+
+    .settings-version {
+      margin: 0;
+      padding: 8px 4px 0;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .settings-data-row {

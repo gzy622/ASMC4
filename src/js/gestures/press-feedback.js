@@ -1,4 +1,4 @@
-import { appShell } from "../dom-refs.js";
+import { appShell, drawer } from "../dom-refs.js";
 
 const PRESSABLE = [
   ".student-card",
@@ -10,6 +10,7 @@ const PRESSABLE = [
   ".assignment-item",
   ".assignment-item-add",
   ".panel-close",
+  ".panel-back",
   ".quick-action-btn",
   ".dialog-button",
   ".numpad-btn",
@@ -31,6 +32,13 @@ const MOVE_CANCEL_DISTANCE = 8;
 function resolve(target) {
   const el = target.closest(PRESSABLE);
   if (!el) return null;
+  if (
+    drawer.classList.contains("is-open")
+    && el.classList.contains("student-card")
+    && !target.closest(".drawer")
+  ) {
+    return null;
+  }
   if (
     el.classList.contains("assignment-item") &&
     target.closest(ASSIGNMENT_ITEM_INNER)

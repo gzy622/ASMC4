@@ -10,16 +10,19 @@
 dev.cmd
 ```
 
-按菜单选择 1–6；或直接带参数：
+按菜单选择 1–7（**直接回车**重复上次）；或快捷命令：
 
 | 需求 | 命令 |
 |------|------|
-| Web · PC | `dev.cmd -Surface web -Target pc` |
-| Web · 手机 · Wi-Fi | `dev.cmd -Surface web -Target lan` |
-| Web · 手机 · adb | `dev.cmd -Surface web -Target adb` |
-| Android 应用 · adb 安装 | `dev.cmd -Surface android` 或选 4 |
-| Android APK · 远控下载 | `build-apk.cmd` 或 `dev.cmd -Surface apk` 或选 5 |
+| Web · 手机 · Wi-Fi（默认） | `dev.cmd web` 或 `dev.cmd web lan` |
+| Web · PC | `dev.cmd web pc` |
+| Web · 手机 · adb | `dev.cmd adb` 或 `dev.cmd web adb` |
+| Android 应用 · adb 安装 | `dev.cmd android` 或选 4 |
+| Android APK · 远控下载 | `build-apk.cmd` 或 `dev.cmd apk` 或选 5 |
 | **Web + Android 同窗口** | `dev.cmd -Surface full -Target pc\|lan\|adb` 或选 6 |
+| 无线 adb 配对 | `dev.cmd pair` 或选 7 |
+
+仍支持完整参数：`dev.cmd -Surface web -Target lan` 等。
 
 等价：`npm run dev`（交互菜单）、`npm run apk`（仅构建 APK）。
 

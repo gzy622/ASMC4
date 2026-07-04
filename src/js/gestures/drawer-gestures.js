@@ -51,7 +51,11 @@ createHorizontalDragGesture(appShell, {
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
-  shouldStart: () => !uiTransitionBusy,
+  shouldStart: (event) => {
+    if (uiTransitionBusy) return false;
+    if (event.target.closest(".drawer-filter")) return false;
+    return true;
+  },
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {
     if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });

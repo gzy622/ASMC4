@@ -1,9 +1,22 @@
 import { escapeHTML } from "../utils/escapeHTML.js";
 import { getAssignmentStats } from "../state.js";
-import { assignmentList } from "../dom-refs.js";
+import { assignmentList, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
+
+function getFilteredAssignments(assignments) {
+  const keyword = (drawerSearchInput?.value || "").trim().toLowerCase();
+  const subject = drawerSubjectFilter?.value || "";
+
+  return assignments.filter(assignment => {
+    if (keyword && !assignment.title.toLowerCase().includes(keyword)) return false;
+    if (subject && assignment.subject !== subject) return false;
+    return true;
+  });
+}
 
 export function renderAssignmentList(state) {
-  assignmentList.innerHTML = state.assignments.map(assignment => {
+  const filtered = getFilteredAssignments(state.assignments);
+
+  assignmentList.innerHTML = filtered.map(assignment => {
     const stats = getAssignmentStats(assignment);
     const activeClass = String(assignment.id) === String(state.currentAssignmentId) ? "is-active" : "";
     const safeId = escapeHTML(assignment.id);

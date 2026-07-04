@@ -102,6 +102,8 @@ DOM（`index.html` + `dom-refs.js`）：
 
 侧栏作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独接 `is-pressed`；父项 `.assignment-item` 的 `:active` / `is-pressed` 须排除 `.assignment-item-actions` 与操作钮，避免点编辑/删除时整条缩放。
 
+侧栏筛选行（`.drawer-filter`）里的搜索框和科目筛选不参与侧栏横向拖动；`drawer-gestures.js` 里要直接放行这两个控件，避免输入/点选时误触发抽屉滑动。
+
 ### `#appToast`
 
 - 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。

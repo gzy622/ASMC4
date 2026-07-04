@@ -18,7 +18,7 @@ import { toggleScoringMode, toggleStudent } from "../business/student.js";
 import { openScoreSheet } from "../score-sheet/index.js";
 import { handleLongPressEnd, handleLongPressMove, handleLongPressStart } from "../score-sheet/longpress.js";
 import { isStudentForceNone } from "../utils/display.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
 
@@ -58,7 +58,7 @@ export function bindStudentEvents() {
     const state = getState();
     state.showRealNames = !state.showRealNames;
     saveAppState({ history: false });
-    render();
+    scheduleRender();
     announce(state.showRealNames ? "已显示姓名" : "已隐藏姓名");
   }
 

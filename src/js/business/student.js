@@ -1,7 +1,7 @@
 import { saveAppState, getState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
 import { isStudentForceNone, getStateClass, getDisplayName } from "../utils/display.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { renderProgress } from "../render/progress.js";
 import { refreshOpenQuickPanel } from "../render/quickPanel.js";
 import { renderStudents } from "../render/students.js";
@@ -42,6 +42,6 @@ export function toggleScoringMode() {
   const state = getState();
   state.scoringMode = !state.scoringMode;
   saveAppState({ history: false });
-  render();
+  scheduleRender();
   announce(state.scoringMode ? "打分模式已开启" : "打分模式已关闭");
 }

@@ -1,5 +1,7 @@
 {
   "adbWireless": "",
   "apkOutputDir": "",
-  "apkVariant": "debug"
+  "apkVariant": "debug",
+  "lastSurface": "",
+  "lastTarget": ""
 }

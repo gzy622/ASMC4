@@ -77,13 +77,13 @@ const lanIP = getLANIP();
 
 server.listen(port, '0.0.0.0', () => {
   console.log('');
-  console.log('  >>>  ASMC4 - Dev Server (Node.js)');
+  console.log('  >>>  ASMC4 - 开发服务器');
   console.log('');
-  console.log(`  Local     http://localhost:${port}/`);
+  console.log(`  本机     http://localhost:${port}/`);
   if (lanIP) {
-    console.log(`  LAN       http://${lanIP}:${port}/`);
+    console.log(`  局域网   http://${lanIP}:${port}/`);
   }
   console.log('');
-  console.log('  Press Ctrl+C to stop');
+  console.log('  按 Ctrl+C 停止');
   console.log('');
 });

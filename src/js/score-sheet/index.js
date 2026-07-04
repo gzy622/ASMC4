@@ -4,7 +4,7 @@ import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStu
 import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreStep10Mode, noteInputValue } from "../runtime.js";
 import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
@@ -90,7 +90,7 @@ export function confirmScore() {
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(currentScoringStudent.id));
   const displayName = getDisplayName(currentScoringStudent, studentIndex >= 0 ? studentIndex : 0);
   saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
-  render();
+  scheduleRender();
   closeScoreSheet();
 
   announce(message, { action: "undo", assignmentId: assignment.id });

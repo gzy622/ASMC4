@@ -1,40 +1,35 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
-  ASMC4 unified preview: Web (PC / LAN / adb) + Android app.
+  ASMC4 统一开发预览：网页（本机 / LAN / adb）+ 安卓应用。
 
-  Usage:
-    dev.ps1                          interactive menu
-    dev.ps1 -Surface web -Target pc
+  用法:
+    dev.ps1                          交互菜单
+    dev.ps1 web                      网页 LAN（默认）
+    dev.ps1 web pc|lan|adb
+    dev.ps1 adb                      网页 adb
+    dev.ps1 android                  安卓应用 adb 安装
+    dev.ps1 apk                      导出 APK
+    dev.ps1 pair                     无线 adb 配对
     dev.ps1 -Surface web -Target lan
-    dev.ps1 -Surface web -Target adb
-    dev.ps1 -Surface android
-    dev.ps1 -Surface full -Target pc|lan|adb   Web + Android, one window
-    dev.ps1 -Surface apk
 
-  In-session keys: B=rebuild dist, R=rebuild+install Android, Q=quit
-  Wireless daily: menu 6 then LAN (2) for phone Web; R for Android install.
-
-  adb: always Invoke-Adb -Command @('...'); never positional Invoke-Adb devices.
-
-  Legacy: -Mode pc|lan|usb maps to web + matching target.
-
-  Wireless adb: dev.ps1 auto-connects via adb mdns when Wireless debugging is on.
-  Optional dev-device.local.json adbWireless pins host / fallback when mdns is unavailable.
+  会话内热键: B=重新构建  R=构建并安装安卓  Q=退出
 #>
 
 param(
-    [ValidateSet('web', 'android', 'apk', 'full', '')]
+    [ValidateSet('web', 'android', 'apk', 'full', 'pair', '')]
     [string]$Surface = '',
 
     [ValidateSet('pc', 'lan', 'adb', '')]
     [string]$Target = '',
 
-    # legacy alias
     [ValidateSet('pc', 'lan', 'usb', '')]
     [string]$Mode = '',
 
     [ValidateRange(1, 65535)]
-    [int]$Port = 8000
+    [int]$Port = 8000,
+
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$QuickArgs
 )
 
 Set-StrictMode -Version Latest
@@ -44,7 +39,8 @@ try { chcp 65001 | Out-Null } catch {}
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [Console]::OutputEncoding
 
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
+. (Join-Path $PSScriptRoot 'lib.ps1')
+$ProjectRoot = $script:ProjectRoot
 Set-Location -LiteralPath $ProjectRoot
 
 if ($Mode -and -not $Surface) {
@@ -52,343 +48,22 @@ if ($Mode -and -not $Surface) {
     $Target = if ($Mode -eq 'usb') { 'adb' } else { $Mode }
 }
 
-function Read-Utf8Text {
-    param([string]$Path)
-    return [System.IO.File]::ReadAllText($Path, [System.Text.UTF8Encoding]::new($false))
-}
-
-# adb writes info to stderr; avoid NativeCommandError under $ErrorActionPreference Stop
-function Invoke-Adb {
-    param(
-        [Parameter(Mandatory)]
-        [string[]]$Command,
-        [string]$DeviceId = ''
-    )
-
-    $adbCmd = @($Command | Where-Object { $_ -ne $null -and "$_" -ne '' })
-    if ($adbCmd.Count -eq 0) {
-        throw 'Invoke-Adb: missing adb command arguments.'
-    }
-
-    $invokeArgs = @()
-    if ($DeviceId) { $invokeArgs += '-s', $DeviceId }
-    $invokeArgs += $adbCmd
-
-    $oldEap = $ErrorActionPreference
-    $ErrorActionPreference = 'SilentlyContinue'
-    try {
-        $output = & adb @invokeArgs 2>&1
-        $code = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
-        return [pscustomobject]@{
-            Output   = @($output | ForEach-Object { "$_" })
-            ExitCode = $code
+if ($QuickArgs -and $QuickArgs.Count -ge 1 -and -not $Surface) {
+    $cmd = $QuickArgs[0].ToLower()
+    $arg2 = if ($QuickArgs.Count -ge 2) { $QuickArgs[1].ToLower() } else { '' }
+    switch ($cmd) {
+        'web' {
+            $Surface = 'web'
+            $Target = if ($arg2 -in @('pc', 'lan', 'adb')) { $arg2 } else { 'lan' }
         }
-    } finally {
-        $ErrorActionPreference = $oldEap
+        'adb' { $Surface = 'web'; $Target = 'adb' }
+        'android' { $Surface = 'android' }
+        'apk' { $Surface = 'apk' }
+        'pair' { $Surface = 'pair' }
+        'pc' { $Surface = 'web'; $Target = 'pc' }
+        'lan' { $Surface = 'web'; $Target = 'lan' }
+        default { throw "未知命令: $cmd" }
     }
-}
-
-$script:AndroidAppId = 'com.gzy622.asmc4'
-$script:AdbWirelessPlaceholder = '192.168.1.100:5555'
-
-function Get-DevDeviceConfig {
-    $localPath = Join-Path $ProjectRoot 'scripts/dev-device.local.json'
-    if (-not (Test-Path -LiteralPath $localPath)) { return $null }
-
-    try {
-        return Read-Utf8Text -Path $localPath | ConvertFrom-Json
-    } catch {
-        Write-Host "[WARN] Could not parse dev-device.local.json: $_"
-        return $null
-    }
-}
-
-function Test-LooksLikeAdbSerial {
-    param([string]$Serial)
-
-    if ($Serial -match '(?i)list all|copy local|remove this|print offline|detach') { return $false }
-    if ($Serial -match '^\d+\.\d+\.\d+\.\d+:\d+$') { return $true }
-    if ($Serial -match '^adb-') { return $true }
-    if ($Serial -match '^\S{1,128}$') { return $true }
-    return $false
-}
-
-function Get-AdbReadyDevices {
-    if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { return @() }
-
-    $result = Invoke-Adb -Command @('devices')
-    $ready = @()
-    foreach ($line in ($result.Output | Select-Object -Skip 1)) {
-        if ($line -match '^\s*(.+?)\s+device\s*$') {
-            $serial = $Matches[1].Trim()
-            if (Test-LooksLikeAdbSerial -Serial $serial) {
-                $ready += $serial
-            }
-        }
-    }
-    return $ready
-}
-
-function Get-AdbDeviceEntries {
-    if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { return @() }
-
-    $result = Invoke-Adb -Command @('devices')
-    $entries = @()
-    foreach ($line in ($result.Output | Select-Object -Skip 1)) {
-        if ($line -match '^\s*(.+?)\s+(device|offline|unauthorized)\s*$') {
-            $serial = $Matches[1].Trim()
-            if (Test-LooksLikeAdbSerial -Serial $serial) {
-                $entries += [pscustomobject]@{
-                    Serial = $serial
-                    State  = $Matches[2]
-                }
-            }
-        }
-    }
-    return $entries
-}
-
-function Select-PreferredAdbDevice {
-    param([string[]]$Devices)
-
-    $wireless = Get-AdbWirelessAddress
-    if ($wireless) {
-        $exact = @($Devices | Where-Object { $_ -eq $wireless })
-        if ($exact.Count -gt 0) { return $exact[0] }
-
-        $hostPart = ($wireless -split ':')[0]
-        $byHost = @($Devices | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+:\d+$' -and $_.StartsWith("${hostPart}:") })
-        if ($byHost.Count -gt 0) { return $byHost[0] }
-    }
-
-    $ipDevices = @($Devices | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+:\d+$' })
-    if ($ipDevices.Count -eq 1) { return $ipDevices[0] }
-
-    Write-Host "[WARN] Multiple adb devices; using $($Devices[0])."
-    return $Devices[0]
-}
-
-function Resolve-AdbDevices {
-    $devices = @(Get-AdbReadyDevices)
-    if ($devices.Count -eq 0) { return $null }
-    if ($devices.Count -eq 1) { return $devices[0] }
-
-    $preferred = Select-PreferredAdbDevice -Devices $devices
-    foreach ($serial in $devices) {
-        if ($serial -ne $preferred) {
-            Write-Host "  [Adb]  Disconnect duplicate: $serial"
-            Invoke-Adb -Command @('disconnect', $serial) | Out-Null
-        }
-    }
-    return $preferred
-}
-
-function Test-AdbConnectOk {
-    param($Result)
-
-    if ($Result.ExitCode -eq 0) { return $true }
-    $text = ($Result.Output -join ' ').ToLower()
-    return $text -match 'connected to|already connected'
-}
-
-function Get-ConfigProp {
-    param($Cfg, [string]$Name)
-
-    if (-not $Cfg) { return $null }
-    $prop = $Cfg.PSObject.Properties[$Name]
-    if (-not $prop -or $null -eq $prop.Value) { return $null }
-    return [string]$prop.Value
-}
-
-function Get-AdbWirelessAddress {
-    $wireless = $env:ASMC4_ADB_WIRELESS
-    if (-not $wireless) {
-        $cfg = Get-DevDeviceConfig
-        $fromCfg = Get-ConfigProp $cfg 'adbWireless'
-        if ($fromCfg) { $wireless = $fromCfg }
-    }
-    if (-not $wireless) { return $null }
-    $wireless = $wireless.Trim()
-    if (-not $wireless) { return $null }
-    if ($wireless -eq $script:AdbWirelessPlaceholder) { return $null }
-    return $wireless
-}
-
-function Get-AdbMdnsConnectAddresses {
-    $result = Invoke-Adb -Command @('mdns', 'services')
-    $addrs = @()
-    foreach ($line in ($result.Output | Select-Object -Skip 1)) {
-        $trimmed = "$line".Trim()
-        if (-not $trimmed) { continue }
-        if ($trimmed -match '_adb-tls-connect\._tcp\s+(\d+\.\d+\.\d+\.\d+:\d+)\s*$') {
-            $addrs += $Matches[1]
-        }
-    }
-    return @($addrs | Select-Object -Unique)
-}
-
-function Wait-AdbMdnsConnectAddresses {
-    param([int]$MaxWaitSec = 5)
-
-    $deadline = (Get-Date).AddSeconds($MaxWaitSec)
-    while ((Get-Date) -lt $deadline) {
-        $addrs = @(Get-AdbMdnsConnectAddresses)
-        if ($addrs.Count -gt 0) { return $addrs }
-        Start-Sleep -Milliseconds 500
-    }
-    return @(Get-AdbMdnsConnectAddresses)
-}
-
-function Set-AdbWirelessConfig {
-    param([string]$Address)
-
-    $localPath = Join-Path $ProjectRoot 'scripts/dev-device.local.json'
-    $cfg = [ordered]@{}
-    $current = $null
-    if (Test-Path -LiteralPath $localPath) {
-        try {
-            $parsed = Read-Utf8Text -Path $localPath | ConvertFrom-Json
-            foreach ($prop in $parsed.PSObject.Properties) {
-                $cfg[$prop.Name] = $prop.Value
-            }
-            $current = Get-ConfigProp $parsed 'adbWireless'
-        } catch {
-            Write-Host "[WARN] Could not read dev-device.local.json for adbWireless update: $_"
-        }
-    }
-
-    if ($current -eq $Address) { return }
-
-    $cfg['adbWireless'] = $Address
-    $json = ($cfg | ConvertTo-Json -Depth 4)
-    [System.IO.File]::WriteAllText($localPath, $json, [System.Text.UTF8Encoding]::new($false))
-    Write-Host "  [Adb]  Saved adbWireless -> $Address"
-}
-
-function Connect-AdbWirelessTargets {
-    param(
-        [string[]]$Addresses,
-        [switch]$UpdateConfig
-    )
-
-    foreach ($addr in $Addresses) {
-        if (-not $addr) { continue }
-        if (Connect-AdbWireless -Address $addr.Trim()) {
-            if ($UpdateConfig) { Set-AdbWirelessConfig -Address $addr.Trim() }
-            return $true
-        }
-    }
-    return $false
-}
-
-function Connect-AdbWirelessAuto {
-    $mdnsAddrs = @(Wait-AdbMdnsConnectAddresses)
-    $saved = Get-AdbWirelessAddress
-    $savedHost = if ($saved) { ($saved -split ':', 2)[0] } else { $null }
-
-    if ($mdnsAddrs.Count -gt 0) {
-        Write-Host "  [Adb]  mdns wireless: $($mdnsAddrs -join ', ')"
-        $ordered = @($mdnsAddrs)
-        if ($savedHost) {
-            $preferred = @($mdnsAddrs | Where-Object { $_.StartsWith("${savedHost}:") })
-            $rest = @($mdnsAddrs | Where-Object { -not $_.StartsWith("${savedHost}:") })
-            $ordered = $preferred + $rest
-        }
-
-        if (Connect-AdbWirelessTargets -Addresses $ordered -UpdateConfig) {
-            return $true
-        }
-
-        if ($savedHost -and @($mdnsAddrs | Where-Object { $_.StartsWith("${savedHost}:") }).Count -gt 0) {
-            return $false
-        }
-    }
-
-    if ($saved) {
-        return Connect-AdbWireless -Address $saved
-    }
-
-    return $false
-}
-
-function Connect-AdbWireless {
-    param(
-        [string]$Address,
-        [int]$MaxAttempts = 3
-    )
-
-    $ready = @(Get-AdbReadyDevices)
-    if ($ready -contains $Address) {
-        Resolve-AdbDevices | Out-Null
-        return $true
-    }
-
-    foreach ($entry in Get-AdbDeviceEntries) {
-        if ($entry.State -eq 'offline') {
-            Invoke-Adb -Command @('disconnect', $entry.Serial) | Out-Null
-        }
-    }
-
-    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
-        if ($attempt -eq 1) {
-            Write-Host "  [Adb]  Connecting wireless $Address ..."
-        } else {
-            Write-Host "  [Adb]  Retry connect $attempt/$MaxAttempts ..."
-            Start-Sleep -Seconds 2
-        }
-
-        $result = Invoke-Adb -Command @('connect', $Address)
-        foreach ($line in $result.Output) {
-            if ($line) { Write-Host "         $line" }
-        }
-
-        if (Test-AdbConnectOk -Result $result) { return $true }
-        if (@(Get-AdbReadyDevices).Count -gt 0) { return $true }
-    }
-
-    return $false
-}
-
-function Ensure-AdbDevice {
-    param(
-        [switch]$AllowMissing,
-        [switch]$Quiet
-    )
-
-    if (-not (Get-Command adb -ErrorAction SilentlyContinue)) {
-        throw 'adb not found. Install Android Platform-Tools and add adb to PATH.'
-    }
-
-    Invoke-Adb -Command @('start-server') | Out-Null
-
-    $picked = Resolve-AdbDevices
-    if ($picked) {
-        Write-Host "  [Adb]  Device ready: $picked"
-        return $picked
-    }
-
-    $wireless = Get-AdbWirelessAddress
-
-    if ($wireless -or @(Wait-AdbMdnsConnectAddresses -MaxWaitSec 1).Count -gt 0) {
-        Connect-AdbWirelessAuto | Out-Null
-        $picked = Resolve-AdbDevices
-        if ($picked) {
-            Write-Host "  [Adb]  Device ready: $picked"
-            return $picked
-        }
-    }
-
-    $hint = if ($wireless) {
-        'Wireless connect failed. Keep Wireless debugging on, re-pair once, or plug USB.'
-    } else {
-        'No device found. Plug in USB, enable Wireless debugging, or set adbWireless in scripts/dev-device.local.json (see dev-device.example.json).'
-    }
-
-    if ($AllowMissing) {
-        if (-not $Quiet) { Write-Host "[WARN] $hint" }
-        return $null
-    }
-    throw $hint
 }
 
 function Test-PortListening {
@@ -403,38 +78,44 @@ function Get-FreePort {
         if (-not (Test-PortListening -CheckPort $candidate)) { return $candidate }
         $candidate++
     }
-    throw 'No available port found.'
+    throw '没有可用端口。'
+}
+
+function Test-Asmc4FirewallRule {
+    param([int]$RulePort)
+
+    $ruleName = "ASMC4 Dev $RulePort"
+    return [bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)
 }
 
 function Ensure-LanFirewall {
-    param(
-        [int]$RulePort,
-        [string]$ResumeSurface = 'web',
-        [string]$ResumeTarget = 'lan'
-    )
+    param([int]$RulePort)
+
+    if (Test-Asmc4FirewallRule -RulePort $RulePort) {
+        Write-Host '  [FW] 防火墙规则已存在'
+        return
+    }
 
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
         [Security.Principal.WindowsBuiltInRole]::Administrator
     )
-    if (-not $isAdmin) {
-        Write-Host '[INFO] LAN mode needs admin once for firewall. Requesting elevation...'
-        $devScript = Join-Path $ProjectRoot 'scripts\dev.ps1'
-        $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = 'powershell.exe'
-        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$devScript`" -Surface $ResumeSurface -Target $ResumeTarget -Port $RulePort"
-        $psi.Verb = 'runas'
-        $psi.UseShellExecute = $true
-        $psi.WorkingDirectory = $ProjectRoot
-        [System.Diagnostics.Process]::Start($psi) | Out-Null
-        exit
+    if ($isAdmin) {
+        Write-Host "  [FW] 添加防火墙规则 TCP $RulePort"
+        $ruleName = "ASMC4 Dev $RulePort"
+        New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP -LocalPort $RulePort -Action Allow -Profile Any | Out-Null
+        Write-Host '  [FW] 防火墙规则已添加'
+        return
     }
 
-    $ruleName = "ASMC4 Dev $RulePort"
-    if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) {
-        Write-Host "  [FW] Adding firewall rule for TCP $RulePort"
-        New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Protocol TCP -LocalPort $RulePort -Action Allow -Profile Any | Out-Null
-    } else {
-        Write-Host '  [FW] Firewall rule already exists'
+    Write-Host '[INFO] 需管理员权限添加防火墙规则（仅首次），正在请求提升...'
+    $helper = Join-Path $ProjectRoot 'scripts\add-firewall-rule.ps1'
+    $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$helper`" -Port $RulePort"
+    $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argList -Verb RunAs -Wait -PassThru
+    if ($proc.ExitCode -ne 0) {
+        throw '防火墙规则添加失败或被取消。'
+    }
+    if (-not (Test-Asmc4FirewallRule -RulePort $RulePort)) {
+        throw '防火墙规则添加后仍未检测到，请手动允许端口或重试。'
     }
 }
 
@@ -453,13 +134,13 @@ function Get-LanIP {
 }
 
 function Invoke-InitialBuild {
-    Write-Host '  [Build] Building JS and CSS...'
+    Write-Host '  [Build] 正在构建...'
     node build.mjs
-    if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+    if ($LASTEXITCODE -ne 0) { throw '构建失败' }
 }
 
 function Start-WatchProcess {
-    Write-Host '  [Watch] Auto-rebuild on save...'
+    Write-Host '  [Watch] 保存文件后自动重建...'
     return Start-Process -FilePath node -ArgumentList 'build.mjs', '--watch' -WindowStyle Hidden -PassThru
 }
 
@@ -480,33 +161,6 @@ function Stop-ServeProcess {
     if ($ServeProcess -and !$ServeProcess.HasExited) { $ServeProcess.Kill() }
 }
 
-function Test-AdbReverseOk {
-    param($Result)
-
-    if ($Result.ExitCode -eq 0) { return $true }
-    $text = ($Result.Output -join ' ').ToLower()
-    return $text -notmatch 'error:'
-}
-
-function Set-AdbReversePort {
-    param(
-        [string]$DeviceId,
-        [int]$Port
-    )
-
-    Invoke-Adb -DeviceId $DeviceId -Command @('reverse', '--remove', "tcp:$Port") | Out-Null
-    return Invoke-Adb -DeviceId $DeviceId -Command @('reverse', "tcp:$Port", "tcp:$Port")
-}
-
-function Remove-AdbReversePort {
-    param(
-        [string]$DeviceId,
-        [int]$Port
-    )
-
-    Invoke-Adb -DeviceId $DeviceId -Command @('reverse', '--remove', "tcp:$Port") | Out-Null
-}
-
 function Enable-WebPhoneLanFallback {
     param(
         [int]$ServePort,
@@ -516,12 +170,12 @@ function Enable-WebPhoneLanFallback {
 
     $lanIP = Get-LanIP
     if (-not $lanIP) {
-        throw "$Reason LAN IP not detected — use menu 2 (LAN) or connect adb/USB."
+        throw "$Reason 未检测到 LAN IP — 请选菜单 2（LAN）或连接 adb/USB。"
     }
 
     Write-Host "  [WARN] $Reason" -ForegroundColor Yellow
-    Write-Host "         Phone Web: http://${lanIP}:$ServePort/ (same Wi-Fi as PC)"
-    Ensure-LanFirewall -RulePort $ServePort -ResumeSurface $ResumeSurface -ResumeTarget 'adb'
+    Write-Host "         手机网页: http://${lanIP}:$ServePort/（与 PC 同 Wi-Fi）"
+    Ensure-LanFirewall -RulePort $ServePort
 
     return @{
         LanIP          = $lanIP
@@ -542,7 +196,7 @@ function Initialize-WebAccess {
     $webPhoneViaLan = $false
 
     if ($WebTarget -eq 'lan') {
-        Ensure-LanFirewall -RulePort $ServePort -ResumeSurface $ResumeSurface -ResumeTarget 'lan'
+        Ensure-LanFirewall -RulePort $ServePort
         $lanIP = Get-LanIP
     }
 
@@ -554,20 +208,20 @@ function Initialize-WebAccess {
             $reverse = Set-AdbReversePort -DeviceId $adbDeviceId -Port $ServePort
 
             if (Test-AdbReverseOk -Result $reverse) {
-                Write-Host "  [Adb]  reverse tcp:$ServePort -> host"
+                Write-Host "  [Adb]  reverse tcp:$ServePort -> 本机"
                 $useAdbReverse = $true
             } else {
                 foreach ($line in $reverse.Output) {
                     if ($line) { Write-Host "         $line" -ForegroundColor DarkYellow }
                 }
                 $fallback = Enable-WebPhoneLanFallback -ServePort $ServePort -ResumeSurface $ResumeSurface `
-                    -Reason 'adb reverse unavailable (common on wireless adb);'
+                    -Reason 'adb reverse 不可用（无线 adb 常见）；'
                 $lanIP = $fallback.LanIP
                 $webPhoneViaLan = $true
             }
         } else {
             $fallback = Enable-WebPhoneLanFallback -ServePort $ServePort -ResumeSurface $ResumeSurface `
-                -Reason 'No adb device; phone Web uses LAN.'
+                -Reason '无 adb 设备，手机网页走 LAN。'
             $lanIP = $fallback.LanIP
             $webPhoneViaLan = $true
         }
@@ -589,9 +243,9 @@ function Write-DevHotkeyLine {
         [ConsoleColor]$ForegroundColor = [ConsoleColor]::Cyan
     )
 
-    $parts = @('B  rebuild dist')
-    if ($AndroidEnabled) { $parts += 'R  rebuild + install Android' }
-    $parts += 'Q  quit'
+    $parts = @('B  重新构建')
+    if ($AndroidEnabled) { $parts += 'R  安装到设备' }
+    $parts += 'Q  退出'
     Write-Host ('  ' + ($parts -join '    ')) -ForegroundColor $ForegroundColor
 }
 
@@ -600,36 +254,36 @@ function Write-DevSessionBanner {
 
     Write-Host ''
     if ($Session.WebEnabled -and $Session.AndroidEnabled) {
-        Write-Host '  >>>  ASMC4 - Web + Android' -ForegroundColor Green
+        Write-Host '  >>>  ASMC4 - 网页 + 安卓' -ForegroundColor Green
     } elseif ($Session.WebEnabled) {
-        Write-Host '  >>>  ASMC4 - Web Preview' -ForegroundColor Green
+        Write-Host '  >>>  ASMC4 - 网页预览' -ForegroundColor Green
     } else {
-        Write-Host '  >>>  ASMC4 - Android App' -ForegroundColor Green
+        Write-Host '  >>>  ASMC4 - 安卓应用' -ForegroundColor Green
     }
     Write-Host ''
 
     if ($Session.WebEnabled) {
-        Write-Host '  Web: save then B or refresh browser (watch runs in background).'
+        Write-Host '  网页：保存后按 B 或刷新浏览器（后台 watch 已开启）。'
         Write-Host ''
         switch ($Session.WebTarget) {
             'pc' {
-                Write-Host "  PC     http://localhost:$($Session.ServePort)/"
+                Write-Host "  本机   http://localhost:$($Session.ServePort)/"
             }
             'lan' {
-                Write-Host "  PC     http://localhost:$($Session.ServePort)/"
+                Write-Host "  本机   http://localhost:$($Session.ServePort)/"
                 if ($Session.LanIP) {
-                    Write-Host "  Phone  http://$($Session.LanIP):$($Session.ServePort)/" -ForegroundColor Cyan
+                    Write-Host "  手机   http://$($Session.LanIP):$($Session.ServePort)/" -ForegroundColor Cyan
                 } else {
-                    Write-Host '  Phone  (LAN IP not detected)'
+                    Write-Host '  手机   （未检测到 LAN IP）'
                 }
             }
             'adb' {
                 if ($Session.WebPhoneViaLan -and $Session.LanIP) {
-                    Write-Host "  PC     http://localhost:$($Session.ServePort)/"
-                    Write-Host "  Phone  http://$($Session.LanIP):$($Session.ServePort)/" -ForegroundColor Cyan
-                    Write-Host '         (adb reverse unavailable; same Wi-Fi as PC)' -ForegroundColor DarkGray
+                    Write-Host "  本机   http://localhost:$($Session.ServePort)/"
+                    Write-Host "  手机   http://$($Session.LanIP):$($Session.ServePort)/" -ForegroundColor Cyan
+                    Write-Host '         （adb reverse 不可用，需与 PC 同 Wi-Fi）' -ForegroundColor DarkGray
                 } else {
-                    Write-Host "  Phone  http://localhost:$($Session.ServePort)/" -ForegroundColor Cyan
+                    Write-Host "  手机   http://localhost:$($Session.ServePort)/" -ForegroundColor Cyan
                 }
             }
         }
@@ -637,9 +291,9 @@ function Write-DevSessionBanner {
     }
 
     if ($Session.AndroidEnabled) {
-        Write-Host '  Android: press R to rebuild, sync, and reinstall on device.'
+        Write-Host '  安卓：按 R 重新构建、同步并安装到设备。'
         if (-not $Session.AndroidDeviceId) {
-            Write-Host '  (No device yet — connect adb and press R)' -ForegroundColor DarkYellow
+            Write-Host '  （尚无设备 — 连接 adb 后按 R）' -ForegroundColor DarkYellow
         }
         Write-Host ''
     }
@@ -649,17 +303,29 @@ function Write-DevSessionBanner {
 }
 
 function Show-DevMenu {
+    $last = Get-LastDevChoice
+    $lastLabel = Format-LastDevLabel -Choice $last
+
     Write-Host ''
-    Write-Host '  ASMC4 Preview' -ForegroundColor Green
+    Write-Host '  ASMC4 开发预览' -ForegroundColor Green
     Write-Host '  ---------------------------------'
-    Write-Host '  1  Web - PC'
-    Write-Host '  2  Web - Phone - LAN (Wi-Fi)'
-    Write-Host '  3  Web - Phone - adb (USB / wireless)'
-    Write-Host '  4  Android App - adb (USB / wireless)'
-    Write-Host '  5  Android APK - export to folder (remote download)'
-    Write-Host '  6  Web + Android - one window (pick web access next)'
+    Write-Host '  1  网页 - 本机'
+    Write-Host '  2  网页 - 手机 LAN（同 Wi-Fi）'
+    Write-Host '  3  网页 - 手机 adb（USB / 无线）'
+    Write-Host '  4  安卓应用 - adb 安装'
+    Write-Host '  5  导出 APK'
+    Write-Host '  6  网页 + 安卓（组合，下一步选网页访问方式）'
+    Write-Host '  7  无线 adb 配对'
+    Write-Host '  ---------------------------------'
+    Write-Host "  上次: $lastLabel  （直接回车重复）"
     Write-Host ''
-    $pick = Read-Host '  Select 1-6'
+    $pick = Read-Host '  选择 1-7'
+
+    if ($pick.Trim() -eq '') {
+        if (-not $last.Surface) { throw '无上次记录，请输入数字。' }
+        return @{ Surface = $last.Surface; Target = $last.Target }
+    }
+
     switch ($pick.Trim()) {
         '1' { return @{ Surface = 'web'; Target = 'pc' } }
         '2' { return @{ Surface = 'web'; Target = 'lan' } }
@@ -668,18 +334,19 @@ function Show-DevMenu {
         '5' { return @{ Surface = 'apk'; Target = '' } }
         '6' {
             Write-Host ''
-            Write-Host '  Web access in this session:'
-            Write-Host '  1  PC    2  LAN (Wi-Fi)    3  adb (USB / wireless)'
-            $webPick = Read-Host '  Select 1-3'
+            Write-Host '  本会话网页访问方式:'
+            Write-Host '  1  本机    2  LAN（Wi-Fi）    3  adb（USB / 无线）'
+            $webPick = Read-Host '  选择 1-3'
             $webTarget = switch ($webPick.Trim()) {
                 '1' { 'pc' }
                 '2' { 'lan' }
                 '3' { 'adb' }
-                default { throw 'Invalid web access selection.' }
+                default { throw '无效的网页访问选择。' }
             }
             return @{ Surface = 'full'; Target = $webTarget }
         }
-        default { throw 'Invalid selection.' }
+        '7' { return @{ Surface = 'pair'; Target = '' } }
+        default { throw '无效选择。' }
     }
 }
 
@@ -705,9 +372,9 @@ function Invoke-DevRebuild {
 
     Invoke-InitialBuild
     if ($Session.WebEnabled) {
-        Write-Host '  [Web]  dist/ rebuilt — refresh the browser.' -ForegroundColor Green
+        Write-Host '  [Web]  dist/ 已重建 — 请刷新浏览器。' -ForegroundColor Green
     } elseif ($Session.AndroidEnabled) {
-        Write-Host '  [Build] dist/ rebuilt — press R to install on device.' -ForegroundColor Green
+        Write-Host '  [Build] dist/ 已重建 — 按 R 安装到设备。' -ForegroundColor Green
     }
 }
 
@@ -717,7 +384,7 @@ function Invoke-DevAndroidPush {
     $device = Ensure-AndroidDeviceId -Session $Session
     Invoke-InitialBuild
     Deploy-AndroidToDevice -DeviceId $device
-    Write-Host '  [Android] Updated on device.' -ForegroundColor Green
+    Write-Host '  [Android] 已更新到设备。' -ForegroundColor Green
 }
 
 function Wait-DevSessionKeys {
@@ -734,7 +401,7 @@ function Wait-DevSessionKeys {
 
         if ($key.KeyChar -match '^[bB]$') {
             Write-Host ''
-            Write-Host '  --- Rebuild dist ---' -ForegroundColor Yellow
+            Write-Host '  --- 重新构建 ---' -ForegroundColor Yellow
             try {
                 Invoke-DevRebuild -Session $Session
             } catch {
@@ -747,7 +414,7 @@ function Wait-DevSessionKeys {
 
         if ($key.KeyChar -match '^[rR]$' -and $Session.AndroidEnabled) {
             Write-Host ''
-            Write-Host '  --- Rebuild + install Android ---' -ForegroundColor Yellow
+            Write-Host '  --- 构建并安装安卓 ---' -ForegroundColor Yellow
             try {
                 Invoke-DevAndroidPush -Session $Session
             } catch {
@@ -795,7 +462,7 @@ function Start-DevSession {
         if ($WebEnabled) {
             $session.AndroidDeviceId = Ensure-AdbDevice -AllowMissing -Quiet
             if (-not $session.AndroidDeviceId) {
-                Write-Host '  [Android] No device yet — connect adb/USB, then press R.'
+                Write-Host '  [Android] 尚无设备 — 连接 adb/USB 后按 R。'
             }
         } else {
             $session.AndroidDeviceId = Ensure-AdbDevice
@@ -819,7 +486,7 @@ function Start-DevSession {
             } catch {
                 Write-Host "  [ERROR] $_" -ForegroundColor Red
                 if (-not $WebEnabled) { throw }
-                Write-Host '  [Android] Press R to retry install.' -ForegroundColor Yellow
+                Write-Host '  [Android] 按 R 重试安装。' -ForegroundColor Yellow
             }
         }
 
@@ -831,7 +498,7 @@ function Start-DevSession {
 
         Write-DevSessionBanner -Session $session
         if ($androidDeployed) {
-            Write-Host '  [Android] Installed and launched on device.'
+            Write-Host '  [Android] 已安装并在设备上启动。'
         }
 
         Wait-DevSessionKeys -Session $session
@@ -844,70 +511,12 @@ function Start-DevSession {
     }
 }
 
-function Invoke-Gradle {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GradleArgs)
-
-    $oldEap = $ErrorActionPreference
-    $ErrorActionPreference = 'SilentlyContinue'
-    $androidDir = Join-Path $ProjectRoot 'android'
-    try {
-        Push-Location -LiteralPath $androidDir
-        $output = & .\gradlew.bat @GradleArgs 2>&1
-        $code = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
-        return [pscustomobject]@{
-            Output   = @($output | ForEach-Object { "$_" })
-            ExitCode = $code
-        }
-    } finally {
-        Pop-Location
-        $ErrorActionPreference = $oldEap
-    }
-}
-
-function Test-GradleOk {
-    param($Result)
-
-    $text = $Result.Output -join "`n"
-    if ($text -match ':app:installDebug FAILED') { return $false }
-    if ($text -match 'BUILD FAILED|FAILURE: Build failed') { return $false }
-    if ($text -match 'BUILD SUCCESSFUL') { return $true }
-    if ($text -match 'Installed on \d+ device') { return $true }
-    return $Result.ExitCode -eq 0
-}
-
-function Get-GradleFailureTail {
-    param($Result)
-
-    $lines = @($Result.Output)
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match ':app:installDebug FAILED') {
-            $end = $i
-            for ($j = $i + 1; $j -lt [Math]::Min($lines.Count, $i + 16); $j++) {
-                $end = $j
-                if ($lines[$j] -match 'BUILD FAILED|^FAILURE:') { break }
-            }
-            return ($lines[$i..$end] -join "`n")
-        }
-    }
-
-    $hits = @($lines | Where-Object {
-            $_ -match '> Task .+ FAILED' -or
-            $_ -match '^FAILURE:' -or
-            $_ -match 'INSTALL_FAILED' -or
-            $_ -match 'Execution failed for task'
-        })
-    if ($hits.Count -gt 0) {
-        return ($hits | Select-Object -Last 12) -join "`n"
-    }
-    return ($lines | Select-Object -Last 20) -join "`n"
-}
-
 function Install-AndroidDebug {
     param([string]$DeviceId)
 
     $resolved = Resolve-AdbDevices
     if ($resolved) { $DeviceId = $resolved }
-    if (-not $DeviceId) { throw 'No adb device for installDebug.' }
+    if (-not $DeviceId) { throw '无 adb 设备，无法 installDebug。' }
 
     $env:ANDROID_SERIAL = $DeviceId
     try {
@@ -919,17 +528,17 @@ function Install-AndroidDebug {
         if (-not (Test-GradleOk $result)) {
             $text = $result.Output -join "`n"
             if ($text -match 'INSTALL_FAILED_UPDATE_INCOMPATIBLE|signatures do not match') {
-                Write-Host '  [Android] Signature mismatch - uninstalling old package...'
+                Write-Host '  [Android] 签名不匹配，正在卸载旧包...'
                 Invoke-Adb -DeviceId $DeviceId -Command @('uninstall', $script:AndroidAppId) | Out-Null
                 $result = Invoke-Gradle installDebug
             }
         }
 
         if (-not (Test-GradleOk $result)) {
-            Write-Host '  [Android] install retry...'
+            Write-Host '  [Android] 安装重试...'
             Start-Sleep -Seconds 2
             $DeviceId = Resolve-AdbDevices
-            if (-not $DeviceId) { throw 'No adb device for install retry.' }
+            if (-not $DeviceId) { throw '重试时无 adb 设备。' }
             $env:ANDROID_SERIAL = $DeviceId
             Invoke-Adb -DeviceId $DeviceId -Command @('wait-for-device') | Out-Null
             $result = Invoke-Gradle installDebug
@@ -937,10 +546,10 @@ function Install-AndroidDebug {
 
         if (-not (Test-GradleOk $result)) {
             $tail = Get-GradleFailureTail -Result $result
-            throw "installDebug failed:`n$tail"
+            throw "installDebug 失败:`n$tail"
         }
 
-        Write-Host '  [Android] installDebug ok'
+        Write-Host '  [Android] installDebug 完成'
     } finally {
         Remove-Item Env:ANDROID_SERIAL -ErrorAction SilentlyContinue
     }
@@ -949,22 +558,22 @@ function Install-AndroidDebug {
 function Start-AndroidApp {
     param([string]$DeviceId)
 
-    Write-Host '  [Android] Launching app...'
+    Write-Host '  [Android] 正在启动应用...'
     $result = Invoke-Adb -DeviceId $DeviceId -Command @(
         'shell', 'am', 'start', '-n', "$($script:AndroidAppId)/.MainActivity"
     )
     if ($result.ExitCode -ne 0) {
-        throw 'Failed to launch app on device'
+        throw '无法在设备上启动应用'
     }
 }
 
 function Sync-CapAndroid {
-    Write-Host '  [Cap]  Syncing dist/ to android/...'
+    Write-Host '  [Cap]  正在同步 dist/ 到 android/...'
     $oldEap = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
         npx cap sync android
-        if ($LASTEXITCODE -ne 0) { throw 'cap sync failed' }
+        if ($LASTEXITCODE -ne 0) { throw 'cap sync 失败' }
     } finally {
         $ErrorActionPreference = $oldEap
     }
@@ -982,22 +591,32 @@ function Start-AndroidDev {
     Start-DevSession -WebEnabled $false -AndroidEnabled $true
 }
 
+function Start-AdbPairFlow {
+    while (Show-AdbWirelessMenu) { }
+}
+
 if (-not $Surface) {
     $picked = Show-DevMenu
     $Surface = $picked.Surface
     if ($picked.Target) { $Target = $picked.Target }
 }
 
+if ($Surface -and $Surface -ne 'pair') {
+    Save-LastDevChoice -Surface $Surface -Target $Target
+}
+
 if ($Surface -eq 'web') {
-    if (-not $Target) { $Target = 'pc' }
+    if (-not $Target) { $Target = 'lan' }
     Start-WebDev -WebTarget $Target -ServePort $Port
 } elseif ($Surface -eq 'full') {
-    if (-not $Target) { $Target = 'pc' }
+    if (-not $Target) { $Target = 'lan' }
     Start-DevSession -WebEnabled $true -AndroidEnabled $true -WebTarget $Target -ServePort $Port
 } elseif ($Surface -eq 'android') {
     Start-AndroidDev
 } elseif ($Surface -eq 'apk') {
     & (Join-Path $ProjectRoot 'scripts/build-apk.ps1')
+} elseif ($Surface -eq 'pair') {
+    Start-AdbPairFlow
 } else {
-    throw "Unknown surface: $Surface"
+    throw "未知模式: $Surface"
 }

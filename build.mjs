@@ -17,8 +17,18 @@ function formatBuildVersion(date = new Date()) {
   return `b${y}${m}${d}.${h}${min}`;
 }
 
+function formatBuildTimestamp(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${min}`;
+}
+
 async function build() {
   const buildVersion = formatBuildVersion();
+  const buildTimestamp = formatBuildTimestamp();
   mkdirSync(join(dist, "js"), { recursive: true });
   mkdirSync(join(dist, "css"), { recursive: true });
 
@@ -35,6 +45,7 @@ async function build() {
     sourcemap: false,
     define: {
       __BUILD_VERSION__: JSON.stringify(buildVersion),
+      __BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
     },
   });
 
@@ -77,13 +88,13 @@ async function build() {
 
   writeFileSync(join(dist, "index.html"), html);
 
-  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ ok  ${buildVersion}`);
+  console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ 完成  ${buildVersion}`);
 }
 
 await build();
 
 if (watchMode) {
-  console.log("[watch] watching src/ and index.html...");
+  console.log("[watch] 监听 src/ 和 index.html...");
   watch(join(src, "css"), { recursive: true }, (_, f) => {
     console.log(`[watch] CSS: ${f}`);
     build().catch(e => console.error("[watch] build error:", e));

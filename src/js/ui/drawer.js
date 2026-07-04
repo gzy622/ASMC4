@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer, appShell } from "../dom-refs.js";
+import { drawer, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -12,6 +12,11 @@ function clearDocumentSelection() {
   if (selection && !selection.isCollapsed) {
     selection.removeAllRanges();
   }
+}
+
+function resetDrawerFilters() {
+  if (drawerSearchInput) drawerSearchInput.value = "";
+  if (drawerSubjectFilter) drawerSubjectFilter.value = "";
 }
 
 function getDrawerExpandScale() {
@@ -51,6 +56,7 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   drawer.style.transform = "";
   clearDrawerExpandScale();
   drawer.setAttribute("aria-hidden", "true");
+  resetDrawerFilters();
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
     setUiTransitionBusy(true);

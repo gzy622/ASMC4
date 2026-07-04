@@ -2,7 +2,8 @@ import {
   addButton,
   confirmPanel,
   drawer,
-  drawerCloseButton,
+  drawerSearchInput,
+  drawerSubjectFilter,
   menuButton,
   newAssignmentCancelButton,
   newAssignmentCloseButton,
@@ -25,7 +26,9 @@ import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
-import { uiTransitionBusy } from "../runtime.js";
+import { setSuppressNextCardClick, uiTransitionBusy } from "../runtime.js";
+import { getState } from "../state.js";
+import { renderAssignmentList } from "../render/assignmentList.js";
 
 function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
@@ -85,6 +88,7 @@ function bindEmptyAreaClose() {
     if (drawer.classList.contains("is-open")) {
       if (event.target.closest(".drawer")) return;
       consumeFloatingLayerEmptyClick(event);
+      setSuppressNextCardClick(true);
       closeDrawer();
     }
   }, true);
@@ -94,12 +98,14 @@ export function bindNavigationEvents() {
   bindEmptyAreaClose();
 
   menuButton.addEventListener("click", openDrawer);
-  drawerCloseButton.addEventListener("click", closeDrawer);
   drawer.addEventListener("selectstart", event => {
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest(".assignment-edit-input, .assignment-edit-subject")) return;
+    if (target?.closest(".assignment-edit-input, .assignment-edit-subject, .drawer-search")) return;
     event.preventDefault();
   });
+
+  drawerSearchInput?.addEventListener("input", () => renderAssignmentList(getState()));
+  drawerSubjectFilter?.addEventListener("change", () => renderAssignmentList(getState()));
 
   addButton.addEventListener("click", openNewAssignmentPanel);
   newAssignmentCloseButton.addEventListener("click", closeFloatingPanels);

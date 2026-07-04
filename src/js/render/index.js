@@ -8,6 +8,17 @@ import { renderScoringMode } from "./scoringMode.js";
 import { renderProgress } from "./progress.js";
 import { syncScoreStep10Ui } from "../score-sheet/score-step10-ui.js";
 
+let renderPending = false;
+
+export function scheduleRender() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(() => {
+    renderPending = false;
+    render();
+  });
+}
+
 export function render() {
   const state = getState();
   const assignment = getCurrentAssignment();

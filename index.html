@@ -100,23 +100,18 @@
     </div>
 
     <aside class="drawer" id="assignmentDrawer" aria-label="作业项目列表" aria-hidden="true">
-      <div class="drawer-head">
-        <div class="drawer-version" id="drawerVersion"></div>
-        <button class="panel-close" id="drawerCloseButton" type="button" aria-label="关闭作业列表">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
-          </svg>
-        </button>
+      <div class="drawer-filter">
+        <input class="drawer-search" id="drawerSearchInput" type="search" placeholder="搜索作业…" aria-label="搜索作业" />
+        <select class="drawer-subject-filter" id="drawerSubjectFilter" aria-label="按科目筛选">
+          <option value="">全部</option>
+        </select>
       </div>
 
       <div class="drawer-list" id="assignmentList"></div>
 
       <div class="drawer-actions">
-        <div class="drawer-actions-row">
-          <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
-          <button class="drawer-action-btn" id="importBackupBtn" type="button">导入备份</button>
-        </div>
-        <button class="drawer-action-btn full" id="settingsBtn" type="button">设置</button>
+        <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
+        <button class="drawer-action-btn" id="settingsBtn" type="button">设置</button>
       </div>
       <input type="file" id="importBackupInput" accept=".json" style="display:none" />
     </aside>
@@ -124,9 +119,9 @@
     <section class="top-sheet" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
       <div class="panel-head">
         <div class="panel-title">新建作业</div>
-        <button class="panel-close" id="newAssignmentCloseButton" type="button" aria-label="关闭新建作业">
+        <button class="panel-back" id="newAssignmentCloseButton" type="button" aria-label="返回">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+            <path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" fill="none"/>
           </svg>
         </button>
       </div>
@@ -154,9 +149,9 @@
             <span class="quick-current-stats" id="quickCurrentStats"></span>
           </div>
         </div>
-        <button class="panel-close" id="quickPanelCloseButton" type="button" aria-label="关闭当前作业">
+        <button class="panel-back" id="quickPanelCloseButton" type="button" aria-label="返回">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+            <path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" fill="none"/>
           </svg>
         </button>
       </div>
@@ -244,13 +239,13 @@
     </section>
 
     <section class="fullscreen-panel" id="settingsPanel" aria-label="设置" aria-hidden="true">
-      <div class="fullscreen-panel-head">
-        <div class="panel-title">设置</div>
-        <button class="panel-close" id="settingsCloseButton" type="button" aria-label="关闭设置">
+      <div class="fullscreen-panel-head settings-panel-head">
+        <button class="panel-back" id="settingsCloseButton" type="button" aria-label="返回">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" fill="none"/>
           </svg>
         </button>
+        <div class="panel-title settings-panel-title">设置</div>
       </div>
 
       <div class="fullscreen-panel-body" id="settingsBody">
@@ -327,6 +322,10 @@
             <button class="drawer-action-btn" id="settingsImportBtn" type="button">导入备份</button>
           </div>
           <button class="drawer-action-btn full" id="settingsRosterBtn" type="button">编辑名单</button>
+        </div>
+
+        <div class="settings-section settings-version-section">
+          <p class="settings-version" id="settingsVersion"></p>
         </div>
       </div>
     </section>

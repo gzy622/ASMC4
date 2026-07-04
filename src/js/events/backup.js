@@ -1,6 +1,5 @@
 import {
   exportBackupBtn,
-  importBackupBtn,
   importBackupInput
 } from "../dom-refs.js";
 
@@ -9,8 +8,6 @@ export function bindBackupEvents() {
     const { exportBackup } = await import("../ui/backup.js");
     exportBackup();
   });
-
-  importBackupBtn.addEventListener("click", () => importBackupInput.click());
 
   importBackupInput.addEventListener("change", async event => {
     const file = event.target.files[0];

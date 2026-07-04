@@ -1,5 +1,5 @@
 import { saveAppState, getState, resetAssignmentHistories } from "../state.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { normalizeAssignment, normalizeRosterFromBackup } from "../utils/normalize.js";
@@ -129,7 +129,7 @@ export function importBackup(file) {
 
             resetAssignmentHistories();
             saveAppState({ history: false });
-            render();
+            scheduleRender();
             closeDrawer();
             closeConfirm();
             announce("备份已导入");

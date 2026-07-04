@@ -18,7 +18,7 @@ import {
   invertCurrentAssignmentSubmission,
   renameAssignment
 } from "../business/assignment.js";
-import { render } from "../render/index.js";
+import { render, scheduleRender } from "../render/index.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
@@ -129,12 +129,12 @@ export function bindAssignmentEvents() {
       const trimmed = clampAssignmentTitle(quickRenameInput.value.trim());
       const assignment = getCurrentAssignment();
       if (!trimmed) {
-        render();
+        scheduleRender();
         return;
       }
 
       if (trimmed === assignment.title) {
-        if (quickRenameInput.value !== assignment.title) render();
+        if (quickRenameInput.value !== assignment.title) scheduleRender();
         return;
       }
 
@@ -142,13 +142,13 @@ export function bindAssignmentEvents() {
       quickRenameInput.value = trimmed;
       assignment.updatedAt = new Date().toISOString();
       saveAppState({ label: `重命名为「${trimmed}」`, assignmentId: assignment.id });
-      render();
+      scheduleRender();
       announce("已重命名", { action: "undo", assignmentId: assignment.id });
     }
     function cancelRename() {
       if (renameSettled) return;
       renameSettled = true;
-      render();
+      scheduleRender();
     }
     quickRenameInput.addEventListener("blur", () => {
       commitRename();
@@ -174,7 +174,7 @@ export function bindAssignmentEvents() {
       assignment.subject = quickSubjectSelect.value;
       const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";
       saveAppState({ label: subjectLabel, assignmentId: assignment.id });
-      render();
+      scheduleRender();
       announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId: assignment.id });
     });
   }

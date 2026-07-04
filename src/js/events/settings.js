@@ -21,7 +21,7 @@ import { renderRosterRows } from "../ui/roster.js";
 import { swapDrawerFullscreenPanel } from "../ui/drawer-fullscreen.js";
 import { announce } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 
 export function bindSettingsEvents() {
   settingsBtn.addEventListener("click", openSettings);
@@ -34,7 +34,7 @@ export function bindSettingsEvents() {
     const state = getState();
     state.showBarScoringToggle = !(state.showBarScoringToggle !== false);
     saveAppState({ history: false });
-    render();
+    scheduleRender();
     announce(state.showBarScoringToggle ? "顶栏按钮已显示" : "顶栏按钮已隐藏");
   });
 
@@ -43,7 +43,7 @@ export function bindSettingsEvents() {
     const state = getState();
     state.showBarStats = !(state.showBarStats !== false);
     saveAppState({ history: false });
-    render();
+    scheduleRender();
     announce(state.showBarStats !== false ? "已交人数已显示" : "已交人数已隐藏");
   });
 
@@ -53,7 +53,7 @@ export function bindSettingsEvents() {
     state.scoreStep10Mode = !state.scoreStep10Mode;
     setScoreStep10Mode(state.scoreStep10Mode);
     saveAppState({ history: false });
-    render();
+    scheduleRender();
     announce(state.scoreStep10Mode ? "×10 已开启" : "×10 已关闭");
   });
 
@@ -62,7 +62,7 @@ export function bindSettingsEvents() {
     const state = getState();
     state.hapticsEnabled = !(state.hapticsEnabled !== false);
     saveAppState({ history: false });
-    render();
+    scheduleRender();
     announce(state.hapticsEnabled !== false ? "振动反馈已开启" : "振动反馈已关闭");
   });
 

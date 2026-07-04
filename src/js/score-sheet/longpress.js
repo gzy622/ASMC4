@@ -1,4 +1,5 @@
 import { getCurrentAssignment } from "../state.js";
+import { drawer } from "../dom-refs.js";
 import { STATUS, LONG_PRESS_MS } from "../constants.js";
 import {
   longPressTimers,
@@ -18,6 +19,7 @@ const LONG_PRESS_MOVE_CANCEL_DISTANCE = 10;
 export function handleLongPressStart(event) {
   const card = event.target.closest(".student-card");
   if (!card) return;
+  if (drawer.classList.contains("is-open")) return;
 
   setLongPressTriggered(false);
   clearTimeout(longPressResetTimer);

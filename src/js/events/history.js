@@ -1,6 +1,6 @@
 import { undoAppState, redoAppState, jumpToHistoryEntry, getCurrentAssignment } from "../state.js";
 import { undoButton, redoButton, appToastAction, historyPanelButton, historyBackButton, historyList } from "../dom-refs.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { announce, hideToast } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
@@ -24,7 +24,7 @@ export function performUndo(assignmentId = getCurrentAssignment().id) {
   if (!undoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
-  render();
+  scheduleRender();
   hideToast();
   announce("已撤回", { action: "redo", assignmentId, showToast: true });
 }
@@ -33,7 +33,7 @@ export function performRedo(assignmentId = getCurrentAssignment().id) {
   if (!redoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
-  render();
+  scheduleRender();
   hideToast();
   announce("已重做", { action: "undo", assignmentId, showToast: true });
 }
@@ -65,7 +65,7 @@ export function bindHistoryEvents() {
     if (!jumpToHistoryEntry(index, assignmentId)) return;
     hapticSelection();
     closeTransientEditing();
-    render();
+    scheduleRender();
     hideToast();
   });
 

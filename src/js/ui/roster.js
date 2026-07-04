@@ -1,6 +1,6 @@
 import { getState } from "../state.js";
 import { defaultStudents } from "../data/defaults.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { applyRosterToAllAssignments } from "../business/roster.js";
 import { openConfirm, closeConfirm } from "./confirm.js";
 import { announce } from "../utils/dom.js";
@@ -198,7 +198,7 @@ export function saveRoster() {
   if (!roster) return;
 
   applyRosterToAllAssignments(roster);
-  render();
+  scheduleRender();
   closeRosterEditor();
   announce("名单已更新");
 }
@@ -217,7 +217,7 @@ export function resetRoster() {
         nonEnglish: false
       }));
       applyRosterToAllAssignments(defaultRoster);
-      render();
+      scheduleRender();
       closeRosterEditor();
       closeConfirm();
       announce("名单已重置");

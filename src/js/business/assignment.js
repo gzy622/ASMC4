@@ -2,7 +2,7 @@ import { getState, saveAppState, getCurrentAssignment, defaultStudents } from ".
 import { MAX_ASSIGNMENTS, STATUS, SUBJECT_OPTIONS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
 import { newAssignmentTitleInput, newAssignmentSubjectInput } from "../dom-refs.js";
-import { render } from "../render/index.js";
+import { scheduleRender } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
 import { createFreshStudentsFrom } from "../utils/normalize.js";
@@ -38,7 +38,7 @@ export function createAssignmentFromDialog() {
   state.currentAssignmentId = nextAssignment.id;
 
   saveAppState({ label: `新建作业「${title}」`, assignmentId: nextAssignment.id });
-  render();
+  scheduleRender();
   closeFloatingPanels();
   announce("已新建作业", { action: "undo", assignmentId: nextAssignment.id });
 }
@@ -65,7 +65,7 @@ export function invertCurrentAssignmentSubmission() {
   });
 
   saveAppState({ label: `反选提交状态「${assignment.title}」`, assignmentId: assignment.id });
-  render();
+  scheduleRender();
 }
 
 export function deleteCurrentAssignment() {
@@ -94,7 +94,7 @@ export function deleteCurrentAssignment() {
   }
 
   saveAppState({ label: `删除作业「${deletedTitle}」`, assignmentId: currentId });
-  render();
+  scheduleRender();
 }
 
 export function deleteAssignmentFromDrawer(assignmentId) {
@@ -130,7 +130,7 @@ export function deleteAssignmentFromDrawer(assignmentId) {
       }
 
       saveAppState({ label: `删除作业「${assignment.title}」`, assignmentId });
-      render();
+      scheduleRender();
       closeConfirm();
       announce("已删除作业", { action: "undo", assignmentId });
     }
@@ -199,7 +199,7 @@ export function renameAssignment(assignmentId) {
     const newSubject = clampSubject(select.value);
 
     if (!trimmed) {
-      render();
+      scheduleRender();
       return;
     }
 
@@ -226,21 +226,21 @@ export function renameAssignment(assignmentId) {
         historyLabel = newSubject ? `修改科目为「${newSubject}」` : "清除科目";
       }
       saveAppState({ label: historyLabel, assignmentId });
-      render();
+      scheduleRender();
       if (titleChanged) {
         announce("已重命名", { action: "undo", assignmentId });
       } else {
         announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId });
       }
     } else {
-      render();
+      scheduleRender();
     }
   }
 
   function cancel() {
     if (settled) return;
     settled = true;
-    render();
+    scheduleRender();
   }
 
   input.addEventListener("blur", function(event) {
