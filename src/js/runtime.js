@@ -3,7 +3,6 @@ import { traceStep } from "./utils/trace.js";
 let pendingConfirmAction = null;
 let currentScoringStudent = null;
 let scoreInputValue = "0";
-let scoreStep10Mode = false;
 let noteInputValue = "";
 const longPressTimers = new Map();
 let longPressTriggered = false;
@@ -17,7 +16,6 @@ export {
   pendingConfirmAction,
   currentScoringStudent,
   scoreInputValue,
-  scoreStep10Mode,
   noteInputValue,
   longPressTimers,
   longPressTriggered,
@@ -27,7 +25,6 @@ export {
 export function setPendingConfirmAction(value) { pendingConfirmAction = value; }
 export function setCurrentScoringStudent(value) { currentScoringStudent = value; }
 export function setScoreInputValue(value) { scoreInputValue = value; }
-export function setScoreStep10Mode(value) { scoreStep10Mode = value; }
 export function setNoteInputValue(value) { noteInputValue = value; }
 export function setLongPressTimer(pointerId, timerId) {
   if (timerId == null) longPressTimers.delete(pointerId);

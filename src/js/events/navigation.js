@@ -16,16 +16,12 @@ import {
   appShell,
   titleButton
 } from "../dom-refs.js";
-import { closeDrawer, openDrawer } from "../ui/drawer.js";
-import {
-  closeFloatingPanels,
-  openNewAssignmentPanel,
-  openQuickPanel
-} from "../ui/panels.js";
-import { closeConfirm } from "../ui/confirm.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
+import { closeFloatingPanels, openNewAssignmentPanel, openQuickPanel } from "../ui/panels.js";
+import { anyFloatingLayerOpen, closeTopmostFloatingLayer } from "../ui/floating-layers.js";
+import { closeDrawer, openDrawer } from "../ui/drawer.js";
 import { setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
 import { getState } from "../state.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -34,18 +30,6 @@ import { traceEvent } from "../utils/trace.js";
 function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
   event.stopImmediatePropagation();
-}
-
-function anyFloatingLayerOpen() {
-  return (
-    confirmPanel.classList.contains("is-open")
-    || scoreSheet.classList.contains("is-open")
-    || rosterEditorPanel.classList.contains("is-open")
-    || settingsPanel.classList.contains("is-open")
-    || newAssignmentPanel.classList.contains("is-open")
-    || quickPanel.classList.contains("is-open")
-    || drawer.classList.contains("is-open")
-  );
 }
 
 function bindEmptyAreaClose() {
@@ -146,22 +130,6 @@ export function bindNavigationEvents() {
     if (isUiTransitionBusy()) return;
     event.preventDefault();
     traceEvent("navigation.escape");
-
-    if (confirmPanel.classList.contains("is-open")) {
-      closeConfirm();
-    } else if (scoreSheet.classList.contains("is-open")) {
-      closeScoreSheet();
-    } else if (rosterEditorPanel.classList.contains("is-open")) {
-      closeRosterEditor();
-    } else if (settingsPanel.classList.contains("is-open")) {
-      closeSettings();
-    } else if (
-      newAssignmentPanel.classList.contains("is-open")
-      || quickPanel.classList.contains("is-open")
-    ) {
-      closeFloatingPanels();
-    } else if (drawer.classList.contains("is-open")) {
-      closeDrawer();
-    }
+    closeTopmostFloatingLayer();
   });
 }

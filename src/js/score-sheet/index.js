@@ -1,7 +1,7 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
-import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, scoreStep10Mode, noteInputValue } from "../runtime.js";
+import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, noteInputValue } from "../runtime.js";
 import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
 import { scheduleRender } from "../render/index.js";
@@ -106,13 +106,6 @@ export function confirmScore() {
   closeScoreSheet();
 
   announce(message, { action: "undo", assignmentId: assignment.id });
-}
-
-export function toggleScoreStep10Mode() {
-  const next = !scoreStep10Mode;
-  syncScoreStep10Ui(next);
-  getState().scoreStep10Mode = next;
-  saveAppState({ history: false });
 }
 
 function armScoreSheetPointerGuard() {

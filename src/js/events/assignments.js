@@ -9,29 +9,23 @@ import {
   quickRenameInput,
   quickSubjectSelect
 } from "../dom-refs.js";
-import { getCurrentAssignment, getState, saveAppState } from "../state.js";
+import { getCurrentAssignment } from "../state.js";
 import { pendingConfirmAction } from "../runtime.js";
 import {
   createAssignmentFromDialog,
   deleteAssignmentFromDrawer,
   deleteCurrentAssignment,
   invertCurrentAssignmentSubmission,
-  renameAssignment
+  renameAssignment,
+  renameCurrentAssignmentTitle,
+  selectAssignment,
+  updateCurrentAssignmentSubject
 } from "../business/assignment.js";
-import { render, scheduleRender } from "../render/index.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
 import { announce } from "../utils/dom.js";
-import { clampAssignmentTitle } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
-
-function selectAssignment(assignmentId) {
-  traceEvent("assignment.select", { assignmentId: String(assignmentId) });
-  getState().currentAssignmentId = assignmentId;
-  saveAppState({ history: false });
-  render();
-}
 
 function selectAssignmentFromDrawer(assignmentId) {
   selectAssignment(assignmentId);
@@ -142,29 +136,13 @@ export function bindAssignmentEvents() {
     function commitRename() {
       if (renameSettled) return;
       renameSettled = true;
-      const trimmed = clampAssignmentTitle(quickRenameInput.value.trim());
-      const assignment = getCurrentAssignment();
-      if (!trimmed) {
-        scheduleRender();
-        return;
-      }
-
-      if (trimmed === assignment.title) {
-        if (quickRenameInput.value !== assignment.title) scheduleRender();
-        return;
-      }
-
-      assignment.title = trimmed;
-      quickRenameInput.value = trimmed;
-      assignment.updatedAt = new Date().toISOString();
-      saveAppState({ label: `重命名为「${trimmed}」`, assignmentId: assignment.id });
-      scheduleRender();
-      announce("已重命名", { action: "undo", assignmentId: assignment.id });
+      const result = renameCurrentAssignmentTitle(quickRenameInput.value);
+      if (result.title !== undefined) quickRenameInput.value = result.title;
     }
     function cancelRename() {
       if (renameSettled) return;
       renameSettled = true;
-      scheduleRender();
+      quickRenameInput.value = getCurrentAssignment().title;
     }
     quickRenameInput.addEventListener("blur", () => {
       commitRename();
@@ -186,13 +164,7 @@ export function bindAssignmentEvents() {
 
   if (quickSubjectSelect) {
     quickSubjectSelect.addEventListener("change", () => {
-      traceEvent("assignment.subjectChange", { subject: quickSubjectSelect.value });
-      const assignment = getCurrentAssignment();
-      assignment.subject = quickSubjectSelect.value;
-      const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";
-      saveAppState({ label: subjectLabel, assignmentId: assignment.id });
-      scheduleRender();
-      announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId: assignment.id });
+      updateCurrentAssignmentSubject(quickSubjectSelect.value);
     });
   }
 }

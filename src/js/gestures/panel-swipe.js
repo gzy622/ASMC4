@@ -1,31 +1,16 @@
 import {
   confirmPanel,
-  drawer,
-  newAssignmentPanel,
   appShell,
   quickPanel,
-  rosterEditorPanel,
-  scoreSheet,
-  scrollContainer,
-  settingsPanel
+  newAssignmentPanel,
+  scrollContainer
 } from "../dom-refs.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { isUiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 import { isHistoryViewActive } from "../ui/history.js";
+import { anyFloatingLayerOpen } from "../ui/floating-layers.js";
 import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
-
-function anyFloatingLayerOpen() {
-  return (
-    drawer.classList.contains("is-open")
-    || quickPanel.classList.contains("is-open")
-    || newAssignmentPanel.classList.contains("is-open")
-    || scoreSheet.classList.contains("is-open")
-    || confirmPanel.classList.contains("is-open")
-    || rosterEditorPanel.classList.contains("is-open")
-    || settingsPanel.classList.contains("is-open")
-  );
-}
 
 function blocksQuickPanelPull() {
   return anyFloatingLayerOpen() || quickPanel.classList.contains("is-dragging");

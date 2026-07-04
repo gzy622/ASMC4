@@ -13,6 +13,46 @@ import { openConfirm, closeConfirm } from "../ui/confirm.js";
 import { closeDrawer } from "../ui/drawer.js";
 import { closeFloatingPanels } from "../ui/panels.js";
 import { clampAssignmentTitle, clampSubject } from "../utils/data-limits.js";
+import { traceEvent } from "../utils/trace.js";
+
+export function selectAssignment(assignmentId) {
+  traceEvent("assignment.select", { assignmentId: String(assignmentId) });
+  getState().currentAssignmentId = assignmentId;
+  saveAppState({ history: false });
+  scheduleRender();
+}
+
+export function renameCurrentAssignmentTitle(rawTitle) {
+  const trimmed = clampAssignmentTitle(rawTitle.trim());
+  const assignment = getCurrentAssignment();
+
+  if (!trimmed) {
+    scheduleRender();
+    return { saved: false };
+  }
+
+  if (trimmed === assignment.title) {
+    if (rawTitle.trim() !== assignment.title) scheduleRender();
+    return { saved: false, title: assignment.title };
+  }
+
+  assignment.title = trimmed;
+  assignment.updatedAt = new Date().toISOString();
+  saveAppState({ label: `重命名为「${trimmed}」`, assignmentId: assignment.id });
+  scheduleRender();
+  announce("已重命名", { action: "undo", assignmentId: assignment.id });
+  return { saved: true, title: trimmed };
+}
+
+export function updateCurrentAssignmentSubject(subjectValue) {
+  traceEvent("assignment.subjectChange", { subject: subjectValue });
+  const assignment = getCurrentAssignment();
+  assignment.subject = clampSubject(subjectValue);
+  const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";
+  saveAppState({ label: subjectLabel, assignmentId: assignment.id });
+  scheduleRender();
+  announce(assignment.subject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId: assignment.id });
+}
 
 export function createAssignmentFromDialog() {
   const state = getState();

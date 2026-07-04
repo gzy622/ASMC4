@@ -1,12 +1,9 @@
 import {
   studentGrid,
-  showRealNameSwitch,
-  quickShowRealNameSwitch,
-  quickScoringModeSwitch,
   scoringToggle
 } from "../dom-refs.js";
 import { STATUS } from "../constants.js";
-import { getCurrentAssignment, getState, saveAppState } from "../state.js";
+import { getCurrentAssignment, getState } from "../state.js";
 import {
   longPressTimers,
   longPressTriggered,
@@ -14,13 +11,11 @@ import {
   setSuppressNextCardClick,
   suppressNextCardClick
 } from "../runtime.js";
-import { toggleScoringMode, toggleStudent } from "../business/student.js";
+import { toggleStudent } from "../business/student.js";
+import { toggleScoringMode } from "../business/settings.js";
 import { openScoreSheet } from "../score-sheet/index.js";
 import { handleLongPressEnd, handleLongPressMove, handleLongPressStart } from "../score-sheet/longpress.js";
 import { isStudentForceNone } from "../utils/display.js";
-import { scheduleRender } from "../render/index.js";
-import { announce } from "../utils/dom.js";
-import { hapticSelection } from "../utils/haptics.js";
 import { traceEvent } from "../utils/trace.js";
 
 export function bindStudentEvents() {
@@ -59,39 +54,9 @@ export function bindStudentEvents() {
     if (getState().scoringMode) {
       openScoreSheet(student);
     } else {
-      toggleStudent(student, card);
+      toggleStudent(student);
     }
   });
-
-  function toggleShowRealNames() {
-    traceEvent("student.showRealNames.toggle");
-    hapticSelection();
-    const state = getState();
-    state.showRealNames = !state.showRealNames;
-    saveAppState({ history: false });
-    scheduleRender();
-    announce(state.showRealNames ? "已显示姓名" : "已隐藏姓名");
-  }
-
-  function bindQuickSettingRow(rowEl, switchEl, toggleFn) {
-    rowEl?.addEventListener("click", toggleFn);
-    switchEl?.addEventListener("click", event => {
-      event.stopPropagation();
-      toggleFn();
-    });
-  }
-
-  showRealNameSwitch?.addEventListener("click", toggleShowRealNames);
-  bindQuickSettingRow(
-    quickShowRealNameSwitch?.closest(".quick-setting-row"),
-    quickShowRealNameSwitch,
-    toggleShowRealNames
-  );
-  bindQuickSettingRow(
-    quickScoringModeSwitch?.closest(".quick-setting-row"),
-    quickScoringModeSwitch,
-    toggleScoringMode
-  );
 
   studentGrid.addEventListener("pointerdown", handleLongPressStart);
   studentGrid.addEventListener("pointermove", handleLongPressMove);

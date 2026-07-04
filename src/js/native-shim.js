@@ -1,20 +1,6 @@
-import {
-  confirmScrim,
-  scoreSheet,
-  rosterEditorPanel,
-  settingsPanel,
-  quickPanel,
-  newAssignmentPanel,
-  drawer
-} from "./dom-refs.js";
-import { closeConfirm } from "./ui/confirm.js";
-import { closeScoreSheet } from "./score-sheet/index.js";
-import { closeRosterEditor } from "./ui/roster.js";
-import { closeSettings } from "./ui/settings.js";
-import { closeFloatingPanels } from "./ui/panels.js";
-import { closeDrawer } from "./ui/drawer.js";
 import { isUiTransitionBusy } from "./runtime.js";
 import { isNativePlatform } from "./utils/native.js";
+import { closeTopmostFloatingLayer } from "./ui/floating-layers.js";
 
 (async () => {
   if (!isNativePlatform()) return;
@@ -36,32 +22,7 @@ import { isNativePlatform } from "./utils/native.js";
 
   App.addListener("backButton", () => {
     if (isUiTransitionBusy()) return;
-
-    if (confirmScrim.classList.contains("is-open")) {
-      closeConfirm();
-      return;
-    }
-    if (scoreSheet.classList.contains("is-open")) {
-      closeScoreSheet();
-      return;
-    }
-    if (rosterEditorPanel.classList.contains("is-open")) {
-      closeRosterEditor();
-      return;
-    }
-    if (settingsPanel.classList.contains("is-open")) {
-      closeSettings();
-      return;
-    }
-    if (quickPanel.classList.contains("is-open") || newAssignmentPanel.classList.contains("is-open")) {
-      closeFloatingPanels();
-      return;
-    }
-    if (drawer.classList.contains("is-open")) {
-      closeDrawer();
-      return;
-    }
-
+    if (closeTopmostFloatingLayer()) return;
     App.exitApp();
   });
 })();

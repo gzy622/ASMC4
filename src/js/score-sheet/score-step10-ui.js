@@ -1,8 +1,6 @@
 import { scoreStep10Button, scoreNumpad } from "../dom-refs.js";
-import { setScoreStep10Mode } from "../runtime.js";
 
 export function syncScoreStep10Ui(enabled) {
-  setScoreStep10Mode(enabled);
   scoreStep10Button.classList.toggle("is-on", enabled);
 
   scoreNumpad.querySelectorAll(".numpad-btn").forEach(btn => {

@@ -16,21 +16,21 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/constants.js`: 全局常量
 - `src/js/native-shim.js`: Android 原生桥接垫片
 - `src/js/events/`: 事件
-- `src/js/business/`: 修改
+- `src/js/business/`: 业务修改（`assignment.js`、`settings.js`、`student.js`、`roster.js`）
 - `src/js/render/`: 渲染（含 8 个模块）
-- `src/js/ui/`: 面板（含 8 个模块）
+- `src/js/ui/`: 面板与 UI 动作（含 `floating-layers.js` 浮层栈、`switch-bind.js` switch 绑定）
 - `src/js/score-sheet/`: 打分
 - `src/js/gestures/`: 手势（含 9 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
 
-- `navigation.js`: 抽屉、浮层、Esc
-- `assignments.js`: 新建、切换、重命名、删除、反选
-- `students.js`: 点击、姓名开关、打分模式、长按
-- `score.js`: 数字键盘、小数点、显示区退格、备注、确认/取消
+- `navigation.js`: 抽屉、空白处关浮层、Esc
+- `assignments.js`: 新建、切换、删除、反选、确认框；quickPanel 输入委托 business
+- `students.js`: 学生卡点击、顶栏打分按钮、长按
+- `score.js`: 数字键盘、备注、确认/取消
 - `backup.js`: 导入、导出
-- `settings.js`: 设置页、×10、花名册跳转
+- `settings.js`: 设置页开关（含 quickPanel 偏好 switch、trace 开关）
 - `roster.js`: 花名册编辑
 
 ## 数据
@@ -52,7 +52,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 ### 运行时（`runtime.js`，不持久化）
 
-- `pendingConfirmAction`, `currentScoringStudent`, `scoreInputValue`, `scoreStep10Mode`
+- `pendingConfirmAction`, `currentScoringStudent`, `scoreInputValue`
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
 - `uiTransitionBusy`, `pointerDirectionLock`
 
@@ -97,7 +97,9 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### 浮层状态（勿混用）
 
-- `anyFloatingLayerOpen()`：侧栏 / 顶部 sheet（`#quickPanel`、`#newAssignmentPanel`）/ 居中确认框（`#confirmPanel`）/ 打分 sheet / 全屏页（设置、名单编辑）的 `is-open` → 禁止再下拉打开。
+- **关闭栈**（`ui/floating-layers.js` → `closeTopmostFloatingLayer()`）：确认框 → 打分 sheet → 名单编辑 → 设置 → quickPanel/newAssignment → 侧栏。浏览器后退（`back-guard.js`）、Android 返回键（`native-shim.js`）、Esc（`navigation.js`）共用此顺序。
+- `anyFloatingLayerOpen()`（同文件）：上述浮层任一 `is-open`；`back-guard` 的 MutationObserver 也监听 `FLOATING_LAYER_ELS`（含 `#confirmScrim`）。
+- `panel-swipe.js` 内 `blocksQuickPanelPull()` 复用 `ui/floating-layers.js` 的 `anyFloatingLayerOpen()`；`shouldStart` 里对 `#confirmPanel` 的单独判断保留。
 - `blocksQuickPanelPull()`：上式 **或** `#quickPanel.is-dragging` → 打开手势 `canStart` 用（拖动预览中也算浮层占用）。
 - 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
 
@@ -171,13 +173,14 @@ DOM（`index.html` + `dom-refs.js`）：
 ### Toast / announce
 
 - 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。
-- 落点：`utils/dom.js`；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`（**不**先 `hideToast()`，与上一条 toast 并存续期）。
+- 落点：`utils/dom.js` 的 `announce()`（内部 `showToast()`，不对外 export）；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`（**不**先 `hideToast()`，与上一条 toast 并存续期）。
 - 文案 4 到 8 字；撤回/重做 toast 固定「已撤回」「已重做」。
 - 显示类设置、`selectAssignment` 用 `saveAppState({ history: false })`，toast 不带撤回。
 
 ## 约束
 
-- DOM 查询只放在 `dom-refs.js`
+- DOM 查询只放在 `dom-refs.js`；例外：`ui/roster.js` 拖拽反馈用 `document.querySelectorAll(".roster-row.drag-over-*")`（动态行 class）
+- 确认框 `#confirmScrim` 与 `#confirmPanel` 同步 `is-open`；关闭栈查 scrim，部分手势 `shouldStart` 查 panel
 - 用户文本进 `innerHTML` 前先 `escapeHTML()`
 - 学生 id 比较统一转字符串
 - `state.js` 不依赖 `render/`；`runtime.js` 不依赖 `state.js`
