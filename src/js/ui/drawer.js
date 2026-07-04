@@ -3,7 +3,7 @@ import { drawer, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { uiTransitionBusy, setUiTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
+import { isUiTransitionBusy, setUiTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
 
 const DRAWER_TRANSITION_MS = 320;
 
@@ -34,7 +34,7 @@ function clearDrawerExpandScale() {
 }
 
 export function openDrawer({ withTransitionLock = true } = {}) {
-  if (uiTransitionBusy) return;
+  if (isUiTransitionBusy("drawer")) return;
   closeScoreSheet();
   clearDocumentSelection();
   drawer.classList.add("is-open");
@@ -44,8 +44,8 @@ export function openDrawer({ withTransitionLock = true } = {}) {
     renderAssignmentList(getState());
   });
   if (withTransitionLock) {
-    setUiTransitionBusy(true);
-    setTimeout(() => setUiTransitionBusy(false), DRAWER_TRANSITION_MS);
+    setUiTransitionBusy(true, "drawer");
+    setTimeout(() => setUiTransitionBusy(false, "drawer"), DRAWER_TRANSITION_MS);
   }
 }
 
@@ -59,8 +59,8 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   resetDrawerFilters();
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
-    setUiTransitionBusy(true);
-    setTimeout(() => setUiTransitionBusy(false), DRAWER_TRANSITION_MS);
+    setUiTransitionBusy(true, "drawer");
+    setTimeout(() => setUiTransitionBusy(false, "drawer"), DRAWER_TRANSITION_MS);
   }
 }
 

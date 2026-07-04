@@ -7,7 +7,7 @@ const longPressTimers = new Map();
 let longPressTriggered = false;
 let suppressNextCardClick = false;
 
-let uiTransitionBusy = false;
+const uiTransitionBusyKeys = new Set();
 let pointerDirectionLock = null;
 let pointerDirectionLockId = null;
 
@@ -19,8 +19,7 @@ export {
   noteInputValue,
   longPressTimers,
   longPressTriggered,
-  suppressNextCardClick,
-  uiTransitionBusy
+  suppressNextCardClick
 };
 
 export function setPendingConfirmAction(value) { pendingConfirmAction = value; }
@@ -43,7 +42,17 @@ export function clearAllLongPressTimers() {
 }
 export function setLongPressTriggered(value) { longPressTriggered = value; }
 export function setSuppressNextCardClick(value) { suppressNextCardClick = value; }
-export function setUiTransitionBusy(value) { uiTransitionBusy = value; }
+
+export function setUiTransitionBusy(busy, key = "global") {
+  if (busy) uiTransitionBusyKeys.add(key);
+  else uiTransitionBusyKeys.delete(key);
+}
+
+export function isUiTransitionBusy(key) {
+  if (key != null) return uiTransitionBusyKeys.has(key);
+  return uiTransitionBusyKeys.size > 0;
+}
+
 export function claimDirection(pointerId, dir) {
   if (pointerDirectionLockId !== null && pointerDirectionLockId !== pointerId) {
     return null;

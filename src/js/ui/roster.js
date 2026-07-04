@@ -91,6 +91,30 @@ function refreshRowIndices() {
 
 export function setupDragHandlers() {
   let dragState = null;
+  let dragRafId = null;
+  let pendingPointer = null;
+
+  function updateDragPosition(event) {
+    if (!dragState) return;
+
+    const targets = document.elementsFromPoint(event.clientX, event.clientY);
+    const targetRow = targets.find(el => el.classList?.contains("roster-row"));
+
+    document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
+      .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));
+
+    if (!targetRow || targetRow === dragState.row) {
+      dragState.targetRow = null;
+      return;
+    }
+
+    const rect = targetRow.getBoundingClientRect();
+    const after = event.clientY > rect.top + rect.height / 2;
+
+    targetRow.classList.add(after ? "drag-over-bottom" : "drag-over-top");
+    dragState.targetRow = targetRow;
+    dragState.after = after;
+  }
 
   rosterEditorList.addEventListener("pointerdown", e => {
     const handle = e.target.closest(".roster-row-handle");
@@ -107,29 +131,27 @@ export function setupDragHandlers() {
   rosterEditorList.addEventListener("pointermove", e => {
     if (!dragState) return;
     e.preventDefault();
-
-    const targets = document.elementsFromPoint(e.clientX, e.clientY);
-    const targetRow = targets.find(el => el.classList?.contains("roster-row"));
-
-    document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
-      .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));
-
-    if (!targetRow || targetRow === dragState.row) {
-      dragState.targetRow = null;
-      return;
-    }
-
-    const rect = targetRow.getBoundingClientRect();
-    const after = e.clientY > rect.top + rect.height / 2;
-
-    targetRow.classList.add(after ? "drag-over-bottom" : "drag-over-top");
-    dragState.targetRow = targetRow;
-    dragState.after = after;
+    pendingPointer = e;
+    if (dragRafId !== null) return;
+    dragRafId = requestAnimationFrame(() => {
+      dragRafId = null;
+      if (!dragState || !pendingPointer) return;
+      updateDragPosition(pendingPointer);
+      pendingPointer = null;
+    });
   });
 
   rosterEditorList.addEventListener("pointerup", e => {
     if (!dragState) return;
     e.preventDefault();
+    if (dragRafId !== null) {
+      cancelAnimationFrame(dragRafId);
+      dragRafId = null;
+    }
+    if (pendingPointer) {
+      updateDragPosition(pendingPointer);
+      pendingPointer = null;
+    }
 
     dragState.row.classList.remove("dragging");
 
@@ -150,6 +172,11 @@ export function setupDragHandlers() {
 
   rosterEditorList.addEventListener("pointercancel", () => {
     if (!dragState) return;
+    if (dragRafId !== null) {
+      cancelAnimationFrame(dragRafId);
+      dragRafId = null;
+    }
+    pendingPointer = null;
     dragState.row.classList.remove("dragging");
     document.querySelectorAll(".roster-row.drag-over-top, .roster-row.drag-over-bottom")
       .forEach(el => el.classList.remove("drag-over-top", "drag-over-bottom"));

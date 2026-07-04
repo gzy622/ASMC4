@@ -119,12 +119,6 @@ export function getHistoryEntries(assignmentId) {
 
 function persistSerialized(serialized) {
   try {
-    const limitError = getAppStateLimitError(appState);
-    if (limitError) {
-      console.warn("保存失败：数据超出限制");
-      alert(limitError);
-      return false;
-    }
     localStorage.setItem(STORAGE_KEY, serialized);
     return true;
   } catch (error) {
@@ -165,7 +159,7 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
   const currentSerialized = JSON.stringify(appState);
   if (currentSerialized === lastSerialized) return true;
 
-  const limitError = getAppStateLimitError(appState);
+  const limitError = getAppStateLimitError(appState, currentSerialized);
   if (limitError) {
     console.warn("保存失败：数据超出限制");
     alert(limitError);

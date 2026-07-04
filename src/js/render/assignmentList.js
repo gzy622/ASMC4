@@ -2,6 +2,8 @@ import { escapeHTML } from "../utils/escapeHTML.js";
 import { getAssignmentStats } from "../state.js";
 import { assignmentList, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
 
+let renderedListKey = "";
+
 function getFilteredAssignments(assignments) {
   const keyword = (drawerSearchInput?.value || "").trim().toLowerCase();
   const subject = drawerSubjectFilter?.value || "";
@@ -13,7 +15,27 @@ function getFilteredAssignments(assignments) {
   });
 }
 
+function buildListKey(state) {
+  const filtered = getFilteredAssignments(state.assignments);
+  const keyword = (drawerSearchInput?.value || "").trim().toLowerCase();
+  const subject = drawerSubjectFilter?.value || "";
+
+  return [
+    String(state.currentAssignmentId),
+    keyword,
+    subject,
+    ...filtered.map(assignment => {
+      const stats = getAssignmentStats(assignment);
+      return `${assignment.id}:${assignment.title}:${assignment.subject}:${stats.submitted}:${stats.total}`;
+    })
+  ].join("|");
+}
+
 export function renderAssignmentList(state) {
+  const listKey = buildListKey(state);
+  if (listKey === renderedListKey) return;
+  renderedListKey = listKey;
+
   const filtered = getFilteredAssignments(state.assignments);
 
   assignmentList.innerHTML = filtered.map(assignment => {

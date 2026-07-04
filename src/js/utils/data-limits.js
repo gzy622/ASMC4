@@ -32,7 +32,7 @@ export function getSerializedSizeBytes(serialized) {
   return new TextEncoder().encode(serialized).length;
 }
 
-export function getAppStateLimitError(state) {
+export function getAppStateLimitError(state, serialized = null) {
   if (!state || !Array.isArray(state.assignments)) {
     return "数据格式无效";
   }
@@ -49,8 +49,8 @@ export function getAppStateLimitError(state) {
     return `单个作业的学生数量不能超过 ${MAX_ROSTER_SIZE} 人`;
   }
 
-  const serialized = JSON.stringify(state);
-  if (getSerializedSizeBytes(serialized) > MAX_STATE_BYTES) {
+  const payload = serialized ?? JSON.stringify(state);
+  if (getSerializedSizeBytes(payload) > MAX_STATE_BYTES) {
     return "数据太大，已超过本地可安全保存的范围";
   }
 

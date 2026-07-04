@@ -30,6 +30,7 @@ const { abortRelease } = createVerticalDragGesture(appToast, {
     };
   },
   onClose: hideToast,
+  busyKey: "toast",
 });
 
 appToast.addEventListener("pointermove", event => event.stopPropagation());

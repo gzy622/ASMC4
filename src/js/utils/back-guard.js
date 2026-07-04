@@ -13,7 +13,7 @@ import { closeRosterEditor } from "../ui/roster.js";
 import { closeSettings } from "../ui/settings.js";
 import { closeFloatingPanels } from "../ui/panels.js";
 import { closeDrawer } from "../ui/drawer.js";
-import { uiTransitionBusy } from "../runtime.js";
+import { isUiTransitionBusy } from "../runtime.js";
 import { isNativePlatform } from "./native.js";
 
 const FLOATING_LAYER_ELS = [
@@ -60,7 +60,7 @@ if (!isNativePlatform()) {
   window.addEventListener("popstate", () => {
     if (!barrierActive) return;
     barrierActive = false;
-    if (uiTransitionBusy) { ensureBarrier(); return; }
+    if (isUiTransitionBusy()) { ensureBarrier(); return; }
     if (anyFloatingLayerOpen()) {
       closeTopmostFloatingLayer();
       if (anyFloatingLayerOpen()) ensureBarrier();

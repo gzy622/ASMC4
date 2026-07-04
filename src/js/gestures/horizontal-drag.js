@@ -1,6 +1,7 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
+import { parseTransformAxis } from "../utils/transform.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -13,6 +14,7 @@ export function createHorizontalDragGesture(bindEl, {
   onProgress,
   getReleaseSecondary,
   onRelease,
+  busyKey = "drawer",
 }) {
   let startX = null;
   let startY = null;
@@ -22,8 +24,11 @@ export function createHorizontalDragGesture(bindEl, {
   let lastMoveAt = 0;
   let lastVelocity = 0;
   let releaseAnimating = false;
+  let releaseGeneration = 0;
+  let activeRelease = null;
   let pendingTransform = null;
   let rafId = null;
+  let dragBasePx = 0;
 
   function scheduleTransform(value) {
     pendingTransform = value;
@@ -88,6 +93,7 @@ export function createHorizontalDragGesture(bindEl, {
     dragging = false;
     activePointerId = null;
     currentPx = 0;
+    dragBasePx = 0;
     lastMoveAt = 0;
     lastVelocity = 0;
   }
@@ -104,8 +110,32 @@ export function createHorizontalDragGesture(bindEl, {
     lastMoveAt = now;
   }
 
+  function readCurrentPx() {
+    const transform = targetEl.style.transform || getComputedStyle(targetEl).transform;
+    return parseTransformAxis(transform, "X");
+  }
+
+  function interruptRelease() {
+    if (!releaseAnimating) return;
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    flushTransform();
+    dragBasePx = readCurrentPx();
+    currentPx = dragBasePx;
+    releaseAnimating = false;
+    setUiTransitionBusy(false, busyKey);
+    targetEl.style.transition = "none";
+    targetEl.style.willChange = "transform";
+    targetEl.style.transform = `translateX(${dragBasePx}px)`;
+  }
+
   bindEl.addEventListener("pointerdown", (event) => {
-    if (releaseAnimating) return;
+    const interrupted = releaseAnimating;
+    if (releaseAnimating) {
+      if (!shouldStart(event)) return;
+      interruptRelease();
+    }
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
@@ -114,7 +144,8 @@ export function createHorizontalDragGesture(bindEl, {
     startX = event.clientX;
     startY = event.clientY;
     dragging = false;
-    currentPx = getBasePx();
+    dragBasePx = interrupted ? dragBasePx : getBasePx();
+    currentPx = dragBasePx;
     lastMoveAt = performance.now();
     lastVelocity = 0;
   });
@@ -146,7 +177,7 @@ export function createHorizontalDragGesture(bindEl, {
         capturePointer(event);
         targetEl.style.transition = "none";
         targetEl.style.willChange = "transform";
-        currentPx = getBasePx();
+        currentPx = dragBasePx;
         lastVelocity = 0;
       } else {
         return;
@@ -154,8 +185,7 @@ export function createHorizontalDragGesture(bindEl, {
     }
 
     const closedPx = getClosedPx();
-    const basePx = getBasePx();
-    const clamped = Math.max(closedPx, Math.min(0, basePx + dx));
+    const clamped = Math.max(closedPx, Math.min(0, dragBasePx + dx));
     trackVelocity(clamped);
     scheduleTransform(`translateX(${clamped}px)`);
     if (onProgress) {
@@ -189,23 +219,32 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
 
     if (wasDragging) {
+      const generation = ++releaseGeneration;
       releaseAnimating = true;
-      setUiTransitionBusy(true);
+      setUiTransitionBusy(true, busyKey);
       targetEl.style.transform = `translateX(${releasedPx}px)`;
       const secondaryTarget = getReleaseSecondary
         ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
         : null;
       try {
-        await animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget).finished;
-        setUiTransitionBusy(false);
+        activeRelease = animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
+        await activeRelease.finished;
+        if (generation !== releaseGeneration) return;
+        setUiTransitionBusy(false, busyKey);
         if (onRelease) onRelease(dx, wasDragging, velocity);
       } finally {
+        if (generation !== releaseGeneration) {
+          activeRelease = null;
+          return;
+        }
         clearDragStyles();
         if (secondaryTarget) {
           secondaryTarget.el.style[secondaryTarget.prop] = "";
         }
-        setUiTransitionBusy(false);
+        setUiTransitionBusy(false, busyKey);
         releaseAnimating = false;
+        dragBasePx = 0;
+        activeRelease = null;
       }
     }
   });
