@@ -24,8 +24,10 @@ import { openNewAssignmentPanel, closeFloatingPanels } from "../ui/panels.js";
 import { closeConfirm, openConfirm } from "../ui/confirm.js";
 import { announce } from "../utils/dom.js";
 import { clampAssignmentTitle } from "../utils/data-limits.js";
+import { traceEvent } from "../utils/trace.js";
 
 function selectAssignment(assignmentId) {
+  traceEvent("assignment.select", { assignmentId: String(assignmentId) });
   getState().currentAssignmentId = assignmentId;
   saveAppState({ history: false });
   render();
@@ -37,9 +39,15 @@ function selectAssignmentFromDrawer(assignmentId) {
 }
 
 export function bindAssignmentEvents() {
-  newAssignmentCreateButton.addEventListener("click", createAssignmentFromDialog);
+  newAssignmentCreateButton.addEventListener("click", () => {
+    traceEvent("assignment.create");
+    createAssignmentFromDialog();
+  });
   newAssignmentTitleInput.addEventListener("keydown", event => {
-    if (event.key === "Enter") createAssignmentFromDialog();
+    if (event.key === "Enter") {
+      traceEvent("assignment.create");
+      createAssignmentFromDialog();
+    }
   });
 
   assignmentList.addEventListener("click", event => {
@@ -56,8 +64,14 @@ export function bindAssignmentEvents() {
     if (actionButton) {
       event.stopPropagation();
       const { action, assignmentId } = actionButton.dataset;
-      if (action === "edit") renameAssignment(assignmentId);
-      if (action === "delete") deleteAssignmentFromDrawer(assignmentId);
+      if (action === "edit") {
+        traceEvent("assignment.rename", { assignmentId: String(assignmentId) });
+        renameAssignment(assignmentId);
+      }
+      if (action === "delete") {
+        traceEvent("assignment.delete", { assignmentId: String(assignmentId) });
+        deleteAssignmentFromDrawer(assignmentId);
+      }
       return;
     }
 
@@ -85,6 +99,7 @@ export function bindAssignmentEvents() {
   });
 
   invertButton.addEventListener("click", () => {
+    traceEvent("assignment.invert");
     const assignment = getCurrentAssignment();
     openConfirm({
       title: "反选提交状态",
@@ -100,6 +115,7 @@ export function bindAssignmentEvents() {
   });
 
   deleteAssignmentButton.addEventListener("click", () => {
+    traceEvent("assignment.deleteCurrent");
     const assignment = getCurrentAssignment();
     const assignmentId = assignment.id;
     openConfirm({
@@ -170,6 +186,7 @@ export function bindAssignmentEvents() {
 
   if (quickSubjectSelect) {
     quickSubjectSelect.addEventListener("change", () => {
+      traceEvent("assignment.subjectChange", { subject: quickSubjectSelect.value });
       const assignment = getCurrentAssignment();
       assignment.subject = quickSubjectSelect.value;
       const subjectLabel = assignment.subject ? `修改科目为「${assignment.subject}」` : "清除科目";

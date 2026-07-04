@@ -53,6 +53,7 @@ function bindTopSheetCloseGesture(panel) {
     closeDirection: -1,
     onClose: closeFloatingPanels,
     busyKey: "panel",
+    traceLabel: "newAssignment.close",
   });
 
   createVerticalDragGesture(appShell, {
@@ -66,6 +67,7 @@ function bindTopSheetCloseGesture(panel) {
     },
     onClose: closeFloatingPanels,
     busyKey: "panel",
+    traceLabel: "newAssignment.close.shell",
   });
 }
 
@@ -91,6 +93,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     ...closeOpts,
     shouldStart: event => quickPanel.classList.contains("is-open")
       && !event.target.closest("#quickPanelHistoryView"),
+    traceLabel: "quickPanel.close",
   });
 
   createVerticalDragGesture(appShell, {
@@ -109,6 +112,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     },
     onClose: closeFloatingPanels,
     busyKey: "panel",
+    traceLabel: "quickPanel.close.shell",
   });
 }
 
@@ -127,6 +131,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   onOpen: finishTopSheetOpen,
   onCancel: cancelTopSheetOpen,
   busyKey: "panel",
+  traceLabel: "quickPanel.pullOpen",
 });
 
 bindQuickPanelCloseGesture(quickPanelOpenGesture.abortRelease);

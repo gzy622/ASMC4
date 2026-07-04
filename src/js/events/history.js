@@ -7,6 +7,7 @@ import { hapticSelection } from "../utils/haptics.js";
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { closeConfirm } from "../ui/confirm.js";
 import { switchToHistoryView, switchToMainView } from "../ui/history.js";
+import { traceEvent } from "../utils/trace.js";
 
 function isEditableTarget(element) {
   if (!element) return false;
@@ -21,20 +22,20 @@ function closeTransientEditing() {
 }
 
 export function performUndo(assignmentId = getCurrentAssignment().id) {
+  traceEvent("history.undo", { assignmentId: String(assignmentId) });
   if (!undoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
   scheduleRender();
-  hideToast();
   announce("已撤回", { action: "redo", assignmentId, showToast: true });
 }
 
 export function performRedo(assignmentId = getCurrentAssignment().id) {
+  traceEvent("history.redo", { assignmentId: String(assignmentId) });
   if (!redoAppState(assignmentId)) return;
   hapticSelection();
   closeTransientEditing();
   scheduleRender();
-  hideToast();
   announce("已重做", { action: "undo", assignmentId, showToast: true });
 }
 
@@ -43,12 +44,14 @@ export function bindHistoryEvents() {
   redoButton?.addEventListener("click", performRedo);
 
   historyPanelButton?.addEventListener("click", () => {
+    traceEvent("history.panel.open");
     hapticSelection();
     refreshQuickPanelContent(true);
     switchToHistoryView();
   });
 
   historyBackButton?.addEventListener("click", () => {
+    traceEvent("history.panel.back");
     hapticSelection();
     refreshQuickPanelContent(false);
     switchToMainView();
@@ -61,6 +64,7 @@ export function bindHistoryEvents() {
     const index = Number(entry.dataset.index);
     if (!Number.isInteger(index)) return;
     const assignmentId = getCurrentAssignment().id;
+    traceEvent("history.jump", { index, assignmentId: String(assignmentId) });
 
     if (!jumpToHistoryEntry(index, assignmentId)) return;
     hapticSelection();

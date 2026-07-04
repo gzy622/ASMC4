@@ -8,6 +8,7 @@ import {
 import { animateRelease } from "./release-animation.js";
 import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
+import { traceGesture } from "../utils/trace.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -21,6 +22,8 @@ export function createVerticalDragGesture(el, {
   getReleaseSecondary,
   getCloseTargetPx,
   busyKey = "gesture",
+  formatTransform = (delta) => `translateY(${delta}px)`,
+  traceLabel,
 }) {
   let startY = null;
   let startX = null;
@@ -152,7 +155,7 @@ export function createVerticalDragGesture(el, {
     setUiTransitionBusy(false, busyKey);
     targetEl.style.transition = "none";
     targetEl.style.willChange = "transform";
-    targetEl.style.transform = `translateY(${dragBaseDelta}px)`;
+    targetEl.style.transform = formatTransform(dragBaseDelta);
   }
 
   function handlePointerDown(event) {
@@ -174,6 +177,7 @@ export function createVerticalDragGesture(el, {
     currentDelta = dragBaseDelta;
     lastMoveAt = performance.now();
     lastVelocity = 0;
+    if (traceLabel) traceGesture(traceLabel, "pointerdown");
   }
 
   function handlePointerMove(event) {
@@ -199,6 +203,7 @@ export function createVerticalDragGesture(el, {
         return;
       }
       dragging = true;
+      if (traceLabel) traceGesture(traceLabel, "dragStart");
       if (onDragStart) onDragStart(event);
       capturePointer(event);
       targetEl.style.transition = "none";
@@ -215,7 +220,7 @@ export function createVerticalDragGesture(el, {
     }
 
     trackVelocity(clamped);
-    scheduleTransform(`translateY(${clamped}px)`);
+    scheduleTransform(formatTransform(clamped));
     if (onProgress) {
       const range = targetEl.offsetHeight;
       onProgress(range > 0 ? 1 - Math.abs(clamped) / range : 0);
@@ -250,10 +255,14 @@ export function createVerticalDragGesture(el, {
 
     if (!wasDragging) return;
 
+    if (traceLabel) {
+      traceGesture(traceLabel, "release", { delta, velocity, willClose: shouldClose });
+    }
+
     const generation = releaseGeneration;
     releaseAnimating = true;
     setUiTransitionBusy(true, busyKey);
-    targetEl.style.transform = `translateY(${delta}px)`;
+    targetEl.style.transform = formatTransform(delta);
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
@@ -263,7 +272,10 @@ export function createVerticalDragGesture(el, {
       if (generation !== releaseGeneration) return;
       setUiTransitionBusy(false, busyKey);
       if (shouldClose) {
+        if (traceLabel) traceGesture(traceLabel, "close");
         onClose();
+      } else if (traceLabel) {
+        traceGesture(traceLabel, "cancel");
       }
     } finally {
       if (generation !== releaseGeneration) {
@@ -283,6 +295,7 @@ export function createVerticalDragGesture(el, {
 
   function handlePointerCancel(event) {
     if (event.pointerId !== activePointerId) return;
+    if (traceLabel) traceGesture(traceLabel, "pointercancel");
     resetDragState({ restoreTarget: true });
   }
 
@@ -315,6 +328,7 @@ export function createTopSheetOpenGesture(bindEl, {
   getReleaseSecondary,
   keepSecondaryOnOpen = false,
   busyKey = "panel",
+  traceLabel,
 }) {
   let releaseGeneration = 0;
   let activeRelease = null;
@@ -456,6 +470,7 @@ export function createTopSheetOpenGesture(bindEl, {
     currentDelta = dragBaseDelta;
     lastMoveAt = performance.now();
     lastVelocity = 0;
+    if (traceLabel) traceGesture(traceLabel, "pointerdown");
   }
 
   function handlePointerMove(event) {
@@ -491,6 +506,7 @@ export function createTopSheetOpenGesture(bindEl, {
       }
 
       dragging = true;
+      if (traceLabel) traceGesture(traceLabel, "dragStart");
       capturePointer(event);
       if (onPrepare) onPrepare();
       sheetEl.style.transition = "none";
@@ -540,6 +556,10 @@ export function createTopSheetOpenGesture(bindEl, {
 
     if (!wasDragging) return;
 
+    if (traceLabel) {
+      traceGesture(traceLabel, "release", { delta, velocity, willOpen: shouldOpen });
+    }
+
     const generation = ++releaseGeneration;
     releaseAnimating = true;
     setUiTransitionBusy(true, busyKey);
@@ -556,8 +576,9 @@ export function createTopSheetOpenGesture(bindEl, {
       activeRelease = animateRelease(sheetEl, "y", delta, targetDelta, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
-      if (!shouldOpen && onCancel) {
-        onCancel();
+      if (!shouldOpen) {
+        if (traceLabel) traceGesture(traceLabel, "cancel");
+        if (onCancel) onCancel();
       }
     } finally {
       if (generation !== releaseGeneration) return;
@@ -584,6 +605,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
   function handlePointerCancel(event) {
     if (event.pointerId !== activePointerId) return;
+    if (traceLabel) traceGesture(traceLabel, "pointercancel");
     if (dragging) {
       handlePointerUp(event);
       return;

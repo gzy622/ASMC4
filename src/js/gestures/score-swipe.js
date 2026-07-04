@@ -7,12 +7,14 @@ createVerticalDragGesture(scoreSheet, {
   closeDirection: +1,
   onClose: closeScoreSheet,
   busyKey: "sheet",
+  traceLabel: "scoreSheet.close",
 });
 
 createVerticalDragGesture(appShell, {
   closeDirection: +1,
   targetEl: scoreSheet,
   busyKey: "sheet",
+  traceLabel: "scoreSheet.close.shell",
   shouldStart: (event) => {
     if (isUiTransitionBusy("sheet")) return false;
     if (confirmPanel.classList.contains("is-open")) return false;

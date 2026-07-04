@@ -11,6 +11,18 @@ import { fillSubjectSelect, fillDrawerSubjectFilter } from "./utils/subject-sele
 import { BUILD_TIMESTAMP } from "./build-version.js";
 import { quickSubjectSelect, newAssignmentSubjectInput, drawerSubjectFilter, settingsVersion, bootMask, studentGrid } from "./dom-refs.js";
 import { setThemeColor } from "./utils/dom.js";
+import {
+  setTraceRuntimeSnapshotProvider
+} from "./utils/trace.js";
+import {
+  currentScoringStudent,
+  isUiTransitionBusy
+} from "./runtime.js";
+
+setTraceRuntimeSnapshotProvider(() => ({
+  uiTransitionBusy: isUiTransitionBusy(),
+  scoringStudentId: currentScoringStudent ? String(currentScoringStudent.id) : null
+}));
 
 setThemeColor("#f4f4f4");
 

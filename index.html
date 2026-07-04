@@ -113,7 +113,6 @@
         <button class="drawer-action-btn" id="exportBackupBtn" type="button">导出备份</button>
         <button class="drawer-action-btn" id="settingsBtn" type="button">设置</button>
       </div>
-      <input type="file" id="importBackupInput" accept=".json" style="display:none" />
     </aside>
 
     <section class="top-sheet" id="newAssignmentPanel" aria-label="新建作业" aria-hidden="true">
@@ -324,6 +323,24 @@
           <button class="drawer-action-btn full" id="settingsRosterBtn" type="button">编辑名单</button>
         </div>
 
+        <div class="settings-section">
+          <div class="settings-section-title">诊断</div>
+          <div class="setting-row">
+            <div class="setting-text">
+              <p class="setting-title">启用操作日志</p>
+              <p class="setting-desc">记录交互与渲染步骤，可导出 JSON 供事后分析。</p>
+            </div>
+            <button class="switch" id="traceEnabledSwitch" type="button" aria-label="切换操作日志">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <p class="setting-desc" id="traceStatusText">未启用</p>
+          <div class="settings-data-row">
+            <button class="drawer-action-btn" id="traceExportBtn" type="button">导出日志</button>
+            <button class="drawer-action-btn" id="traceClearBtn" type="button">清空日志</button>
+          </div>
+        </div>
+
         <div class="settings-section settings-version-section">
           <p class="settings-version" id="settingsVersion"></p>
         </div>
@@ -385,6 +402,7 @@
       <span class="app-toast-message" id="appToastMessage"></span>
       <button class="app-toast-action" id="appToastAction" type="button" hidden></button>
     </div>
+    <input type="file" id="importBackupInput" accept=".json" hidden />
     <div class="sr-only" id="liveStatus" aria-live="polite"></div>
   </main>
 

@@ -26,9 +26,9 @@ dev.cmd
 
 等价：`npm run dev`（交互菜单）、`npm run apk`（仅构建 APK）。
 
-**会话内热键**（Web / Android / 选项 6）：**B** 手动重建 dist · **R** 重建并安装 Android · **Q** 退出。后台 `--watch` 保存即编译；Web 刷新浏览器，Android 按 **R**。
+**会话内热键**（Web / Android / 选项 6）：**1** 手动重建 dist · **2** 重建并安装 Android · **0** 退出。后台 `--watch` 保存即编译；Web 刷新浏览器，Android 按 **2**。
 
-**日常无线推荐：** 选 **6 → 2 (LAN)** 做手机浏览器预览；同一窗口按 **R** 推 Android。比 **adb reverse**（6→3）更稳。
+**日常无线推荐：** 选 **6 → 2 (LAN)** 做手机浏览器预览；同一窗口按 **2** 推 Android。比 **adb reverse**（6→3）更稳。
 
 **无线 adb（可选）：** 手机开启「无线调试」后，`dev.cmd` 会通过 `adb mdns` 自动发现当前 IP:端口并连接（端口每次会变，无需手改）。可选 `scripts/dev-device.local.json` 的 `adbWireless` 用于固定主机或 mdns 不可用时的回退。已 `adb devices` 可见设备时可不配。
 
@@ -45,7 +45,7 @@ dev.cmd
 
 `apkVariant` 为 `release` 时需项目根目录有 `asmc4.keystore`，否则自动退回 `debug`。
 
-**Android 选项 4 / 6：** `gradlew installDebug` + 启动 Activity（不用 `cap run`）；签名冲突自动卸载重装。选项 6 下 Android 首次安装失败不退出，按 **R** 重试。
+**Android 选项 4 / 6：** `gradlew installDebug` + 启动 Activity（不用 `cap run`）；签名冲突自动卸载重装。选项 6 下 Android 首次安装失败不退出，按 **2** 重试。
 
 **构建：** `npm run build`（仅打包到 `dist/`，不预览）
 

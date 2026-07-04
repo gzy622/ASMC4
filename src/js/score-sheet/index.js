@@ -8,10 +8,16 @@ import { scheduleRender } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
+import { traceEvent } from "../utils/trace.js";
 
 let releaseScoreSheetPointerGuard = null;
 
 export function openScoreSheet(student, guardPointer = false) {
+  traceEvent("scoreSheet.open", {
+    studentId: String(student.id),
+    serial: student.serial,
+    status: student.status
+  });
   setCurrentScoringStudent(student);
 
   const assignment = getCurrentAssignment();
@@ -42,6 +48,7 @@ export function openScoreSheet(student, guardPointer = false) {
 }
 
 export function closeScoreSheet() {
+  traceEvent("scoreSheet.close");
   clearScoreSheetPointerGuard();
   setSuppressNextCardClick(false);
   setCurrentScoringStudent(null);
@@ -61,6 +68,11 @@ export function updateScoreDisplay() {
 
 export function confirmScore() {
   if (!currentScoringStudent) return;
+
+  traceEvent("scoreSheet.confirm", {
+    studentId: String(currentScoringStudent.id),
+    serial: currentScoringStudent.serial
+  });
 
   const score = parseFloat(scoreInputValue);
   const hasScore = !(isNaN(score) || score <= 0);

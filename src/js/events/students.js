@@ -21,9 +21,13 @@ import { isStudentForceNone } from "../utils/display.js";
 import { scheduleRender } from "../render/index.js";
 import { announce } from "../utils/dom.js";
 import { hapticSelection } from "../utils/haptics.js";
+import { traceEvent } from "../utils/trace.js";
 
 export function bindStudentEvents() {
-  scoringToggle.addEventListener("click", toggleScoringMode);
+  scoringToggle.addEventListener("click", () => {
+    traceEvent("student.scoringToggle");
+    toggleScoringMode();
+  });
 
   studentGrid.addEventListener("click", event => {
     const card = event.target.closest(".student-card");
@@ -46,6 +50,12 @@ export function bindStudentEvents() {
     if (!student || student.status === STATUS.NONE) return;
     if (isStudentForceNone(student, assignment)) return;
 
+    traceEvent("student.card.click", {
+      studentId: String(student.id),
+      serial: student.serial,
+      scoringMode: getState().scoringMode
+    });
+
     if (getState().scoringMode) {
       openScoreSheet(student);
     } else {
@@ -54,6 +64,7 @@ export function bindStudentEvents() {
   });
 
   function toggleShowRealNames() {
+    traceEvent("student.showRealNames.toggle");
     hapticSelection();
     const state = getState();
     state.showRealNames = !state.showRealNames;

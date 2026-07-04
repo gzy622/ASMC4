@@ -4,6 +4,10 @@ import { assignmentList, drawerSearchInput, drawerSubjectFilter } from "../dom-r
 
 let renderedListKey = "";
 
+export function invalidateAssignmentListCache() {
+  renderedListKey = "";
+}
+
 function getFilteredAssignments(assignments) {
   const keyword = (drawerSearchInput?.value || "").trim().toLowerCase();
   const subject = drawerSubjectFilter?.value || "";

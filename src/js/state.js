@@ -3,6 +3,7 @@ import { normalizeAssignment, normalizeRosterFromBackup } from "./utils/normaliz
 import { clone } from "./utils/clone.js";
 import { defaultStudents, defaultAssignment } from "./data/defaults.js";
 import { getAppStateLimitError } from "./utils/data-limits.js";
+import { traceStep } from "./utils/trace.js";
 
 let appState = loadAppState();
 let lastSerialized = JSON.stringify(appState);
@@ -156,13 +157,18 @@ export function pruneAssignmentHistoryIfOrphan(assignmentId) {
 }
 
 export function saveAppState({ history = true, label = "", assignmentId = null } = {}) {
+  const targetId = getAssignmentIdKey(assignmentId != null ? assignmentId : appState.currentAssignmentId);
   const currentSerialized = JSON.stringify(appState);
-  if (currentSerialized === lastSerialized) return true;
+  if (currentSerialized === lastSerialized) {
+    traceStep("saveAppState", { skipped: true, history, assignmentId: targetId });
+    return true;
+  }
 
   const limitError = getAppStateLimitError(appState, currentSerialized);
   if (limitError) {
     console.warn("保存失败：数据超出限制");
     alert(limitError);
+    traceStep("saveAppState", { ok: false, reason: "limit", history, assignmentId: targetId });
     return false;
   }
 
@@ -170,13 +176,14 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
     if (persistSerialized(currentSerialized)) {
       lastSerialized = currentSerialized;
       pruneOrphanAssignmentHistories();
+      traceStep("saveAppState", { ok: true, history: false, assignmentId: targetId });
       return true;
     }
+    traceStep("saveAppState", { ok: false, history: false, assignmentId: targetId });
     return false;
   }
 
   // 旧实现是 historyEntries.length = historyIndex + 1;，现在改为按作业各自截断未来记录。
-  const targetId = getAssignmentIdKey(assignmentId != null ? assignmentId : appState.currentAssignmentId);
   const targetAssignment = getAssignmentById(targetId);
   const targetOrderIndex = getAssignmentIndexById(targetId);
   const assignmentHistory = assignmentHistories.get(targetId) || ensureAssignmentHistory(targetId, {
@@ -201,11 +208,13 @@ export function saveAppState({ history = true, label = "", assignmentId = null }
   if (persistSerialized(currentSerialized)) {
     lastSerialized = currentSerialized;
     pruneOrphanAssignmentHistories();
+    traceStep("saveAppState", { ok: true, history: true, assignmentId: targetId });
     return true;
   }
 
   assignmentHistory.entries.length = prevEntriesLength;
   assignmentHistory.index = prevIndex;
+  traceStep("saveAppState", { ok: false, history: true, assignmentId: targetId });
   return false;
 }
 

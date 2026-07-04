@@ -1121,48 +1121,56 @@
 
     .app-toast {
       position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 20px;
+      left: 50%;
+      bottom: 16px;
       z-index: 120;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 14px;
+      gap: 8px;
+      width: max-content;
+      max-width: calc(100% - 32px);
+      padding: 7px 10px;
+      border-radius: 10px;
       background: var(--overlay-toast);
       color: var(--card);
-      box-shadow: var(--shadow-toast);
-      transform: translateY(calc(100% + 24px));
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+      transform: translateX(-50%) translateY(10px);
       opacity: 0;
       pointer-events: none;
-      transition: transform 0.22s ease, opacity 0.22s ease;
+      transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
     .app-toast.is-visible {
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
       opacity: 1;
       pointer-events: auto;
       touch-action: none;
     }
 
+    .app-toast.is-fading-out {
+      transform: translateX(-50%) translateY(0);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+
     .app-toast-message {
       flex: 1;
       min-width: 0;
-      font-size: 14px;
-      line-height: 1.4;
+      font-size: 13px;
+      line-height: 1.35;
     }
 
     .app-toast-action {
       flex-shrink: 0;
       border: 0;
-      border-radius: 10px;
-      padding: 6px 12px;
+      border-radius: 8px;
+      padding: 4px 10px;
       background: var(--overlay-toast-action);
       color: var(--card);
       font: inherit;
-      font-size: 14px;
-      font-weight: 650;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
     }
 

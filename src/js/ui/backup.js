@@ -2,10 +2,12 @@ import { saveAppState, getState, resetAssignmentHistories } from "../state.js";
 import { scheduleRender } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
+import { closeSettings } from "./settings.js";
 import { normalizeAssignment, normalizeRosterFromBackup } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
-import { importBackupInput } from "../dom-refs.js";
+import { importBackupInput, settingsPanel } from "../dom-refs.js";
 import { isNativePlatform } from "../utils/native.js";
+import { suspendBackGuard, resumeBackGuard } from "../utils/back-guard.js";
 import { MAX_BACKUP_FILE_BYTES } from "../constants.js";
 import { getAppStateLimitError } from "../utils/data-limits.js";
 
@@ -59,6 +61,12 @@ export async function exportBackup() {
     if (error.message && (error.message.includes("cancel") || error.message.includes("abort"))) return;
     alert("导出失败：" + error.message);
   }
+}
+
+export function openImportBackupPicker() {
+  suspendBackGuard();
+  importBackupInput.click();
+  window.addEventListener("focus", () => resumeBackGuard(), { once: true });
 }
 
 export function importBackup(file) {
@@ -130,7 +138,11 @@ export function importBackup(file) {
             resetAssignmentHistories();
             saveAppState({ history: false });
             scheduleRender();
-            closeDrawer();
+            if (settingsPanel.classList.contains("is-open")) {
+              void closeSettings();
+            } else {
+              closeDrawer();
+            }
             closeConfirm();
             announce("备份已导入");
           } catch (err) {

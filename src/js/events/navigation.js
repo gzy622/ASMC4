@@ -29,6 +29,7 @@ import { closeSettings } from "../ui/settings.js";
 import { setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
 import { getState } from "../state.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
+import { traceEvent } from "../utils/trace.js";
 
 function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
@@ -51,6 +52,7 @@ function bindEmptyAreaClose() {
   appShell.addEventListener("click", event => {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
+    if (event.target.closest("#importBackupInput")) return;
     if (isUiTransitionBusy()) {
       if (anyFloatingLayerOpen()) consumeFloatingLayerEmptyClick(event);
       return;
@@ -97,7 +99,10 @@ function bindEmptyAreaClose() {
 export function bindNavigationEvents() {
   bindEmptyAreaClose();
 
-  menuButton.addEventListener("click", openDrawer);
+  menuButton.addEventListener("click", () => {
+    traceEvent("navigation.drawer.open");
+    openDrawer();
+  });
   drawer.addEventListener("selectstart", event => {
     const target = event.target instanceof Element ? event.target : null;
     if (target?.closest(".assignment-edit-input, .assignment-edit-subject, .drawer-search")) return;
@@ -107,23 +112,40 @@ export function bindNavigationEvents() {
   drawerSearchInput?.addEventListener("input", () => renderAssignmentList(getState()));
   drawerSubjectFilter?.addEventListener("change", () => renderAssignmentList(getState()));
 
-  addButton.addEventListener("click", openNewAssignmentPanel);
-  newAssignmentCloseButton.addEventListener("click", closeFloatingPanels);
-  newAssignmentCancelButton.addEventListener("click", closeFloatingPanels);
+  addButton.addEventListener("click", () => {
+    traceEvent("navigation.newAssignment.open");
+    openNewAssignmentPanel();
+  });
+  newAssignmentCloseButton.addEventListener("click", () => {
+    traceEvent("navigation.panels.close");
+    closeFloatingPanels();
+  });
+  newAssignmentCancelButton.addEventListener("click", () => {
+    traceEvent("navigation.panels.close");
+    closeFloatingPanels();
+  });
 
-  titleButton.addEventListener("click", () => openQuickPanel());
+  titleButton.addEventListener("click", () => {
+    traceEvent("navigation.quickPanel.open");
+    openQuickPanel();
+  });
   titleButton.addEventListener("keydown", event => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
+      traceEvent("navigation.quickPanel.open");
       openQuickPanel({ focusName: true });
     }
   });
-  quickPanelCloseButton.addEventListener("click", closeFloatingPanels);
+  quickPanelCloseButton.addEventListener("click", () => {
+    traceEvent("navigation.panels.close");
+    closeFloatingPanels();
+  });
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;
     if (isUiTransitionBusy()) return;
     event.preventDefault();
+    traceEvent("navigation.escape");
 
     if (confirmPanel.classList.contains("is-open")) {
       closeConfirm();

@@ -3,6 +3,7 @@ import { MAX_ASSIGNMENTS, STATUS, SUBJECT_OPTIONS } from "../constants.js";
 import { makeId, makeDefaultAssignmentTitle } from "../utils/id.js";
 import { newAssignmentTitleInput, newAssignmentSubjectInput } from "../dom-refs.js";
 import { scheduleRender } from "../render/index.js";
+import { invalidateAssignmentListCache } from "../render/assignmentList.js";
 import { announce } from "../utils/dom.js";
 import { clone } from "../utils/clone.js";
 import { createFreshStudentsFrom } from "../utils/normalize.js";
@@ -191,6 +192,11 @@ export function renameAssignment(assignmentId) {
 
   let settled = false;
 
+  function exitEditMode() {
+    invalidateAssignmentListCache();
+    scheduleRender();
+  }
+
   function commit() {
     if (settled) return;
     settled = true;
@@ -199,7 +205,7 @@ export function renameAssignment(assignmentId) {
     const newSubject = clampSubject(select.value);
 
     if (!trimmed) {
-      scheduleRender();
+      exitEditMode();
       return;
     }
 
@@ -233,14 +239,14 @@ export function renameAssignment(assignmentId) {
         announce(newSubject ? "科目已更新" : "科目已清除", { action: "undo", assignmentId });
       }
     } else {
-      scheduleRender();
+      exitEditMode();
     }
   }
 
   function cancel() {
     if (settled) return;
     settled = true;
-    scheduleRender();
+    exitEditMode();
   }
 
   input.addEventListener("blur", function(event) {

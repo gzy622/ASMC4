@@ -8,12 +8,26 @@ import { renderStudents } from "../render/students.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { announce } from "../utils/dom.js";
 import { hapticLight, hapticSelection } from "../utils/haptics.js";
+import { traceStep } from "../utils/trace.js";
 
 export function toggleStudent(student, cardEl) {
-  if (student.status === STATUS.NONE) return;
-  if (isStudentForceNone(student, getCurrentAssignment())) return;
+  if (student.status === STATUS.NONE) {
+    traceStep("toggleStudent", { skipped: true, reason: "none", studentId: String(student.id) });
+    return;
+  }
+  if (isStudentForceNone(student, getCurrentAssignment())) {
+    traceStep("toggleStudent", { skipped: true, reason: "forceNone", studentId: String(student.id) });
+    return;
+  }
 
+  const prevStatus = student.status;
   student.status = student.status === STATUS.SUBMITTED ? STATUS.NORMAL : STATUS.SUBMITTED;
+  traceStep("toggleStudent", {
+    studentId: String(student.id),
+    serial: student.serial,
+    fromStatus: prevStatus,
+    toStatus: student.status
+  });
 
   if (student.status !== STATUS.SUBMITTED && (student.badgeType === "submit" || student.badgeType === "score")) {
     student.badge = "";
@@ -38,6 +52,7 @@ export function toggleStudent(student, cardEl) {
 }
 
 export function toggleScoringMode() {
+  traceStep("toggleScoringMode", { to: !getState().scoringMode });
   hapticSelection();
   const state = getState();
   state.scoringMode = !state.scoringMode;

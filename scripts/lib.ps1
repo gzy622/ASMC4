@@ -716,6 +716,6 @@ function Read-DevRetryOnce {
     param([string]$Label = '再来一次')
 
     Write-Host ''
-    $ans = Read-Host "  R  $Label，回车退出"
-    return ($ans -match '^[rR]$')
+    $ans = Read-Host "  1  $Label，回车退出"
+    return ($ans.Trim() -eq '1')
 }

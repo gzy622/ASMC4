@@ -2,6 +2,7 @@ import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
+import { traceGesture } from "../utils/trace.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -15,6 +16,7 @@ export function createHorizontalDragGesture(bindEl, {
   getReleaseSecondary,
   onRelease,
   busyKey = "drawer",
+  traceLabel,
 }) {
   let startX = null;
   let startY = null;
@@ -148,6 +150,7 @@ export function createHorizontalDragGesture(bindEl, {
     currentPx = dragBasePx;
     lastMoveAt = performance.now();
     lastVelocity = 0;
+    if (traceLabel) traceGesture(traceLabel, "pointerdown");
   });
 
   bindEl.addEventListener("pointermove", (event) => {
@@ -174,6 +177,7 @@ export function createHorizontalDragGesture(bindEl, {
           return;
         }
         dragging = true;
+        if (traceLabel) traceGesture(traceLabel, "dragStart");
         capturePointer(event);
         targetEl.style.transition = "none";
         targetEl.style.willChange = "transform";
@@ -219,6 +223,13 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
 
     if (wasDragging) {
+      if (traceLabel) {
+        traceGesture(traceLabel, "release", {
+          delta: releasedPx,
+          velocity,
+          targetPx
+        });
+      }
       const generation = ++releaseGeneration;
       releaseAnimating = true;
       setUiTransitionBusy(true, busyKey);
@@ -232,6 +243,7 @@ export function createHorizontalDragGesture(bindEl, {
         if (generation !== releaseGeneration) return;
         setUiTransitionBusy(false, busyKey);
         if (onRelease) onRelease(dx, wasDragging, velocity);
+        if (traceLabel) traceGesture(traceLabel, "close");
       } finally {
         if (generation !== releaseGeneration) {
           activeRelease = null;
@@ -251,6 +263,7 @@ export function createHorizontalDragGesture(bindEl, {
 
   bindEl.addEventListener("pointercancel", (event) => {
     if (event.pointerId !== activePointerId) return;
+    if (traceLabel) traceGesture(traceLabel, "pointercancel");
     resetDragState({ restoreTarget: true });
   });
 

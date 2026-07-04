@@ -56,6 +56,11 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `noteInputValue`, `longPressTimers`, `longPressTriggered`, `suppressNextCardClick`
 - `uiTransitionBusy`, `pointerDirectionLock`
 
+### 诊断日志（`localStorage["asmc4_trace_config_v1"]`，`utils/trace.js`）
+
+- 设置页「启用操作日志」开关；内存环形缓冲（最多 800 条），可导出 JSON。
+- `traceEvent` / `traceStep` / `traceGesture`；手势工厂可选 `traceLabel`（启用时才写入）。
+
 ## 打分 sheet
 
 DOM（`index.html` + `dom-refs.js`）：
@@ -74,7 +79,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ## 手势
 
-模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。
+模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
 
 ### `#quickPanel`（顶部 sheet）
 
@@ -106,11 +111,11 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### `#appToast`
 
-- 下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`），仅 `is-visible` 时响应；阈值 48px。
-- 关闭位移须与 CSS `translateY(calc(100% + 24px))` 对齐：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
-- `showToast` 先 `abortToastDismiss()`（`registerToastDismissAbort` ← `abortRelease`），再 `clearToastInlineStyles()`，避免连续操作残留内联样式或过期 `onClose`。
-- `hideToast()` 来自手势关闭时不再 abort 当前 release，避免 WAAPI 关闭动画重入；非手势关闭才先 abort。
-- `hideToast()` 改状态前 `transition: none`，避免 CSS 与 WAAPI 分段动画；关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
+- 底栏居中 pill（`left: 50%` + `translateX(-50%)`）；下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`，`formatTransform` 含 `translateX(-50%)`），仅 `is-visible` 时响应；阈值 48px。
+- 关闭位移：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
+- `showToast` 先 `abortToastDismiss()`，再 `clearToastInlineStyles()`；若 toast 仍可见或正在 `is-fading-out`，只更新文案与撤回/重做按钮并续期定时器。
+- `hideToast()` 来自手势关闭时不再 abort 当前 release；非手势关闭先 abort。定时关闭走 `is-fading-out` 淡出（`transitionend` + 超时兜底），手势关闭仍 `transition: none` 直隐。
+- 关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
 - 可见态 `.app-toast.is-visible` 设 `touch-action: none`，toast 指针事件须阻止冒泡，避免穿透到底层 sheet 手势。
 
 ### 改手势后手动测
@@ -142,6 +147,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### dev.ps1 / 无线 adb
 
+- 会话内热键：**1** 重建 dist、**2** 安装 Android、**0** 退出（原 B/R/Q）。
 - **Invoke-Adb** 用 `Invoke-Adb -Command @('devices')`；禁止 `Invoke-Adb devices`。
 - 多设备：优先 `adbWireless` IP；`Get-AdbReadyDevices` 过滤假序列号。
 - 无线调试：`Connect-AdbWirelessAuto` 先 `adb mdns services`（`_adb-tls-connect._tcp`）再连配置里的 `adbWireless`；成功会回写 `dev-device.local.json`。
@@ -165,7 +171,7 @@ DOM（`index.html` + `dom-refs.js`）：
 ### Toast / announce
 
 - 批量改：先 `rg 'announce\(' src/`（长输出用 `rtk rg`）。
-- 落点：`utils/dom.js`；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`。
+- 落点：`utils/dom.js`；下滑关闭见上文 `#appToast`；undo/redo 仅 `events/history.js`（**不**先 `hideToast()`，与上一条 toast 并存续期）。
 - 文案 4 到 8 字；撤回/重做 toast 固定「已撤回」「已重做」。
 - 显示类设置、`selectAssignment` 用 `saveAppState({ history: false })`，toast 不带撤回。
 

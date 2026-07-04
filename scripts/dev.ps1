@@ -12,7 +12,7 @@
     dev.ps1 pair                     无线 adb 配对
     dev.ps1 -Surface web -Target lan
 
-  会话内热键: B=重新构建  R=构建并安装安卓  Q=退出
+  会话内热键: 1=重新构建  2=构建并安装安卓  0=退出
 #>
 
 param(
@@ -243,9 +243,9 @@ function Write-DevHotkeyLine {
         [ConsoleColor]$ForegroundColor = [ConsoleColor]::Cyan
     )
 
-    $parts = @('B  重新构建')
-    if ($AndroidEnabled) { $parts += 'R  安装到设备' }
-    $parts += 'Q  退出'
+    $parts = @('1  重新构建')
+    if ($AndroidEnabled) { $parts += '2  安装到设备' }
+    $parts += '0  退出'
     Write-Host ('  ' + ($parts -join '    ')) -ForegroundColor $ForegroundColor
 }
 
@@ -263,7 +263,7 @@ function Write-DevSessionBanner {
     Write-Host ''
 
     if ($Session.WebEnabled) {
-        Write-Host '  网页：保存后按 B 或刷新浏览器（后台 watch 已开启）。'
+        Write-Host '  网页：保存后按 1 或刷新浏览器（后台 watch 已开启）。'
         Write-Host ''
         switch ($Session.WebTarget) {
             'pc' {
@@ -291,9 +291,9 @@ function Write-DevSessionBanner {
     }
 
     if ($Session.AndroidEnabled) {
-        Write-Host '  安卓：按 R 重新构建、同步并安装到设备。'
+        Write-Host '  安卓：按 2 重新构建、同步并安装到设备。'
         if (-not $Session.AndroidDeviceId) {
-            Write-Host '  （尚无设备 — 连接 adb 后按 R）' -ForegroundColor DarkYellow
+            Write-Host '  （尚无设备 — 连接 adb 后按 2）' -ForegroundColor DarkYellow
         }
         Write-Host ''
     }
@@ -374,7 +374,7 @@ function Invoke-DevRebuild {
     if ($Session.WebEnabled) {
         Write-Host '  [Web]  dist/ 已重建 — 请刷新浏览器。' -ForegroundColor Green
     } elseif ($Session.AndroidEnabled) {
-        Write-Host '  [Build] dist/ 已重建 — 按 R 安装到设备。' -ForegroundColor Green
+        Write-Host '  [Build] dist/ 已重建 — 按 2 安装到设备。' -ForegroundColor Green
     }
 }
 
@@ -397,9 +397,9 @@ function Wait-DevSessionKeys {
         }
 
         $key = [Console]::ReadKey($true)
-        if ($key.KeyChar -match '^[qQ]$') { return }
+        if ($key.KeyChar -eq '0') { return }
 
-        if ($key.KeyChar -match '^[bB]$') {
+        if ($key.KeyChar -eq '1') {
             Write-Host ''
             Write-Host '  --- 重新构建 ---' -ForegroundColor Yellow
             try {
@@ -412,7 +412,7 @@ function Wait-DevSessionKeys {
             continue
         }
 
-        if ($key.KeyChar -match '^[rR]$' -and $Session.AndroidEnabled) {
+        if ($key.KeyChar -eq '2' -and $Session.AndroidEnabled) {
             Write-Host ''
             Write-Host '  --- 构建并安装安卓 ---' -ForegroundColor Yellow
             try {
@@ -462,7 +462,7 @@ function Start-DevSession {
         if ($WebEnabled) {
             $session.AndroidDeviceId = Ensure-AdbDevice -AllowMissing -Quiet
             if (-not $session.AndroidDeviceId) {
-                Write-Host '  [Android] 尚无设备 — 连接 adb/USB 后按 R。'
+                Write-Host '  [Android] 尚无设备 — 连接 adb/USB 后按 2。'
             }
         } else {
             $session.AndroidDeviceId = Ensure-AdbDevice
@@ -486,7 +486,7 @@ function Start-DevSession {
             } catch {
                 Write-Host "  [ERROR] $_" -ForegroundColor Red
                 if (-not $WebEnabled) { throw }
-                Write-Host '  [Android] 按 R 重试安装。' -ForegroundColor Yellow
+                Write-Host '  [Android] 按 2 重试安装。' -ForegroundColor Yellow
             }
         }
 

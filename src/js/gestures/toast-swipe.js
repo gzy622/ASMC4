@@ -9,9 +9,12 @@ function toastDismissDistance(el) {
   return el.offsetHeight + TOAST_DISMISS_EXTRA_PX;
 }
 
+const toastTransform = (delta) => `translateX(-50%) translateY(${delta}px)`;
+
 const { abortRelease } = createVerticalDragGesture(appToast, {
   closeDirection: 1,
   threshold: TOAST_DISMISS_THRESHOLD,
+  formatTransform: toastTransform,
   shouldStart: (event) => {
     event.stopPropagation();
     return appToast.classList.contains("is-visible") && !appToast.hidden;
@@ -31,6 +34,7 @@ const { abortRelease } = createVerticalDragGesture(appToast, {
   },
   onClose: hideToast,
   busyKey: "toast",
+  traceLabel: "toast.dismiss",
 });
 
 appToast.addEventListener("pointermove", event => event.stopPropagation());

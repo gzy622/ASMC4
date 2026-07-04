@@ -6,8 +6,11 @@ import {
   scoreStep10ModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
-  hapticsEnabledSwitch
+  hapticsEnabledSwitch,
+  traceEnabledSwitch,
+  traceStatusText
 } from "../dom-refs.js";
+import { isTraceEnabled, getTraceEntries } from "../utils/trace.js";
 
 function syncSwitch(el, on, labelOn, labelOff) {
   if (!el) return;
@@ -71,4 +74,18 @@ export function renderSettingsState(state) {
     "振动反馈已开启，点击关闭",
     "振动反馈已关闭，点击开启"
   );
+
+  const traceOn = isTraceEnabled();
+  syncSwitch(
+    traceEnabledSwitch,
+    traceOn,
+    "操作日志已开启，点击关闭",
+    "操作日志已关闭，点击开启"
+  );
+  if (traceStatusText) {
+    const count = getTraceEntries().length;
+    traceStatusText.textContent = traceOn
+      ? `已记录 ${count} 条`
+      : "未启用";
+  }
 }

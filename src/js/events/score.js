@@ -21,10 +21,17 @@ import {
   toggleScoreStep10Mode,
   updateScoreDisplay
 } from "../score-sheet/index.js";
+import { traceEvent } from "../utils/trace.js";
 
 export function bindScoreEvents() {
-  scoreCancel.addEventListener("click", closeScoreSheet);
-  scoreConfirm.addEventListener("click", confirmScore);
+  scoreCancel.addEventListener("click", () => {
+    traceEvent("score.cancel");
+    closeScoreSheet();
+  });
+  scoreConfirm.addEventListener("click", () => {
+    traceEvent("score.confirm");
+    confirmScore();
+  });
   scoreSheet.addEventListener("selectstart", event => {
     const target = event.target instanceof Element ? event.target : null;
     if (target === scoreNoteInput || target?.closest("#scoreNoteInput")) return;
@@ -50,6 +57,7 @@ export function bindScoreEvents() {
     hapticSelection();
 
     const { value, action } = button.dataset;
+    traceEvent("score.numpad", { value, action });
 
     if (value !== undefined) {
       if (scoreStep10Mode) {
@@ -79,6 +87,7 @@ export function bindScoreEvents() {
   });
 
   scoreBackspaceBtn.addEventListener("click", () => {
+    traceEvent("score.backspace");
     hapticSelection();
     setScoreInputValue(
       scoreInputValue.length > 1 ? scoreInputValue.slice(0, -1) : "0"

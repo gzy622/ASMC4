@@ -27,6 +27,7 @@ const FLOATING_LAYER_ELS = [
 ];
 
 let barrierActive = false;
+let backGuardSuspended = false;
 
 function anyFloatingLayerOpen() {
   return FLOATING_LAYER_ELS.some(el => el.classList.contains("is-open"));
@@ -49,6 +50,17 @@ function closeTopmostFloatingLayer() {
   if (drawer.classList.contains("is-open")) return closeDrawer();
 }
 
+export function suspendBackGuard() {
+  if (isNativePlatform()) return;
+  backGuardSuspended = true;
+}
+
+export function resumeBackGuard() {
+  if (isNativePlatform()) return;
+  backGuardSuspended = false;
+  if (anyFloatingLayerOpen()) ensureBarrier();
+}
+
 if (!isNativePlatform()) {
   const mo = new MutationObserver(() => {
     if (anyFloatingLayerOpen()) ensureBarrier();
@@ -58,6 +70,10 @@ if (!isNativePlatform()) {
   }
 
   window.addEventListener("popstate", () => {
+    if (backGuardSuspended) {
+      if (anyFloatingLayerOpen()) ensureBarrier();
+      return;
+    }
     if (!barrierActive) return;
     barrierActive = false;
     if (isUiTransitionBusy()) { ensureBarrier(); return; }

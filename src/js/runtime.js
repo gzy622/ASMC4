@@ -1,3 +1,5 @@
+import { traceStep } from "./utils/trace.js";
+
 let pendingConfirmAction = null;
 let currentScoringStudent = null;
 let scoreInputValue = "0";
@@ -44,8 +46,16 @@ export function setLongPressTriggered(value) { longPressTriggered = value; }
 export function setSuppressNextCardClick(value) { suppressNextCardClick = value; }
 
 export function setUiTransitionBusy(busy, key = "global") {
-  if (busy) uiTransitionBusyKeys.add(key);
-  else uiTransitionBusyKeys.delete(key);
+  const hadKey = uiTransitionBusyKeys.has(key);
+  if (busy) {
+    if (!hadKey) {
+      uiTransitionBusyKeys.add(key);
+      traceStep("uiTransitionBusy", { busy: true, busyKey: key });
+    }
+  } else if (hadKey) {
+    uiTransitionBusyKeys.delete(key);
+    traceStep("uiTransitionBusy", { busy: false, busyKey: key });
+  }
 }
 
 export function isUiTransitionBusy(key) {

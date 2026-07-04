@@ -22,6 +22,7 @@ createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
+  traceLabel: "drawer.edgeSwipe",
   shouldStart: (event) => {
     if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) return false;
     if (isUiTransitionBusy("drawer")) return false;
@@ -51,6 +52,7 @@ createHorizontalDragGesture(appShell, {
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
+  traceLabel: "drawer.close",
   shouldStart: (event) => {
     if (isUiTransitionBusy("drawer")) return false;
     if (event.target.closest(".drawer-filter")) return false;
@@ -67,6 +69,7 @@ createHorizontalDragGesture(drawer, {
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
+  traceLabel: "drawer.shellClose",
   shouldStart: (event) => {
     if (isUiTransitionBusy("drawer")) return false;
     if (!drawer.classList.contains("is-open")) return false;

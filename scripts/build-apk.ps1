@@ -12,7 +12,7 @@
     apkOutputDir  - 空则桌面
     apkVariant    - debug | release（默认 debug）
 
-  完成后按 R 可立即再导出一次。
+  完成后按 1 可立即再导出一次。
 #>
 
 param(
