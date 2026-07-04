@@ -11,6 +11,10 @@ const EXPAND_DURATION = 280;
 const CONTENT_FADE = 180;
 const TRANSITION_TIMEOUT_PAD = 80;
 
+function waitForAnimationFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
 function waitForTransition(el, { property = null, timeoutMs = 400 } = {}) {
   return new Promise(resolve => {
     let settled = false;
@@ -43,6 +47,8 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
 
+  void drawer.offsetWidth;
+  await waitForAnimationFrame();
   expandDrawer();
   await waitForTransition(drawer, {
     property: "transform",
