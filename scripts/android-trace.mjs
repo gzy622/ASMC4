@@ -431,6 +431,17 @@ function summarizeEvents(events, meta) {
   return lines.join("\n");
 }
 
+async function clearDiagnosticLite(client) {
+  try {
+    await client.send("Runtime.evaluate", {
+      expression: "document.documentElement.classList.remove('perf-diagnostics-lite')",
+      awaitPromise: false,
+    });
+  } catch {
+    // WebView/CDP may already be gone; ignore cleanup failures.
+  }
+}
+
 async function recordTrace(client, options) {
   const events = [];
   let completeResolve;
@@ -441,43 +452,45 @@ async function recordTrace(client, options) {
   });
   client.on("Tracing.tracingComplete", completeResolve);
 
-  if (options.diagnosticLite) {
-    await client.send("Runtime.evaluate", {
-      expression: "document.documentElement.classList.add('perf-diagnostics-lite')",
-      awaitPromise: false,
+  try {
+    if (options.diagnosticLite) {
+      await client.send("Runtime.evaluate", {
+        expression: "document.documentElement.classList.add('perf-diagnostics-lite')",
+        awaitPromise: false,
+      });
+    } else {
+      await clearDiagnosticLite(client);
+    }
+
+    const startedAt = new Date();
+    await client.send("Tracing.start", {
+      categories: TRACE_CATEGORIES,
+      transferMode: "ReportEvents",
+      options: "sampling-frequency=10000",
     });
-  } else {
-    await client.send("Runtime.evaluate", {
-      expression: "document.documentElement.classList.remove('perf-diagnostics-lite')",
-      awaitPromise: false,
-    });
+
+    if (options.manual) {
+      const rl = readline.createInterface({ input, output });
+      await rl.question("录制中。现在操作侧栏/面板，完成后按回车停止...");
+      rl.close();
+    } else {
+      console.log(`录制中：${options.seconds}s。现在操作侧栏/面板...`);
+      await sleep(options.seconds * 1000);
+    }
+
+    await client.send("Tracing.end");
+    await complete;
+    const endedAt = new Date();
+    return {
+      events,
+      startedAt,
+      endedAt,
+      durationSeconds: (endedAt.getTime() - startedAt.getTime()) / 1000,
+    };
+  } finally {
+    // Lite mode is only for the recording window; always clear afterward.
+    await clearDiagnosticLite(client);
   }
-
-  const startedAt = new Date();
-  await client.send("Tracing.start", {
-    categories: TRACE_CATEGORIES,
-    transferMode: "ReportEvents",
-    options: "sampling-frequency=10000",
-  });
-
-  if (options.manual) {
-    const rl = readline.createInterface({ input, output });
-    await rl.question("录制中。现在操作侧栏/面板，完成后按回车停止...");
-    rl.close();
-  } else {
-    console.log(`录制中：${options.seconds}s。现在操作侧栏/面板...`);
-    await sleep(options.seconds * 1000);
-  }
-
-  await client.send("Tracing.end");
-  await complete;
-  const endedAt = new Date();
-  return {
-    events,
-    startedAt,
-    endedAt,
-    durationSeconds: (endedAt.getTime() - startedAt.getTime()) / 1000,
-  };
 }
 
 async function main() {
