@@ -1,6 +1,7 @@
 import { appShell, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
-import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
+import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
+import { isLayerOpenForGestureBlock, isTargetReleaseAnimating } from "./motion-registry.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
@@ -25,10 +26,10 @@ createHorizontalDragGesture(appShell, {
   traceLabel: "drawer.edgeSwipe",
   shouldStart: (event) => {
     if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) return false;
-    if (isUiTransitionBusy("drawer")) return false;
-    if (quickPanel.classList.contains("is-open")) return false;
-    if (newAssignmentPanel.classList.contains("is-open")) return false;
-    if (scoreSheet.classList.contains("is-open")) return false;
+    if (isTargetReleaseAnimating(drawer)) return false;
+    if (isLayerOpenForGestureBlock(quickPanel)) return false;
+    if (isLayerOpenForGestureBlock(newAssignmentPanel)) return false;
+    if (isLayerOpenForGestureBlock(scoreSheet)) return false;
     return true;
   },
   shouldContinueMove: () => !drawer.classList.contains("is-open") && !scoreSheet.classList.contains("is-open"),
@@ -54,7 +55,7 @@ createHorizontalDragGesture(drawer, {
   getClosedPx: drawerClosedPx,
   traceLabel: "drawer.close",
   shouldStart: (event) => {
-    if (isUiTransitionBusy("drawer")) return false;
+    if (isTargetReleaseAnimating(drawer)) return false;
     if (event.target.closest(".drawer-filter")) return false;
     return true;
   },
@@ -71,7 +72,7 @@ createHorizontalDragGesture(appShell, {
   getClosedPx: drawerClosedPx,
   traceLabel: "drawer.shellClose",
   shouldStart: (event) => {
-    if (isUiTransitionBusy("drawer")) return false;
+    if (isTargetReleaseAnimating(drawer)) return false;
     if (!drawer.classList.contains("is-open")) return false;
     return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap");
   },

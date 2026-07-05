@@ -1,6 +1,7 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
-import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
+import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
+import { claimDirection, releaseDirection } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
 
@@ -128,27 +129,8 @@ export function createHorizontalDragGesture(bindEl, {
     return parseTransformAxis(transform, "X");
   }
 
-  function interruptRelease() {
-    if (!releaseAnimating) return;
-    releaseGeneration += 1;
-    activeRelease?.cancel();
-    activeRelease = null;
-    flushTransform();
-    dragBasePx = readCurrentPx();
-    currentPx = dragBasePx;
-    releaseAnimating = false;
-    setUiTransitionBusy(false, busyKey);
-    targetEl.style.transition = "none";
-    targetEl.style.willChange = "transform";
-    targetEl.style.transform = `translateX(${dragBasePx}px)`;
-  }
-
   bindEl.addEventListener("pointerdown", (event) => {
-    const interrupted = releaseAnimating;
-    if (releaseAnimating) {
-      if (!shouldStart(event)) return;
-      interruptRelease();
-    }
+    if (releaseAnimating) return;
     if (activePointerId !== null) return;
     if (!isPrimaryMouseButton(event)) return;
     if (!shouldStart(event)) return;
@@ -157,7 +139,7 @@ export function createHorizontalDragGesture(bindEl, {
     startX = event.clientX;
     startY = event.clientY;
     dragging = false;
-    dragBasePx = interrupted ? dragBasePx : getBasePx();
+    dragBasePx = getBasePx();
     currentPx = dragBasePx;
     lastMoveAt = performance.now();
     lastVelocity = 0;
@@ -251,7 +233,7 @@ export function createHorizontalDragGesture(bindEl, {
     }
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    setUiTransitionBusy(true, busyKey);
+    beginTargetReleaseAnimation(targetEl);
     targetEl.style.transform = `translateX(${releasedPx}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
@@ -260,7 +242,8 @@ export function createHorizontalDragGesture(bindEl, {
       activeRelease = animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
-      setUiTransitionBusy(false, busyKey);
+      releaseAnimating = false;
+      endTargetReleaseAnimation(targetEl);
       if (onRelease) onRelease(dx, wasDragging, velocity);
       if (traceLabel) traceGesture(traceLabel, "close");
     } finally {
@@ -272,8 +255,10 @@ export function createHorizontalDragGesture(bindEl, {
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }
-      setUiTransitionBusy(false, busyKey);
-      releaseAnimating = false;
+      if (releaseAnimating) {
+        releaseAnimating = false;
+        endTargetReleaseAnimation(targetEl);
+      }
       dragBasePx = 0;
       activeRelease = null;
     }

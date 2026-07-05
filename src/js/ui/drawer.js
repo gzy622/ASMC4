@@ -3,7 +3,7 @@ import { drawer, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { isUiTransitionBusy, setUiTransitionBusy, setSuppressNextCardClick } from "../runtime.js";
+import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
 
 const DRAWER_TRANSITION_MS = 320;
 
@@ -34,7 +34,6 @@ function clearDrawerExpandScale() {
 }
 
 export function openDrawer({ withTransitionLock = true } = {}) {
-  if (isUiTransitionBusy("drawer")) return;
   closeScoreSheet();
   clearDocumentSelection();
   drawer.classList.add("is-open");
