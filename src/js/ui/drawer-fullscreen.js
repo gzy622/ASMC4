@@ -7,6 +7,7 @@ import { closeFloatingPanels } from "./panels.js";
 import { expandDrawer, contractDrawer, snapResetDrawer, snapPrepareDrawer } from "./drawer.js";
 import { isUiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
 
+const DRAWER_OPEN_DURATION = 320;
 const EXPAND_DURATION = 280;
 const CONTENT_FADE = 180;
 const TRANSITION_TIMEOUT_PAD = 80;
@@ -26,7 +27,7 @@ function waitForTransition(el, { property = null, timeoutMs = 400 } = {}) {
       resolve();
     };
     const onEnd = (event) => {
-      if (!el.contains(event.target)) return;
+      if (event.target !== el) return;
       if (property && event.propertyName !== property) return;
       finish();
     };
@@ -46,6 +47,13 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
 
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
+
+  if (isUiTransitionBusy("drawer")) {
+    await waitForTransition(drawer, {
+      property: "transform",
+      timeoutMs: DRAWER_OPEN_DURATION + TRANSITION_TIMEOUT_PAD,
+    });
+  }
 
   void drawer.offsetWidth;
   await waitForAnimationFrame();
