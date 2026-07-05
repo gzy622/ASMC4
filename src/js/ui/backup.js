@@ -59,7 +59,7 @@ export async function exportBackup() {
     }
   } catch (error) {
     if (error.message && (error.message.includes("cancel") || error.message.includes("abort"))) return;
-    alert("导出失败：" + error.message);
+    announce("导出失败：" + error.message, { showToast: true });
   }
 }
 
@@ -71,7 +71,7 @@ export function openImportBackupPicker() {
 
 export function importBackup(file) {
   if (file.size > MAX_BACKUP_FILE_BYTES) {
-    alert("备份文件过大，请先精简作业或名单后再导入。");
+    announce("备份文件过大，请先精简作业或名单后再导入。", { showToast: true });
     importBackupInput.value = "";
     return;
   }
@@ -82,7 +82,7 @@ export function importBackup(file) {
       const data = JSON.parse(event.target.result);
 
       if (!data || !Array.isArray(data.assignments)) {
-        alert("备份文件格式无效：缺少 assignments 数组");
+        announce("备份文件格式无效：缺少 assignments 数组", { showToast: true });
         return;
       }
 
@@ -98,7 +98,7 @@ export function importBackup(file) {
               .map(normalizeAssignment);
 
             if (assignments.length === 0) {
-              alert("备份文件中没有有效的作业数据");
+              announce("备份文件中没有有效的作业数据", { showToast: true });
               return;
             }
 
@@ -120,7 +120,7 @@ export function importBackup(file) {
 
             const limitError = getAppStateLimitError(nextState);
             if (limitError) {
-              alert(limitError);
+              announce(limitError, { showToast: true });
               return;
             }
 
@@ -146,12 +146,12 @@ export function importBackup(file) {
             closeConfirm();
             announce("备份已导入");
           } catch (err) {
-            alert("导入失败：" + err.message);
+            announce("导入失败：" + err.message, { showToast: true });
           }
         }
       });
     } catch (error) {
-      alert("无法解析备份文件：" + error.message);
+      announce("无法解析备份文件：" + error.message, { showToast: true });
     }
   };
   reader.readAsText(file);

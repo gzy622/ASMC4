@@ -107,15 +107,15 @@ export function invertCurrentAssignmentSubmission() {
   scheduleRender();
 }
 
-export function deleteCurrentAssignment() {
+function removeAssignmentById(assignmentId) {
   const state = getState();
-  const currentId = state.currentAssignmentId;
-  const currentIndex = state.assignments.findIndex(item => String(item.id) === String(currentId));
-  const deletedTitle = currentIndex >= 0 ? state.assignments[currentIndex].title : "作业";
+  const index = state.assignments.findIndex(
+    item => String(item.id) === String(assignmentId)
+  );
+  if (index < 0) return null;
 
-  if (currentIndex >= 0) {
-    state.assignments.splice(currentIndex, 1);
-  }
+  const title = state.assignments[index].title;
+  state.assignments.splice(index, 1);
 
   if (state.assignments.length === 0) {
     const fallback = {
@@ -124,15 +124,21 @@ export function deleteCurrentAssignment() {
       createdAt: new Date().toISOString(),
       students: createFreshStudentsFrom(defaultStudents)
     };
-
     state.assignments.push(fallback);
     state.currentAssignmentId = fallback.id;
-  } else {
-    const nextIndex = Math.max(0, currentIndex - 1);
+  } else if (String(state.currentAssignmentId) === String(assignmentId)) {
+    const nextIndex = Math.max(0, index - 1);
     state.currentAssignmentId = state.assignments[nextIndex].id;
   }
 
-  saveAppState({ label: `删除作业「${deletedTitle}」`, assignmentId: currentId });
+  return title;
+}
+
+export function deleteCurrentAssignment() {
+  const currentId = getState().currentAssignmentId;
+  const title = removeAssignmentById(currentId);
+  if (title == null) return;
+  saveAppState({ label: `删除作业「${title}」`, assignmentId: currentId });
   scheduleRender();
 }
 
@@ -147,28 +153,10 @@ export function deleteAssignmentFromDrawer(assignmentId) {
     okText: "确认删除",
     danger: true,
     onConfirm: function() {
-      const wasCurrent = String(state.currentAssignmentId) === String(assignmentId);
+      const title = removeAssignmentById(assignmentId);
+      if (title == null) return;
 
-      const assignmentIndex = state.assignments.findIndex(item => String(item.id) === String(assignmentId));
-      if (assignmentIndex >= 0) {
-        state.assignments.splice(assignmentIndex, 1);
-      }
-
-      if (state.assignments.length === 0) {
-        const fallback = {
-          id: makeId("assignment"),
-          title: makeDefaultAssignmentTitle(),
-          createdAt: new Date().toISOString(),
-          students: createFreshStudentsFrom(defaultStudents)
-        };
-        state.assignments.push(fallback);
-        state.currentAssignmentId = fallback.id;
-      } else if (wasCurrent) {
-        const nextIndex = Math.max(0, assignmentIndex - 1);
-        state.currentAssignmentId = state.assignments[nextIndex].id;
-      }
-
-      saveAppState({ label: `删除作业「${assignment.title}」`, assignmentId });
+      saveAppState({ label: `删除作业「${title}」`, assignmentId });
       scheduleRender();
       closeConfirm();
       announce("已删除作业", { action: "undo", assignmentId });

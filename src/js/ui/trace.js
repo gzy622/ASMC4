@@ -1,3 +1,4 @@
+import { announce } from "../utils/dom.js";
 import { isNativePlatform } from "../utils/native.js";
 import { exportTraceJson, clearTrace } from "../utils/trace.js";
 import { openConfirm, closeConfirm } from "./confirm.js";
@@ -46,7 +47,7 @@ export async function exportTrace() {
     }
   } catch (error) {
     if (error.message && (error.message.includes("cancel") || error.message.includes("abort"))) return;
-    alert("导出失败：" + error.message);
+    announce("导出失败：" + error.message, { showToast: true });
   }
 }
 

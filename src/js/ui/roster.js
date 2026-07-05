@@ -46,10 +46,9 @@ export function addEmptyRow() {
     announce(`最多只能保留 ${MAX_ROSTER_SIZE} 名学生`);
     return;
   }
-  const lastDomId = existingRows.length > 0
-    ? Math.max(...Array.from(existingRows).map(r => Number(r.dataset.id)))
-    : 0;
-  const newId = lastDomId + 1;
+  const domIds = Array.from(existingRows).map(r => Number(r.dataset.id) || 0);
+  const savedIds = getState().roster.map(r => Number(r.id) || 0);
+  const newId = Math.max(0, ...domIds, ...savedIds) + 1;
   const newIndex = existingRows.length;
 
   const row = document.createElement("div");
