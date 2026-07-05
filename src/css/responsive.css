@@ -67,11 +67,11 @@
       }
 
       .modal-panel {
-        border-radius: 22px;
+        border-radius: 26px;
       }
 
       .top-sheet {
-        border-radius: 0 0 22px 22px;
+        border-radius: 0 0 30px 30px;
       }
 
       .score-display {

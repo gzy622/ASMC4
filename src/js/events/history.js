@@ -40,8 +40,8 @@ export function performRedo(assignmentId = getCurrentAssignment().id) {
 }
 
 export function bindHistoryEvents() {
-  undoButton?.addEventListener("click", performUndo);
-  redoButton?.addEventListener("click", performRedo);
+  undoButton?.addEventListener("click", () => performUndo());
+  redoButton?.addEventListener("click", () => performRedo());
 
   historyPanelButton?.addEventListener("click", () => {
     traceEvent("history.panel.open");

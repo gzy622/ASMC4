@@ -96,6 +96,23 @@ checks = [
         "setSuppressNextCardClick(true);" in read("src/js/score-sheet/longpress.js"),
     ),
     (
+        "quick panel history buttons ignore click event object",
+        'undoButton?.addEventListener("click", () => performUndo());' in read(
+            "src/js/events/history.js"
+        )
+        and 'redoButton?.addEventListener("click", () => performRedo());' in read(
+            "src/js/events/history.js"
+        ),
+    ),
+    (
+        "student cards ignore pointer while floating layers are open",
+        ".phone:has(" in read("src/css/components.css")
+        and ".top-sheet.is-open" in read("src/css/components.css")
+        and ".score-sheet.is-open" in read("src/css/components.css")
+        and ".modal-panel.is-open" in read("src/css/components.css")
+        and ") .student-card" in read("src/css/components.css"),
+    ),
+    (
         "Android WebView native long-press haptics disabled",
         "webView.setHapticFeedbackEnabled(false);" in read(
             "android/app/src/main/java/com/gzy622/asmc4/MainActivity.java"
