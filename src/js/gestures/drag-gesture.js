@@ -288,7 +288,7 @@ export function createVerticalDragGesture(el, {
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
     try {
-      activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget, formatTransform);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
       setUiTransitionBusy(false, busyKey);

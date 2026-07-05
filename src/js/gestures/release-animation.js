@@ -19,11 +19,13 @@ function releaseDuration(distancePx, fromPx, toPx, velocityPxPerMs) {
   );
 }
 
-export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, secondaryTarget = null) {
+export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, secondaryTarget = null, formatTransform = null) {
   const property = axis === "x" ? "translateX" : "translateY";
+  const fromTransform = formatTransform ? formatTransform(fromPx) : `${property}(${fromPx}px)`;
+  const toTransform = formatTransform ? formatTransform(toPx) : `${property}(${toPx}px)`;
 
   if (!el.animate) {
-    el.style.transform = `${property}(${toPx}px)`;
+    el.style.transform = toTransform;
     if (secondaryTarget) {
       secondaryTarget.el.style[secondaryTarget.prop] = secondaryTarget.toValue;
     }
@@ -38,8 +40,8 @@ export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, seco
   const animations = [];
 
   animations.push(el.animate([
-    { transform: `${property}(${fromPx}px)` },
-    { transform: `${property}(${toPx}px)` },
+    { transform: fromTransform },
+    { transform: toTransform },
   ], {
     duration,
     easing: RELEASE_EASING,
@@ -63,7 +65,7 @@ export function animateRelease(el, axis, fromPx, toPx, velocityPxPerMs = 0, seco
   const finished = Promise.all(animations.map(a => a.finished.catch(() => undefined)))
     .then(() => {
       if (cancelled) return;
-      el.style.transform = `${property}(${toPx}px)`;
+      el.style.transform = toTransform;
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = secondaryTarget.toValue;
       }

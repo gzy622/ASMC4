@@ -137,7 +137,7 @@ DOM（`index.html` + `dom-refs.js`）：
 ### `#appToast`
 
 - 底栏居中 pill（`left: 50%` + `translateX(-50%)`）；下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`，`formatTransform` 含 `translateX(-50%)`），仅 `is-visible` 时响应；阈值 48px。
-- 关闭位移：`getCloseTargetPx` → `offsetHeight + 24`；释放时同步淡出 `opacity`。
+- 关闭位移：`getCloseTargetPx` → `offsetHeight + 24`；释放动画同样走 `formatTransform`，并同步淡出 `opacity`。
 - `showToast` 先 `abortToastDismiss()`，再 `clearToastInlineStyles()`；若 toast 仍可见或正在 `is-fading-out`，只更新文案与撤回/重做按钮并续期定时器。
 - `hideToast()` 来自手势关闭时不再 abort 当前 release；非手势关闭先 abort。定时关闭走 `is-fading-out` 淡出（`transitionend` + 超时兜底），手势关闭仍 `transition: none` 直隐。
 - 关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
