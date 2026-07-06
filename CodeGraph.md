@@ -20,7 +20,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/render/`: 渲染（含 8 个模块）
 - `src/js/ui/`: 面板与 UI 动作（含 `floating-layers.js` 浮层栈、`switch-bind.js` switch 绑定）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势（含 9 个模块）
+- `src/js/gestures/`: 手势（含 10 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
@@ -80,7 +80,25 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ## 手势
 
-模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
+模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。手势开始判断与触点区域规则集中在 `gesture-guards.js`；浮层互斥查询仍走 `layer-motion-state.js` / `motion-registry.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
+
+### 手势守卫（`gesture-guards.js`）
+
+命名函数替代各文件内联 `shouldStart` / `canStart`；触点 `closest()` 与浮层互斥集中在此，业务手势文件只绑定回调。
+
+| 函数 | 用途 |
+|------|------|
+| `blocksQuickPanelPull()` / `canQuickPanelPullAtScrollTop()` | quickPanel 下拉打开互斥与列表顶判断 |
+| `blocksDrawerEdgeOpen()` | 边缘开 drawer 时拦 quickPanel / newAssignment / scoreSheet 打开态 |
+| `canStartQuickPanelPullOpen` | 下拉预览 + 释放打开 |
+| `canStartQuickPanelInnerClose` | 面板内上滑关闭 |
+| `canStartQuickPanelShellClose` | 面板外上滑关闭 |
+| `canStartTopSheetInnerClose` / `canStartTopSheetShellClose` | newAssignment 内外关闭 |
+| `canStartDrawerEdgeOpen` / `InnerClose` / `ShellClose` | drawer 三类横滑 |
+| `canStartScoreSheetShellClose` | scoreSheet 壳层下滑关闭 |
+| `canStartToastDismiss` | toast 下滑关闭（`is-visible`，非 `is-open`） |
+
+触点排除选择器：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR` 等；视觉 `is-open` 用 `isPanelVisuallyOpen()`，确认框用 `isConfirmPanelOpen()`。
 
 ### 运动状态（`layer-motion-state.js`）
 
@@ -143,15 +161,15 @@ DOM（`index.html` + `dom-refs.js`）：
 
 关闭栈（`closeTopmostFloatingLayer`）只管 Esc/后退/返回键的**逐层 pop**；各拖动手势的 `shouldStart` 须按场景单独判断——打开/关闭方向不同、可见态类名不同（toast 用 `is-visible`）、shell 关闭须排除面板自身 DOM，且部分实例只拦 confirm 而不拦其它浮层。
 
-| 模块 | 手势 | `shouldStart` / `canStart` 主要检查 |
-|------|------|-------------------------------------|
-| `panel-swipe.js` | quickPanel 下拉打开 | `blocksQuickPanelPull()`（`isLayerOpenForGestureBlock` + 自身释放中）；排除非 `.student-card` 的 button/input/select/textarea |
-| `panel-swipe.js` | quickPanel 壳关闭 | `!isTargetReleaseAnimating(quickPanel)`；`#confirmPanel.is-open` → false；`#quickPanel.is-open`；触点不在 `#quickPanel`；排除 drawer/score-sheet/fullscreen/nav/icon/title-wrap；排除 `#newAssignmentPanel`、`#confirmPanel`、`#rosterEditorPanel`、`#settingsPanel` |
-| `panel-swipe.js` | newAssignment 壳关闭 | 同 quickPanel 壳：`!isTargetReleaseAnimating(panel)`；`#confirmPanel.is-open`；面板 `is-open`；排除其它浮层 DOM |
-| `drawer-gestures.js` | 边缘左滑打开 | 排除 drawer/score-sheet/top-sheet/modal/fullscreen/nav/icon/title-wrap；`!isTargetReleaseAnimating(drawer)`；`isLayerOpenForGestureBlock(quickPanel|newAssignment|scoreSheet)` → false |
-| `drawer-gestures.js` | 侧栏内/壳关闭 | `!isTargetReleaseAnimating(drawer)`；壳关闭须 `drawer.is-open`；排除 `.drawer-filter`（搜索/科目筛选） |
-| `score-swipe.js` | 打分 sheet 壳关闭 | `!isUiTransitionBusy("sheet")`；`#confirmPanel.is-open` → false；`scoreSheet.is-open`；排除 score-sheet 自身与其它浮层 DOM |
-| `toast-swipe.js` | toast 下滑关闭 | `#appToast.is-visible` 且非 `hidden`（**不用** `is-open` / 关闭栈）；`stopPropagation` 防穿透 sheet |
+| 模块 | 手势 | 守卫函数 |
+|------|------|----------|
+| `panel-swipe.js` | quickPanel 下拉打开 | `canStartQuickPanelPullOpen`（内调 `blocksQuickPanelPull()`） |
+| `panel-swipe.js` | quickPanel 面板内关闭 | `canStartQuickPanelInnerClose` |
+| `panel-swipe.js` | quickPanel 壳层关闭 | `canStartQuickPanelShellClose` |
+| `panel-swipe.js` | newAssignment 内外关闭 | `canStartTopSheetInnerClose` / `canStartTopSheetShellClose` |
+| `drawer-gestures.js` | 边缘/内/壳关闭 | `canStartDrawerEdgeOpen` / `InnerClose` / `ShellClose` |
+| `score-swipe.js` | 打分 sheet 壳关闭 | `canStartScoreSheetShellClose` |
+| `toast-swipe.js` | toast 下滑关闭 | `canStartToastDismiss`（`stopPropagation` 仍在 `toast-swipe.js`） |
 
 **为何不能统一成关闭栈或单一 `isConfirmOpen()`：** 打开手势（下拉 quickPanel、边缘开 drawer）与关闭栈方向相反；toast 不在 `FLOATING_LAYER_ELS`；shell 关闭须允许 `.scroll-container` 空白上滑关 panel 但禁止在 panel 内重复绑定；confirm 仅阻断部分 shell 手势，侧栏/ toast 有独立规则。改手势前先对照上表，勿把 `anyFloatingLayerOpen()` 塞进所有 `shouldStart`。
 

@@ -1,7 +1,12 @@
-import { appShell, drawer, quickPanel, newAssignmentPanel, scoreSheet } from "../dom-refs.js";
+import { appShell, drawer } from "../dom-refs.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
-import { isLayerOpenForGestureBlock, isTargetReleaseAnimating } from "./motion-registry.js";
+import {
+  canContinueDrawerEdgeOpen,
+  canStartDrawerEdgeOpen,
+  canStartDrawerInnerClose,
+  canStartDrawerShellClose,
+} from "./gesture-guards.js";
 import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
 
@@ -17,22 +22,15 @@ function shouldReleaseBySwipe(dx, velocity, direction) {
   );
 }
 
-/* ── Phone swipe → open drawer ── */
+// ── 边缘左滑打开 ──
 
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
   traceLabel: "drawer.edgeSwipe",
-  shouldStart: (event) => {
-    if (event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap")) return false;
-    if (isTargetReleaseAnimating(drawer)) return false;
-    if (isLayerOpenForGestureBlock(quickPanel)) return false;
-    if (isLayerOpenForGestureBlock(newAssignmentPanel)) return false;
-    if (isLayerOpenForGestureBlock(scoreSheet)) return false;
-    return true;
-  },
-  shouldContinueMove: () => !drawer.classList.contains("is-open") && !scoreSheet.classList.contains("is-open"),
+  shouldStart: canStartDrawerEdgeOpen,
+  shouldContinueMove: canContinueDrawerEdgeOpen,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, +1) ? 0 : closedPx,
   onTrackMove: (dx, dy) => {
     if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
@@ -48,34 +46,26 @@ createHorizontalDragGesture(appShell, {
   },
 });
 
-/* ── Drawer swipe → close drawer ── */
+// ── 侧栏内左滑关闭 ──
 
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   traceLabel: "drawer.close",
-  shouldStart: (event) => {
-    if (isTargetReleaseAnimating(drawer)) return false;
-    if (event.target.closest(".drawer-filter")) return false;
-    return true;
-  },
+  shouldStart: canStartDrawerInnerClose,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {
     if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });
   },
 });
 
-/* ── Empty area swipe → close drawer ── */
+// ── 空白区左滑关闭 ──
 
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   traceLabel: "drawer.shellClose",
-  shouldStart: (event) => {
-    if (isTargetReleaseAnimating(drawer)) return false;
-    if (!drawer.classList.contains("is-open")) return false;
-    return !event.target.closest(".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap");
-  },
+  shouldStart: canStartDrawerShellClose,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
   onRelease: (dx, wasDragging, velocity) => {
     if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });
