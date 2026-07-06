@@ -1,5 +1,5 @@
 import { appShell, drawer } from "../dom-refs.js";
-import { openDrawer, closeDrawer } from "../ui/drawer.js";
+import { closeDrawer, getDrawerClosedPx, openDrawer } from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
 import {
   canContinueDrawerEdgeOpen,
@@ -7,27 +7,23 @@ import {
   canStartDrawerInnerClose,
   canStartDrawerShellClose,
 } from "./gesture-guards.js";
-import { DRAG_CLOSE_THRESHOLD, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 import { createHorizontalDragGesture } from "./horizontal-drag.js";
-
-function drawerClosedPx() {
-  return -1.2 * drawer.offsetWidth;
-}
+import { evaluateSwipeRelease } from "./swipe-release.js";
 
 function shouldReleaseBySwipe(dx, velocity, direction) {
-  if (velocity * direction <= -FLING_VELOCITY_THRESHOLD) return false;
-  return (
-    dx * direction >= DRAG_CLOSE_THRESHOLD
-    || (dx * direction >= MIN_FLING_DISTANCE && velocity * direction >= FLING_VELOCITY_THRESHOLD)
-  );
+  return evaluateSwipeRelease({
+    distance: dx * direction,
+    velocity,
+    direction,
+  });
 }
 
 // ── 边缘左滑打开 ──
 
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
-  getClosedPx: drawerClosedPx,
-  getBasePx: drawerClosedPx,
+  getClosedPx: getDrawerClosedPx,
+  getBasePx: getDrawerClosedPx,
   useNonlinearMotion: true,
   traceLabel: "drawer.edgeSwipe",
   shouldStart: canStartDrawerEdgeOpen,
@@ -51,7 +47,7 @@ createHorizontalDragGesture(appShell, {
 
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
-  getClosedPx: drawerClosedPx,
+  getClosedPx: getDrawerClosedPx,
   useNonlinearMotion: true,
   traceLabel: "drawer.close",
   shouldStart: canStartDrawerInnerClose,
@@ -65,7 +61,7 @@ createHorizontalDragGesture(drawer, {
 
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
-  getClosedPx: drawerClosedPx,
+  getClosedPx: getDrawerClosedPx,
   useNonlinearMotion: true,
   traceLabel: "drawer.shellClose",
   shouldStart: canStartDrawerShellClose,

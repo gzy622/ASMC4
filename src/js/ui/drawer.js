@@ -5,15 +5,20 @@ import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
 import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal, settleShadowRevealAfterOpen } from "./shadow-reveal.js";
+import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 import {
   beginTargetReleaseAnimation,
   endTargetReleaseAnimation,
   isCrossPanelOpenBlocked,
 } from "../gestures/motion-registry.js";
 import { animateMotionRelease, cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
-
-let drawerMotionGeneration = 0;
+import {
+  isExplicitMotionStale,
+  nextExplicitMotionGeneration,
+  prepareExplicitOpenTransform,
+  runExplicitOpenAnimation,
+} from "../gestures/explicit-open-motion.js";
+import { endExplicitMotion, clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -48,22 +53,8 @@ function clearDrawerExpandScale() {
   drawer.style.removeProperty("--drawer-expand-scale");
 }
 
-function drawerClosedPx() {
+export function getDrawerClosedPx() {
   return -1.2 * drawer.offsetWidth;
-}
-
-function clearDrawerMotionStyles() {
-  drawer.style.transition = "none";
-  drawer.style.transform = "";
-  drawer.style.willChange = "";
-  void drawer.offsetHeight;
-  drawer.style.transition = "";
-}
-
-function endDrawerExplicitMotion() {
-  clearDrawerMotionStyles();
-  drawer.classList.remove("no-anim");
-  void drawer.offsetHeight;
 }
 
 export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
@@ -71,14 +62,12 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
   closeScoreSheet();
   clearDocumentSelection();
   const shouldAnimate = withTransitionLock;
-  const fromPx = drawerClosedPx();
+  const fromPx = getDrawerClosedPx();
   if (shouldAnimate) {
-    drawer.classList.add("no-anim");
-    drawer.style.transform = `translateX(${fromPx}px)`;
+    prepareExplicitOpenTransform(drawer, "x", fromPx);
   }
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
-  if (deferShadow) beginShadowRevealAfterOpen(drawer);
   setThemeColor("#f4f4f4");
   requestAnimationFrame(() => {
     renderAssignmentList(getState());
@@ -90,12 +79,18 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
     }
   }
   if (!shouldAnimate) return;
-  const generation = ++drawerMotionGeneration;
-  animateMotionRelease(drawer, "x", fromPx, 0, 0).finished.then(() => {
-    if (generation !== drawerMotionGeneration) return;
-    endDrawerExplicitMotion();
-    settleShadowRevealAfterOpen(drawer);
-    setUiTransitionBusy(false, "drawer");
+  const generation = nextExplicitMotionGeneration(drawer);
+  runExplicitOpenAnimation({
+    el: drawer,
+    axis: "x",
+    fromPx,
+    generation,
+    onMotionStarted: (anim) => {
+      if (deferShadow) {
+        beginShadowRevealAfterOpen(drawer, { motionFinished: anim.finished });
+      }
+    },
+    onComplete: () => setUiTransitionBusy(false, "drawer"),
   });
 }
 
@@ -104,18 +99,18 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   const hadDrawerLayer = drawer.classList.contains("is-open")
     || drawer.classList.contains("is-expanding");
   const shouldAnimate = withTransitionLock && hadDrawerLayer;
-  const toPx = drawerClosedPx();
+  const toPx = getDrawerClosedPx();
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
 
   if (shouldAnimate) {
-    const generation = ++drawerMotionGeneration;
+    const generation = nextExplicitMotionGeneration(drawer);
     setUiTransitionBusy(true, "drawer");
     drawer.classList.add("no-anim");
     beginTargetReleaseAnimation(drawer, "close");
     drawer.style.transform = "translateX(0)";
     animateMotionRelease(drawer, "x", 0, toPx, 0).finished.then(() => {
-      if (generation !== drawerMotionGeneration) return;
+      if (isExplicitMotionStale(drawer, generation)) return;
       drawer.classList.remove("is-open");
       drawer.classList.remove("is-expanding");
       clearDrawerExpandScale();
@@ -123,19 +118,19 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
       resetDrawerFilters();
       setThemeColor("#f4f4f4");
       endTargetReleaseAnimation(drawer);
-      endDrawerExplicitMotion();
+      endExplicitMotion(drawer);
       setUiTransitionBusy(false, "drawer");
     });
     return;
   }
 
-  drawerMotionGeneration += 1;
+  nextExplicitMotionGeneration(drawer);
   cancelMotionAnimation(drawer);
   endTargetReleaseAnimation(drawer);
   setUiTransitionBusy(false, "drawer");
   drawer.classList.remove("is-open");
   drawer.classList.remove("is-expanding");
-  clearDrawerMotionStyles();
+  clearExplicitMotionStyles(drawer);
   clearDrawerExpandScale();
   drawer.setAttribute("aria-hidden", "true");
   resetDrawerFilters();

@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  :root { --motion: cubic-bezier(.22,.61,.36,1); }
+  #appShell { position: relative; width: 390px; height: 760px; overflow: hidden; border: 1px solid #000; }
+  #drawer {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 310px; background: #eee;
+    transform: translateX(-120%);
+    transform-origin: left center;
+    transition: transform 320ms var(--motion);
+  }
+  #drawer.is-open { transform: translateX(0); will-change: transform; }
+</style></head>
+<body>
+<div id="appShell"><div id="drawer"></div></div>
+<button id="open">open</button>
+<button id="close">close</button>
+<pre id="log"></pre>
+<script>
+const drawer = document.getElementById('drawer');
+const logEl = document.getElementById('log');
+const lines = [];
+function log(s){ lines.push(s); logEl.textContent = lines.join('\n'); console.log(s); }
+
+['transitionrun','transitionstart','transitionend','transitioncancel'].forEach(ev => {
+  drawer.addEventListener(ev, e => log(ev + ' prop=' + e.propertyName + ' t=' + performance.now().toFixed(1)));
+});
+
+// mimic openDrawer
+function openDrawer(){
+  log('--- openDrawer start t=' + performance.now().toFixed(1));
+  const fromPx = -1.2 * drawer.offsetWidth;
+  drawer.classList.add('is-open');
+  requestAnimationFrame(() => {});
+  drawer.style.transition = 'none';
+  drawer.style.transform = `translateX(${fromPx}px)`;
+  const anim = drawer.animate([{transform:`translateX(${fromPx}px)`},{transform:'translateX(0)'}],
+    {duration:280, easing:'cubic-bezier(.22,.61,.36,1)', fill:'forwards'});
+  log('WAAPI created t=' + performance.now().toFixed(1));
+  anim.finished.then(() => {
+    log('WAAPI finished t=' + performance.now().toFixed(1));
+    drawer.style.transform = 'translateX(0)';
+    anim.cancel();
+    drawer.style.transition = '';
+    drawer.style.transform = '';
+    drawer.style.willChange = '';
+    log('cleanup done t=' + performance.now().toFixed(1));
+  });
+}
+
+function closeDrawer(){
+  log('--- closeDrawer start t=' + performance.now().toFixed(1));
+  const toPx = -1.2 * drawer.offsetWidth;
+  drawer.style.transition = 'none';
+  drawer.style.transform = 'translateX(0)';
+  const anim = drawer.animate([{transform:'translateX(0)'},{transform:`translateX(${toPx}px)`}],
+    {duration:280, easing:'cubic-bezier(.22,.61,.36,1)', fill:'forwards'});
+  log('WAAPI created t=' + performance.now().toFixed(1));
+  anim.finished.then(() => {
+    log('WAAPI finished t=' + performance.now().toFixed(1));
+    drawer.style.transform = `translateX(${toPx}px)`;
+    anim.cancel();
+    drawer.classList.remove('is-open');
+    drawer.style.transition = '';
+    drawer.style.transform = '';
+    drawer.style.willChange = '';
+    log('cleanup done t=' + performance.now().toFixed(1));
+  });
+}
+
+document.getElementById('open').addEventListener('click', openDrawer);
+document.getElementById('close').addEventListener('click', closeDrawer);
+
+window.__repro = { openDrawer, closeDrawer };
+
+setTimeout(() => { openDrawer(); }, 100);
+setTimeout(() => { closeDrawer(); }, 900);
+setTimeout(() => { log('=== DONE ==='); }, 1700);
+</script>
+</body></html>

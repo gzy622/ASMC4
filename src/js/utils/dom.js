@@ -1,4 +1,5 @@
 import { liveStatus, appToast, appToastMessage, appToastAction, themeColorMeta } from "../dom-refs.js";
+import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
 import { canUndo, canRedo, pruneAssignmentHistoryIfOrphan } from "../state.js";
 
 const TOAST_DURATION_MS = 3200;
@@ -26,12 +27,8 @@ export function setToastSwipeDismissing(active) {
 }
 
 function clearToastInlineStyles() {
-  appToast.style.transition = "none";
-  appToast.style.transform = "";
-  appToast.style.willChange = "";
+  clearExplicitMotionStyles(appToast);
   appToast.style.opacity = "";
-  void appToast.offsetWidth;
-  appToast.style.transition = "";
 }
 
 function finalizeToastDismiss(prunableAssignmentId) {
@@ -42,17 +39,12 @@ function finalizeToastDismiss(prunableAssignmentId) {
 
 function hideToastAfterGesture() {
   const prunableAssignmentId = appToastAction.dataset.assignmentId;
-  appToast.style.transition = "none";
   appToast.classList.remove("is-visible", "is-fading-out");
   appToast.hidden = true;
   appToastAction.hidden = true;
   delete appToastAction.dataset.action;
   delete appToastAction.dataset.assignmentId;
-  void appToast.offsetWidth;
-  appToast.style.transition = "";
-  appToast.style.transform = "";
-  appToast.style.willChange = "";
-  appToast.style.opacity = "";
+  clearToastInlineStyles();
   finalizeToastDismiss(prunableAssignmentId);
 }
 

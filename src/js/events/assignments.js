@@ -29,7 +29,7 @@ import { traceEvent } from "../utils/trace.js";
 
 function selectAssignmentFromDrawer(assignmentId) {
   selectAssignment(assignmentId);
-  closeDrawer({ withTransitionLock: false });
+  closeDrawer();
 }
 
 export function bindAssignmentEvents() {

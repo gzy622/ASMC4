@@ -1,14 +1,13 @@
 import {
   DRAG_START_THRESHOLD,
   DRAG_SLOPE,
-  FLING_VELOCITY_THRESHOLD,
-  MIN_FLING_DISTANCE,
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
+import { evaluateSwipeRelease } from "./swipe-release.js";
 import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
 import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./layer-motion-state.js";
-import { claimDirection, releaseDirection } from "../runtime.js";
+import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
@@ -54,8 +53,9 @@ export function createVerticalDragGesture(el, {
   }
 
   function resetDragState() {
+    const wasDragging = dragging;
     restoreAfterDragAbort({
-      wasDragging: dragging,
+      wasDragging,
       flushTransform,
       clearDragStyles,
       releasePointer: () => releasePointer(el, activePointerId),
@@ -66,6 +66,7 @@ export function createVerticalDragGesture(el, {
     dragging = false;
     motion.clear();
     activePointerId = null;
+    if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
   }
 
   function abortRelease() {
@@ -82,6 +83,7 @@ export function createVerticalDragGesture(el, {
     activePointerId = null;
     motion.clear();
     clearLayerMotionDrag(targetEl);
+    if (busyKey) setUiTransitionBusy(false, busyKey);
     if (releaseAnimating) {
       releaseAnimating = false;
       endTargetReleaseAnimation(targetEl);
@@ -129,6 +131,7 @@ export function createVerticalDragGesture(el, {
       beginLayerDrag(targetEl);
       if (traceLabel) traceGesture(traceLabel, "dragStart");
       if (onDragStart) onDragStart(event);
+      if (busyKey) setUiTransitionBusy(true, busyKey);
       capturePointer(el, event);
       beginDragMotion(targetEl);
       motion.reset(dragBaseDelta);
@@ -166,11 +169,12 @@ export function createVerticalDragGesture(el, {
     const wasDragging = dragging;
     const delta = motion.current;
     const velocity = motion.velocity;
-    const flingingOpen = velocity * closeDirection <= -FLING_VELOCITY_THRESHOLD;
-    const shouldClose = !flingingOpen && (
-      Math.abs(delta) >= threshold
-      || (Math.abs(delta) >= MIN_FLING_DISTANCE && velocity * closeDirection >= FLING_VELOCITY_THRESHOLD)
-    );
+    const shouldClose = evaluateSwipeRelease({
+      distance: Math.abs(delta),
+      velocity,
+      direction: closeDirection,
+      distanceThreshold: threshold,
+    });
     const closeTargetPx = getCloseTargetPx
       ? getCloseTargetPx(targetEl)
       : targetEl.offsetHeight;
@@ -242,6 +246,7 @@ export function createVerticalDragGesture(el, {
         releaseAnimating = false;
         endTargetReleaseAnimation(targetEl);
       }
+      if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
       dragBaseDelta = 0;
       activeRelease = null;
     }
@@ -319,6 +324,7 @@ export function createTopSheetOpenGesture(bindEl, {
     dragging = false;
     activePointerId = null;
     motion.clear();
+    if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
     if (wasDragging && notifyCancel && onCancel) onCancel();
   }
 
@@ -375,6 +381,7 @@ export function createTopSheetOpenGesture(bindEl, {
       if (traceLabel) traceGesture(traceLabel, "dragStart");
       capturePointer(bindEl, event);
       if (onPrepare) onPrepare();
+      if (busyKey) setUiTransitionBusy(true, busyKey);
       beginDragMotion(sheetEl);
       motion.reset(dragBaseDelta);
       event.preventDefault();
@@ -403,11 +410,12 @@ export function createTopSheetOpenGesture(bindEl, {
     const velocity = motion.velocity;
     const minDelta = closedDelta();
     const openedDistance = delta - minDelta;
-    const flingingClose = velocity <= -FLING_VELOCITY_THRESHOLD;
-    const shouldOpen = !flingingClose && (
-      openedDistance >= threshold
-      || (openedDistance >= MIN_FLING_DISTANCE && velocity >= FLING_VELOCITY_THRESHOLD)
-    );
+    const shouldOpen = evaluateSwipeRelease({
+      distance: openedDistance,
+      velocity,
+      direction: 1,
+      distanceThreshold: threshold,
+    });
     const targetDelta = shouldOpen ? 0 : minDelta;
     const releaseFromDelta = useNonlinearMotion
       ? mapInteractiveDelta(delta, minDelta, 0)
@@ -461,6 +469,7 @@ export function createTopSheetOpenGesture(bindEl, {
       }
       releaseAnimating = false;
       endTargetReleaseAnimation(sheetEl);
+      if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
       dragBaseDelta = 0;
       activeRelease = null;
     }
@@ -473,6 +482,7 @@ export function createTopSheetOpenGesture(bindEl, {
     releaseAnimating = false;
     endTargetReleaseAnimation(sheetEl);
     dragBaseDelta = 0;
+    if (busyKey) setUiTransitionBusy(false, busyKey);
     clearDragStyles();
   }
 

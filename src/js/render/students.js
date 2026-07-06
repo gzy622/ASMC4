@@ -41,9 +41,14 @@ function getCardSnapshot(student, index, assignment) {
   };
 }
 
+function syncCardStateClass(el, stateClass) {
+  el.classList.toggle("is-submitted", stateClass === "is-submitted");
+  el.classList.toggle("no-registration", stateClass === "no-registration");
+}
+
 function patchCard(el, cached, snap) {
   if (cached.stateClass !== snap.stateClass) {
-    el.className = `student-card ${snap.stateClass}`;
+    syncCardStateClass(el, snap.stateClass);
     cached.stateClass = snap.stateClass;
   }
 

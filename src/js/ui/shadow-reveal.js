@@ -5,7 +5,8 @@ import {
   setLayerShadowPending,
 } from "../gestures/layer-motion-state.js";
 
-const SETTLE_FALLBACK_MS = 40;
+const MAX_EXPLICIT_OPEN_MS = 380;
+const SETTLE_FALLBACK_MS = 60;
 const pendingByEl = new WeakMap();
 
 function finishShadowReveal(el) {
@@ -14,25 +15,52 @@ function finishShadowReveal(el) {
   onSettled?.();
 }
 
-export function settleShadowRevealAfterOpen(el) {
-  if (!pendingByEl.has(el)) return;
-  requestAnimationFrame(() => finishShadowReveal(el));
+function scheduleFinishShadowReveal(el) {
+  requestAnimationFrame(() => {
+    if (!pendingByEl.has(el)) return;
+    finishShadowReveal(el);
+  });
 }
 
-export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
+/** WAAPI 打开后显式收尾；与 begin 时传入的 motionFinished 等价，保留给无法提前拿到 Promise 的调用方。 */
+export function settleShadowRevealAfterOpen(el) {
+  if (!pendingByEl.has(el)) return;
+  scheduleFinishShadowReveal(el);
+}
+
+function bindMotionFinished(el, motionFinished) {
+  Promise.resolve(motionFinished).then(() => {
+    if (!pendingByEl.has(el)) return;
+    scheduleFinishShadowReveal(el);
+  }).catch(() => {});
+}
+
+export function beginShadowRevealAfterOpen(el, { onSettled, motionFinished } = {}) {
   cancelShadowReveal(el);
   beginLayerExplicitOpen(el);
   setLayerShadowPending(el, true);
 
   const state = { onEnd: null, timer: null, onSettled };
+  const useTransitionEnd = !motionFinished;
 
-  state.onEnd = (event) => {
-    if (event.target !== el || event.propertyName !== "transform") return;
+  if (useTransitionEnd) {
+    state.onEnd = (event) => {
+      if (event.target !== el || event.propertyName !== "transform") return;
+      finishShadowReveal(el);
+    };
+    el.addEventListener("transitionend", state.onEnd);
+  } else {
+    bindMotionFinished(el, motionFinished);
+  }
+
+  state.timer = setTimeout(() => {
+    if (!pendingByEl.has(el)) return;
+    if (useTransitionEnd && el.classList.contains("no-anim")) {
+      state.timer = setTimeout(() => finishShadowReveal(el), SETTLE_FALLBACK_MS);
+      return;
+    }
     finishShadowReveal(el);
-  };
-
-  state.timer = setTimeout(() => finishShadowReveal(el), PANEL_TRANSITION_MS + SETTLE_FALLBACK_MS);
-  el.addEventListener("transitionend", state.onEnd);
+  }, Math.max(PANEL_TRANSITION_MS, MAX_EXPLICIT_OPEN_MS) + SETTLE_FALLBACK_MS);
   pendingByEl.set(el, state);
 }
 

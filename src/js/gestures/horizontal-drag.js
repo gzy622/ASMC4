@@ -2,7 +2,7 @@ import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
 import { beginLayerDrag, isLayerMotionDragging } from "./layer-motion-state.js";
-import { claimDirection, releaseDirection } from "../runtime.js";
+import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
@@ -47,8 +47,9 @@ export function createHorizontalDragGesture(bindEl, {
   }
 
   function resetDragState() {
+    const wasDragging = dragging;
     restoreAfterDragAbort({
-      wasDragging: dragging,
+      wasDragging,
       flushTransform,
       clearDragStyles,
       releasePointer: () => releasePointer(bindEl, activePointerId),
@@ -60,6 +61,7 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
     motion.clear();
     dragBasePx = 0;
+    if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
   }
 
   bindEl.addEventListener("pointerdown", (event) => {
@@ -104,6 +106,7 @@ export function createHorizontalDragGesture(bindEl, {
         beginLayerDrag(targetEl);
         if (traceLabel) traceGesture(traceLabel, "dragStart");
         capturePointer(bindEl, event);
+        if (busyKey) setUiTransitionBusy(true, busyKey);
         beginDragMotion(targetEl);
         motion.reset(dragBasePx);
       } else {
@@ -193,6 +196,7 @@ export function createHorizontalDragGesture(bindEl, {
         releaseAnimating = false;
         endTargetReleaseAnimation(targetEl);
       }
+      if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
       dragBasePx = 0;
       activeRelease = null;
     }

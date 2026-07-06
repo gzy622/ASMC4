@@ -32,7 +32,6 @@
       -webkit-touch-callout: none;
     }
 
-    .student-card:active,
     .student-card.is-pressed {
       transform: scale(0.95);
     }

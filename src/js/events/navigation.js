@@ -99,6 +99,11 @@ export function bindNavigationEvents() {
   drawerSubjectFilter?.addEventListener("change", () => renderAssignmentList(getState()));
 
   addButton.addEventListener("click", () => {
+    if (drawer.classList.contains("is-open")) {
+      traceEvent("navigation.drawer.close");
+      closeDrawer();
+      return;
+    }
     traceEvent("navigation.newAssignment.open");
     openNewAssignmentPanel();
   });

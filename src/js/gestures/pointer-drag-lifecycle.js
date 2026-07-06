@@ -44,6 +44,20 @@ export function clearMotionDragStyles(targetEl) {
   clearLayerMotionDrag(targetEl);
 }
 
+export function clearExplicitMotionStyles(targetEl) {
+  targetEl.style.transition = "none";
+  targetEl.style.transform = "";
+  targetEl.style.willChange = "";
+  void targetEl.offsetHeight;
+  targetEl.style.transition = "";
+}
+
+export function endExplicitMotion(targetEl) {
+  clearExplicitMotionStyles(targetEl);
+  targetEl.classList.remove("no-anim");
+  void targetEl.offsetHeight;
+}
+
 export function capturePointer(bindEl, event) {
   if (bindEl.setPointerCapture && !bindEl.hasPointerCapture(event.pointerId)) {
     bindEl.setPointerCapture(event.pointerId);

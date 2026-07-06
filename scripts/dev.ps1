@@ -320,14 +320,17 @@ function Show-DevMenu {
     Write-Host '  ---------------------------------'
     Write-Host "  上次: $lastLabel  （直接回车重复）"
     Write-Host ''
-    $pick = Read-Host '  选择 1-7'
+    Write-Host '  选择 1-7' -NoNewline
+    $char = [Console]::ReadKey($true).KeyChar
 
-    if ($pick.Trim() -eq '') {
+    if ($char -eq "`r" -or $char -eq "`n") {
+        Write-Host '  (重复上次)'
         if (-not $last.Surface) { throw '无上次记录，请输入数字。' }
         return @{ Surface = $last.Surface; Target = $last.Target }
     }
 
-    switch ($pick.Trim()) {
+    Write-Host "  $char"
+    switch ($char) {
         '1' { return @{ Surface = 'web'; Target = 'pc' } }
         '2' { return @{ Surface = 'web'; Target = 'lan' } }
         '3' { return @{ Surface = 'web'; Target = 'adb' } }
@@ -336,11 +339,14 @@ function Show-DevMenu {
             Write-Host ''
             Write-Host '  APK 类型:'
             Write-Host '  1  debug    2  release'
-            $apkPick = Read-Host '  选择 1-2（回车按配置/default）'
-            $apkVariant = switch ($apkPick.Trim()) {
+            Write-Host '  选择 1-2' -NoNewline
+            $apkChar = [Console]::ReadKey($true).KeyChar
+            Write-Host "  $apkChar"
+            $apkVariant = switch ($apkChar) {
                 '1' { 'debug' }
                 '2' { 'release' }
-                '' { '' }
+                "`r" { '' }
+                "`n" { '' }
                 default { throw '无效的 APK 类型选择。' }
             }
             return @{ Surface = 'apk'; Target = $apkVariant }
@@ -349,8 +355,10 @@ function Show-DevMenu {
             Write-Host ''
             Write-Host '  本会话网页访问方式:'
             Write-Host '  1  本机    2  LAN（Wi-Fi）    3  adb（USB / 无线）'
-            $webPick = Read-Host '  选择 1-3'
-            $webTarget = switch ($webPick.Trim()) {
+            Write-Host '  选择 1-3' -NoNewline
+            $webChar = [Console]::ReadKey($true).KeyChar
+            Write-Host "  $webChar"
+            $webTarget = switch ($webChar) {
                 '1' { 'pc' }
                 '2' { 'lan' }
                 '3' { 'adb' }
