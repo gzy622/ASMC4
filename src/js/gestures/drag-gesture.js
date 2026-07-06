@@ -262,7 +262,7 @@ export function createVerticalDragGesture(el, {
 
     const generation = releaseGeneration;
     releaseAnimating = true;
-    beginTargetReleaseAnimation(targetEl);
+    beginTargetReleaseAnimation(targetEl, shouldClose ? "close" : "open");
     targetEl.style.transform = formatTransform(delta);
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
@@ -562,7 +562,7 @@ export function createTopSheetOpenGesture(bindEl, {
 
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    beginTargetReleaseAnimation(sheetEl);
+    beginTargetReleaseAnimation(sheetEl, shouldOpen ? "open" : "close");
     sheetEl.style.transform = `translateY(${delta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })

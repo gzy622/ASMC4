@@ -1,4 +1,5 @@
 import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
+import { beginTargetExplicitOpenAnimation, endTargetExplicitOpenAnimation } from "../gestures/motion-registry.js";
 
 const SHADOW_PENDING_CLASS = "is-shadow-pending";
 const SETTLE_FALLBACK_MS = 40;
@@ -12,6 +13,7 @@ function finishShadowReveal(el) {
 
 export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
   cancelShadowReveal(el);
+  beginTargetExplicitOpenAnimation(el);
   el.classList.add(SHADOW_PENDING_CLASS);
 
   const state = { onEnd: null, timer: null, onSettled };
@@ -28,6 +30,7 @@ export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
 
 export function cancelShadowReveal(el) {
   const state = pendingByEl.get(el);
+  endTargetExplicitOpenAnimation(el);
   if (!state) {
     el.classList.remove(SHADOW_PENDING_CLASS);
     return;

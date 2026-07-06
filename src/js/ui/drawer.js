@@ -6,6 +6,7 @@ import { renderAssignmentList } from "../render/assignmentList.js";
 import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
 import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
+import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -34,6 +35,7 @@ function clearDrawerExpandScale() {
 }
 
 export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
+  if (isCrossPanelOpenBlocked()) return;
   closeScoreSheet();
   clearDocumentSelection();
   drawer.classList.add("is-open");

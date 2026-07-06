@@ -6,6 +6,11 @@ import { renderAssignmentList } from "../render/assignmentList.js";
 import { closeFloatingPanels } from "./panels.js";
 import { expandDrawer, contractDrawer, snapResetDrawer, snapPrepareDrawer } from "./drawer.js";
 import { isUiTransitionBusy, setUiTransitionBusy } from "../runtime.js";
+import {
+  beginTargetExplicitOpenAnimation,
+  endTargetExplicitOpenAnimation,
+  isCrossPanelOpenBlocked,
+} from "../gestures/motion-registry.js";
 
 const DRAWER_OPEN_DURATION = 320;
 const EXPAND_DURATION = 280;
@@ -37,43 +42,50 @@ function waitForTransition(el, { property = null, timeoutMs = 400 } = {}) {
 }
 
 export async function openDrawerFullscreenPanel(panel, renderFn) {
+  if (isCrossPanelOpenBlocked()) return;
   if (isUiTransitionBusy("drawer-fullscreen")) return;
   setUiTransitionBusy(true, "drawer-fullscreen");
+  beginTargetExplicitOpenAnimation(drawer);
+  beginTargetExplicitOpenAnimation(panel);
 
-  closeScoreSheet();
-  closeFloatingPanels();
+  try {
+    closeScoreSheet();
+    closeFloatingPanels();
 
-  renderFn();
+    renderFn();
 
-  drawer.classList.add("is-open");
-  drawer.setAttribute("aria-hidden", "false");
+    drawer.classList.add("is-open");
+    drawer.setAttribute("aria-hidden", "false");
 
-  if (isUiTransitionBusy("drawer")) {
+    if (isUiTransitionBusy("drawer")) {
+      await waitForTransition(drawer, {
+        property: "transform",
+        timeoutMs: DRAWER_OPEN_DURATION + TRANSITION_TIMEOUT_PAD,
+      });
+    }
+
+    void drawer.offsetWidth;
+    await waitForAnimationFrame();
+    expandDrawer();
     await waitForTransition(drawer, {
       property: "transform",
-      timeoutMs: DRAWER_OPEN_DURATION + TRANSITION_TIMEOUT_PAD,
+      timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
     });
+
+    panel.classList.remove("is-closing");
+    panel.classList.add("is-open");
+    panel.setAttribute("aria-hidden", "false");
+    await waitForTransition(panel, {
+      property: "opacity",
+      timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
+    });
+
+    snapResetDrawer();
+  } finally {
+    endTargetExplicitOpenAnimation(drawer);
+    endTargetExplicitOpenAnimation(panel);
+    setUiTransitionBusy(false, "drawer-fullscreen");
   }
-
-  void drawer.offsetWidth;
-  await waitForAnimationFrame();
-  expandDrawer();
-  await waitForTransition(drawer, {
-    property: "transform",
-    timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
-  });
-
-  panel.classList.remove("is-closing");
-  panel.classList.add("is-open");
-  panel.setAttribute("aria-hidden", "false");
-  await waitForTransition(panel, {
-    property: "opacity",
-    timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-  });
-
-  snapResetDrawer();
-
-  setUiTransitionBusy(false, "drawer-fullscreen");
 }
 
 export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {

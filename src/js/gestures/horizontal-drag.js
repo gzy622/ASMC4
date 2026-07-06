@@ -233,7 +233,7 @@ export function createHorizontalDragGesture(bindEl, {
     }
     const generation = ++releaseGeneration;
     releaseAnimating = true;
-    beginTargetReleaseAnimation(targetEl);
+    beginTargetReleaseAnimation(targetEl, targetPx === 0 ? "open" : "close");
     targetEl.style.transform = `translateX(${releasedPx}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
@@ -244,6 +244,7 @@ export function createHorizontalDragGesture(bindEl, {
       if (generation !== releaseGeneration) return;
       releaseAnimating = false;
       endTargetReleaseAnimation(targetEl);
+      setMotionDragging(false);
       if (onRelease) onRelease(dx, wasDragging, velocity);
       if (traceLabel) traceGesture(traceLabel, "close");
     } finally {

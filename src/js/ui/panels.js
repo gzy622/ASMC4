@@ -6,6 +6,7 @@ import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
+import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
 
 let abortQuickPanelOpenDrag = () => {};
 
@@ -19,6 +20,7 @@ function teardownQuickPanelDrag() {
 }
 
 export function openNewAssignmentPanel() {
+  if (isCrossPanelOpenBlocked()) return;
   closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
@@ -70,6 +72,7 @@ export function closeFloatingPanels({ restoreFocus = true } = {}) {
 }
 
 export function openQuickPanel({ focusName = false } = {}) {
+  if (isCrossPanelOpenBlocked()) return;
   closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
