@@ -17,6 +17,10 @@ export const FORM_CONTROL_SELECTOR = "button:not(.student-card), input, select, 
 export const FLOATING_UI_EXCLUDE_SELECTOR =
   ".drawer, .score-sheet, .top-sheet, .modal-panel, .fullscreen-panel, .nav-button, .icon-button, .title-wrap";
 
+/** 顶栏主操作（不算壳层空白）；限定 .app-bar 以免误伤浮层内同类 class */
+export const PRIMARY_CHROME_SELECTOR =
+  ".app-bar .nav-button, .app-bar .icon-button, .app-bar .title-wrap";
+
 /** quickPanel 壳层关闭：不含 top-sheet（由 #quickPanel 单独排除） */
 export const QUICK_PANEL_SHELL_EXCLUDE_SELECTOR =
   ".drawer, .score-sheet, .fullscreen-panel, .nav-button, .icon-button, .title-wrap";
@@ -34,6 +38,10 @@ export function isTouchOn(target, selector) {
 
 export function isTouchOnFormControl(target) {
   return isTouchOn(target, FORM_CONTROL_SELECTOR);
+}
+
+export function isPrimaryChromeClick(target) {
+  return isTouchOn(target, PRIMARY_CHROME_SELECTOR);
 }
 
 export function isConfirmPanelOpen() {

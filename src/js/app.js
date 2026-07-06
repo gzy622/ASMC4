@@ -12,6 +12,7 @@ import { BUILD_TIMESTAMP } from "./build-version.js";
 import { quickSubjectSelect, newAssignmentSubjectInput, drawerSubjectFilter, settingsVersion, bootMask, studentGrid } from "./dom-refs.js";
 import { setThemeColor } from "./utils/dom.js";
 import {
+  createDebugTraceApi,
   setTraceRuntimeSnapshotProvider
 } from "./utils/trace.js";
 import {
@@ -23,6 +24,10 @@ setTraceRuntimeSnapshotProvider(() => ({
   uiTransitionBusy: isUiTransitionBusy(),
   scoringStudentId: currentScoringStudent ? String(currentScoringStudent.id) : null
 }));
+
+if (typeof window !== "undefined") {
+  window.__ASMC4_DEBUG_TRACE__ = createDebugTraceApi();
+}
 
 setThemeColor("#f4f4f4");
 

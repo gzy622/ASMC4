@@ -98,6 +98,14 @@ function scheduleClear(pointerId) {
   }, delay));
 }
 
+function acknowledgeActivatedPress(el) {
+  if (el.classList.contains("is-pressed")) return;
+  el.classList.add("is-pressed");
+  setTimeout(() => {
+    el.classList.remove("is-pressed");
+  }, MIN_PRESS_VISIBLE_MS);
+}
+
 appShell.addEventListener("pointerdown", (event) => {
   if (event.button && event.button !== 0) return;
   const el = resolve(event.target);
@@ -128,4 +136,11 @@ window.addEventListener("lostpointercapture", (event) => scheduleClear(event.poi
 window.addEventListener("blur", clearAll);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) clearAll();
+});
+
+// 合成 click / pointercancel 等导致 pointer 路径未留下 is-pressed 时，在 click 真正冒泡上来后补一次反馈。
+appShell.addEventListener("click", (event) => {
+  const el = resolve(event.target);
+  if (!el || el.disabled) return;
+  acknowledgeActivatedPress(el);
 });

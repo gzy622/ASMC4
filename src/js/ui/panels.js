@@ -22,7 +22,6 @@ function teardownQuickPanelDrag() {
 
 export function openNewAssignmentPanel() {
   if (isCrossPanelOpenBlocked()) return;
-  closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
 
@@ -74,7 +73,6 @@ export function closeFloatingPanels({ restoreFocus = true } = {}) {
 
 export function openQuickPanel({ focusName = false } = {}) {
   if (isCrossPanelOpenBlocked()) return;
-  closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
   restoreQuickPanelViewFromPreference();

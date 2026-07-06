@@ -85,3 +85,28 @@ export function exportTraceJson() {
     entries: getTraceEntries()
   }, null, 2);
 }
+
+/** 仅供 adb 调试脚本经 CDP 调用，勿在业务 UI 中引用。 */
+export function createDebugTraceApi() {
+  return {
+    clear() {
+      clearTrace();
+      setTraceEnabled(true);
+    },
+    enable() {
+      setTraceEnabled(true);
+    },
+    disable() {
+      setTraceEnabled(false);
+    },
+    exportJson() {
+      return exportTraceJson();
+    },
+    getEntryCount() {
+      return buffer.length;
+    },
+    isEnabled() {
+      return isTraceEnabled();
+    }
+  };
+}

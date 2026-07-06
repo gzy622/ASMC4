@@ -1,27 +1,21 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { execFile } from "node:child_process";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import {
+  DEFAULT_PORT,
+  TRACE_CATEGORIES,
+  findAdb,
+  ensureSingleDevice,
+  sleep,
+  readDefaultPackageName,
+  CdpClient,
+  timestampForFile,
+  connectWebView,
+} from "./android-adb-lib.mjs";
 
-const DEFAULT_PORT = 9229;
 const DEFAULT_SECONDS = 12;
 const DEFAULT_OUT_DIR = "traces/android";
-const TRACE_CATEGORIES = [
-  "toplevel",
-  "blink",
-  "blink.user_timing",
-  "devtools.timeline",
-  "disabled-by-default-devtools.timeline",
-  "disabled-by-default-devtools.timeline.frame",
-  "disabled-by-default-devtools.timeline.stack",
-  "disabled-by-default-devtools.screenshot",
-  "cc",
-  "renderer.scheduler",
-  "latencyInfo",
-  "input",
-  "benchmark",
-].join(",");
 
 function parseArgs(argv) {
   const args = {
@@ -89,240 +83,6 @@ function usage() {
     "  --diagnostic-lite",
     "                   录制时临时禁用面板阴影/伪元素，用于对照 GL 合成成本",
   ].join("\n");
-}
-
-async function readDefaultPackageName() {
-  try {
-    const raw = await fs.readFile("capacitor.config.json", "utf8");
-    const config = JSON.parse(raw);
-    return config.appId || null;
-  } catch {
-    return null;
-  }
-}
-
-function execFileText(file, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    execFile(file, args, {
-      cwd: process.cwd(),
-      windowsHide: true,
-      maxBuffer: 12 * 1024 * 1024,
-      ...options,
-    }, (error, stdout, stderr) => {
-      if (error) {
-        error.stdout = stdout;
-        error.stderr = stderr;
-        reject(error);
-        return;
-      }
-      resolve(String(stdout || ""));
-    });
-  });
-}
-
-async function findAdb() {
-  const names = process.platform === "win32" ? ["adb.exe", "adb"] : ["adb"];
-  const roots = [process.env.ANDROID_HOME, process.env.ANDROID_SDK_ROOT].filter(Boolean);
-  const candidates = [
-    ...roots.flatMap(root => names.map(name => path.join(root, "platform-tools", name))),
-    ...names,
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      await execFileText(candidate, ["version"]);
-      return candidate;
-    } catch {
-      // Try the next candidate.
-    }
-  }
-  throw new Error("找不到 adb。请确认 Android SDK platform-tools 已加入 PATH，或设置 ANDROID_HOME。");
-}
-
-function adbArgs(args, device) {
-  return device ? ["-s", device, ...args] : args;
-}
-
-async function adb(adbPath, args, device) {
-  return execFileText(adbPath, adbArgs(args, device));
-}
-
-async function ensureSingleDevice(adbPath, device) {
-  if (device) return device;
-  const raw = await execFileText(adbPath, ["devices"]);
-  const devices = raw
-    .split(/\r?\n/)
-    .slice(1)
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map(line => line.split(/\s+/))
-    .filter(([, state]) => state === "device")
-    .map(([serial]) => serial);
-
-  if (devices.length === 0) {
-    throw new Error("没有发现已连接并授权的 Android 设备。");
-  }
-  if (devices.length > 1) {
-    throw new Error(`发现多台设备，请加 --device 指定其中一台：${devices.join(", ")}`);
-  }
-  return devices[0];
-}
-
-async function sleep(ms) {
-  await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function getPid(adbPath, device, packageName) {
-  const raw = await adb(adbPath, ["shell", "pidof", packageName], device).catch(() => "");
-  const pid = raw.trim().split(/\s+/)[0];
-  return pid || null;
-}
-
-async function launchApp(adbPath, device, packageName) {
-  await adb(adbPath, ["shell", "monkey", "-p", packageName, "1"], device);
-}
-
-async function waitForPid(adbPath, device, packageName) {
-  for (let i = 0; i < 20; i += 1) {
-    const pid = await getPid(adbPath, device, packageName);
-    if (pid) return pid;
-    await sleep(250);
-  }
-  throw new Error(`App 未运行，无法找到进程：${packageName}`);
-}
-
-async function findWebViewSocket(adbPath, device, pid) {
-  const preferred = `webview_devtools_remote_${pid}`;
-  const raw = await adb(adbPath, ["shell", "cat", "/proc/net/unix"], device);
-  const sockets = [...raw.matchAll(/@?(webview_devtools_remote[^\s]*)/g)].map(match => match[1]);
-
-  if (sockets.includes(preferred)) return preferred;
-  if (sockets.length === 1) return sockets[0];
-  if (sockets.length > 1) {
-    const samePid = sockets.find(socket => socket.endsWith(`_${pid}`));
-    if (samePid) return samePid;
-    throw new Error(`发现多个 WebView 调试端口，无法自动判断：${sockets.join(", ")}`);
-  }
-  throw new Error("没有发现 WebView 调试端口。请确认安装的是 debug 版，且 WebView debugging 已开启。");
-}
-
-async function forwardWebView(adbPath, device, socketName, startPort) {
-  let lastError = null;
-  for (let port = startPort; port < startPort + 30; port += 1) {
-    try {
-      await adb(adbPath, ["forward", `tcp:${port}`, `localabstract:${socketName}`], device);
-      return port;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error("无法建立 adb forward。");
-}
-
-async function fetchJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url} 返回 ${response.status}`);
-  return response.json();
-}
-
-async function findTarget(port, query) {
-  let targets = [];
-  for (let i = 0; i < 20; i += 1) {
-    targets = await fetchJson(`http://127.0.0.1:${port}/json/list`).catch(() => []);
-    if (targets.length) break;
-    await sleep(250);
-  }
-
-  const filtered = targets.filter(target => target.webSocketDebuggerUrl);
-  const byQuery = query
-    ? filtered.find(target => `${target.title || ""} ${target.url || ""}`.toLowerCase().includes(query.toLowerCase()))
-    : null;
-  if (byQuery) return byQuery;
-
-  const likely = filtered.find(target => {
-    const haystack = `${target.title || ""} ${target.url || ""}`.toLowerCase();
-    return haystack.includes("localhost")
-      || haystack.includes("capacitor")
-      || haystack.includes("index.html")
-      || target.type === "page";
-  });
-  if (likely) return likely;
-
-  if (filtered[0]) return filtered[0];
-  throw new Error("WebView 已连接，但没有可录制的页面 target。");
-}
-
-class CdpClient {
-  constructor(url) {
-    this.url = url;
-    this.ws = null;
-    this.nextId = 1;
-    this.pending = new Map();
-    this.handlers = new Map();
-  }
-
-  async connect() {
-    this.ws = new WebSocket(this.url);
-    await new Promise((resolve, reject) => {
-      this.ws.addEventListener("open", resolve, { once: true });
-      this.ws.addEventListener("error", reject, { once: true });
-    });
-    this.ws.addEventListener("message", event => this.handleMessage(event.data));
-    this.ws.addEventListener("close", () => {
-      for (const { reject } of this.pending.values()) {
-        reject(new Error("CDP 连接已关闭"));
-      }
-      this.pending.clear();
-    });
-  }
-
-  handleMessage(raw) {
-    const message = JSON.parse(String(raw));
-    if (message.id) {
-      const pending = this.pending.get(message.id);
-      if (!pending) return;
-      this.pending.delete(message.id);
-      if (message.error) pending.reject(new Error(message.error.message || "CDP error"));
-      else pending.resolve(message.result);
-      return;
-    }
-    if (message.method) {
-      const handlers = this.handlers.get(message.method) || [];
-      handlers.forEach(handler => handler(message.params || {}));
-    }
-  }
-
-  send(method, params = {}) {
-    const id = this.nextId++;
-    const payload = JSON.stringify({ id, method, params });
-    return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      this.ws.send(payload);
-    });
-  }
-
-  on(method, handler) {
-    const handlers = this.handlers.get(method) || [];
-    handlers.push(handler);
-    this.handlers.set(method, handlers);
-  }
-
-  close() {
-    this.ws?.close();
-  }
-}
-
-function timestampForFile(date = new Date()) {
-  const pad = value => String(value).padStart(2, "0");
-  return [
-    date.getFullYear(),
-    pad(date.getMonth() + 1),
-    pad(date.getDate()),
-    "-",
-    pad(date.getHours()),
-    pad(date.getMinutes()),
-    pad(date.getSeconds()),
-  ].join("");
 }
 
 function formatMs(us) {
@@ -488,7 +248,6 @@ async function recordTrace(client, options) {
       durationSeconds: (endedAt.getTime() - startedAt.getTime()) / 1000,
     };
   } finally {
-    // Lite mode is only for the recording window; always clear afterward.
     await clearDiagnosticLite(client);
   }
 }
@@ -505,16 +264,15 @@ async function main() {
 
   const adbPath = await findAdb();
   const device = await ensureSingleDevice(adbPath, args.device);
-
-  if (args.launch) {
-    console.log(`启动 App：${packageName}`);
-    await launchApp(adbPath, device, packageName);
-  }
-
-  const pid = await waitForPid(adbPath, device, packageName);
-  const socketName = await findWebViewSocket(adbPath, device, pid);
-  const port = await forwardWebView(adbPath, device, socketName, args.port);
-  const target = await findTarget(port, args.target);
+  const connection = await connectWebView({
+    adbPath,
+    device,
+    packageName,
+    launch: args.launch,
+    port: args.port,
+    targetQuery: args.target,
+  });
+  const { target, pid, socketName, port } = connection;
 
   console.log(`已连接 WebView：${target.title || "(untitled)"}`);
   console.log(args.manual ? "按提示操作。" : "3 秒后开始录制，请把手放到要操作的位置。");

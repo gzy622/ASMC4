@@ -49,6 +49,23 @@ dev.cmd
 
 **构建：** `npm run build`（仅打包到 `dist/`，不预览）
 
+## Bug 复现录制（adb）
+
+手机连上 USB 或无线 adb 后，在项目根目录：
+
+```powershell
+npm run debug:record
+```
+
+脚本会启动 debug App、连接 WebView、清空并开启应用内操作日志，同步录制 WebView trace 与 `logcat`。在手机上复现问题后，在终端按回车结束。
+
+输出目录：`traces/debug/<时间戳>/`，含 `summary.md`（人读摘要）、`manifest.json`、`app-trace.json`、`webview-trace.json`、`logcat.txt`。
+
+- 多设备：`npm run debug:record -- --device SERIAL`
+- 打印最新录制路径：`npm run debug:record -- --latest`
+
+性能分析仍用 `npm run trace:android`（偏 WebView Performance，不含 logcat / 应用内 trace）。
+
 ## 验证
 
 ```powershell

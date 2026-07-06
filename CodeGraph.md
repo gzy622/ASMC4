@@ -61,6 +61,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 - 设置页「启用操作日志」开关；内存环形缓冲（最多 800 条），可导出 JSON。
 - `traceEvent` / `traceStep` / `traceGesture`；手势工厂可选 `traceLabel`（启用时才写入）。
+- **adb bug 复现**：`npm run debug:record`（`scripts/android-debug-record.mjs`）经 CDP 调用 `window.__ASMC4_DEBUG_TRACE__`（`createDebugTraceApi()`，`app.js` 安装）清空并开启 trace，同步抓 WebView trace + 包级 `logcat`，落盘 `traces/debug/<时间戳>/`（`summary.md`、`manifest.json`、`app-trace.json`、`webview-trace.json`、`logcat.txt`）。智能体默认读 `traces/debug/` 最新目录；`npm run debug:record -- --latest` 打印路径。性能采样仍用 `npm run trace:android`（`traces/android/`）。共用 `scripts/android-adb-lib.mjs`（adb / WebView / CDP）。
 
 ## 打分 sheet
 
@@ -98,7 +99,7 @@ DOM（`index.html` + `dom-refs.js`）：
 | `canStartScoreSheetShellClose` | scoreSheet 壳层下滑关闭 |
 | `canStartToastDismiss` | toast 下滑关闭（`is-visible`，非 `is-open`） |
 
-触点排除选择器：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR` 等；视觉 `is-open` 用 `isPanelVisuallyOpen()`，确认框用 `isConfirmPanelOpen()`。
+触点排除选择器：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`PRIMARY_CHROME_SELECTOR`（顶栏 `.app-bar` 内菜单/图标/标题）、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR` 等；视觉 `is-open` 用 `isPanelVisuallyOpen()`，确认框用 `isConfirmPanelOpen()`。`navigation.js` 的 `bindEmptyAreaClose`（点击空白关浮层）须 `isPrimaryChromeClick()` 早退，与 shell 滑动手势共用「顶栏不算空白」规则。
 
 ### 运动状态（`layer-motion-state.js`）
 

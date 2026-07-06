@@ -52,6 +52,8 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
+  const hadDrawerLayer = drawer.classList.contains("is-open")
+    || drawer.classList.contains("is-expanding");
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
   drawer.classList.remove("is-open");
@@ -61,7 +63,7 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   drawer.setAttribute("aria-hidden", "true");
   resetDrawerFilters();
   setThemeColor("#f4f4f4");
-  if (withTransitionLock) {
+  if (withTransitionLock && hadDrawerLayer) {
     setUiTransitionBusy(true, "drawer");
     setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
   }

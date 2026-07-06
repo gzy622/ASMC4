@@ -26,6 +26,7 @@ import { setSuppressNextCardClick, isUiTransitionBusy } from "../runtime.js";
 import { getState } from "../state.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { traceEvent } from "../utils/trace.js";
+import { isPrimaryChromeClick } from "../gestures/gesture-guards.js";
 
 function consumeFloatingLayerEmptyClick(event) {
   event.preventDefault();
@@ -37,6 +38,7 @@ function bindEmptyAreaClose() {
     if (!(event.target instanceof Element)) return;
     if (event.target.closest("#appToast")) return;
     if (event.target.closest("#importBackupInput")) return;
+    if (isPrimaryChromeClick(event.target)) return;
     if (isUiTransitionBusy()) {
       if (anyFloatingLayerOpen()) consumeFloatingLayerEmptyClick(event);
       return;
