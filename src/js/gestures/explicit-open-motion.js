@@ -19,7 +19,6 @@ export function isExplicitMotionStale(el, generation) {
 }
 
 export function prepareExplicitOpenTransform(el, axis, fromPx) {
-  el.classList.add("no-anim");
   const translate = axis === "x" ? "translateX" : "translateY";
   el.style.transform = `${translate}(${fromPx}px)`;
 }
@@ -55,7 +54,6 @@ export function runExplicitCloseAnimation({
   onComplete,
 }) {
   if (busyKey) setUiTransitionBusy(true, busyKey);
-  el.classList.add("no-anim");
   beginTargetReleaseAnimation(el, "close");
   const translate = axis === "x" ? "translateX" : "translateY";
   el.style.transform = `${translate}(0px)`;

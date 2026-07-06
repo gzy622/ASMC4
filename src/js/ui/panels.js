@@ -9,13 +9,14 @@ import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.
 import {
   isCrossPanelOpenBlocked,
 } from "../gestures/motion-registry.js";
+import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
 import {
   nextExplicitMotionGeneration,
   prepareExplicitOpenTransform,
   runExplicitOpenAnimation,
   runExplicitCloseAnimation,
 } from "../gestures/explicit-open-motion.js";
-import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
+import { snapMotionLayerClosed } from "../gestures/pointer-drag-lifecycle.js";
 import { endQuickPanelPullPreview } from "../gestures/layer-motion-state.js";
 
 let abortQuickPanelOpenDrag = () => {};
@@ -113,6 +114,13 @@ function animateTopSheetClose(panel, onClosed) {
   });
 }
 
+function instantCloseTopSheet(panel) {
+  nextExplicitMotionGeneration(panel);
+  cancelMotionAnimation(panel);
+  snapMotionLayerClosed(panel);
+  panel.setAttribute("aria-hidden", "true");
+}
+
 export function closeFloatingPanels({ restoreFocus = true, animate = true } = {}) {
   const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
   const shouldAnimateQuickPanel = animate && quickPanel.classList.contains("is-open");
@@ -120,7 +128,7 @@ export function closeFloatingPanels({ restoreFocus = true, animate = true } = {}
 
   cancelPendingNewAssignmentFocus();
   blurTopSheetFocus();
-  closeScoreSheet();
+  closeScoreSheet({ animate: false });
   teardownQuickPanelDrag();
   resetQuickPanelView();
   cancelShadowReveal(quickPanel);
@@ -128,20 +136,14 @@ export function closeFloatingPanels({ restoreFocus = true, animate = true } = {}
 
   if (shouldAnimateQuickPanel) {
     animateTopSheetClose(quickPanel);
-  } else {
-    nextExplicitMotionGeneration(quickPanel);
-    quickPanel.classList.remove("is-open");
-    quickPanel.setAttribute("aria-hidden", "true");
-    clearExplicitMotionStyles(quickPanel);
+  } else if (quickPanel.classList.contains("is-open")) {
+    instantCloseTopSheet(quickPanel);
   }
 
   if (shouldAnimateNewAssignmentPanel) {
     animateTopSheetClose(newAssignmentPanel);
-  } else {
-    nextExplicitMotionGeneration(newAssignmentPanel);
-    newAssignmentPanel.classList.remove("is-open");
-    newAssignmentPanel.setAttribute("aria-hidden", "true");
-    clearExplicitMotionStyles(newAssignmentPanel);
+  } else if (newAssignmentPanel.classList.contains("is-open")) {
+    instantCloseTopSheet(newAssignmentPanel);
   }
 
   closeConfirm();

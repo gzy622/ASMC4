@@ -20,7 +20,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/render/`: 渲染（含 8 个模块）
 - `src/js/ui/`: 面板与 UI 动作（含 `floating-layers.js` 浮层栈、`switch-bind.js` switch 绑定）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势（含 9 个模块）
+- `src/js/gestures/`: 手势（15 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
@@ -87,10 +87,12 @@ DOM（`index.html` + `dom-refs.js`）：
 
 | 文件 | 职责 |
 |------|------|
+| `constants.js` | 手势阈值、`PANEL_TRANSITION_MS` 等共享常量 |
 | `gesture-guards.js` | 手势开始判断、触点排除、浮层互斥查询 |
+| `press-feedback.js` | 导航/按钮按压视觉反馈（复用 `NAV_CHROME_SELECTOR`） |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
 | `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
-| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`snapMotionLayerOpen` / `snapMotionLayerClosed`、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
 | `utils/dom.js` | toast、`waitForTransition`（transitionend + timeout） |
 | `swipe-release.js` | `evaluateSwipeRelease` 统一横/竖滑释放阈值 |
 | `explicit-open-motion.js` | 点击打开/关闭 WAAPI 编排、按元素 generation（`WeakMap`）、`busyKey` |
@@ -151,15 +153,15 @@ DOM（`index.html` + `dom-refs.js`）：
 
 重构目标文档中的 `opening` / `closing` 不单独建 phase：`explicit-opening` 承担点击打开，`settling-close` 承担手势释放关闭；程序关依赖 `is-open` 移除 + `cancelShadowReveal`。
 
-其它视觉 class：`is-open`、`is-expanding`（drawer 全屏）、`no-anim`、`is-pointer-guarded`（scoreSheet 防误触）。
+其它视觉 class：`is-open`、`is-expanding`（drawer 全屏 scale）、`no-anim`（仅 `withNoAnimLayer` 瞬时 snap 与 fullscreen 子元素）、`is-pointer-guarded`（scoreSheet 防误触）。
 
 `is-motion-dragging` 仅供 CSS 临时关阴影降绘制；不用于关闭栈或占用判断。
 
-**阴影**：点击打开 drawer / top-sheet / scoreSheet → `shadow-reveal` 登记 `explicit-opening` + `is-shadow-pending`，`motionFinished` 完成后渐入（timeout 兜底）。滑动手势走 `is-motion-dragging`；边缘开 drawer 用 `openDrawer({ deferShadow: false })`。关闭或 snap 无动画须 `cancelShadowReveal(el)`。
+**阴影**：滑动手势面板（drawer / top-sheet / scoreSheet）均用 `::after` + `opacity` 渐入，`design-tokens.css` 中 `--shadow-drawer` / `--shadow-sheet` / `--shadow-sheet-bottom` 分别赋值。点击打开经 `shadow-reveal` 登记 `explicit-opening` + `is-shadow-pending`，`motionFinished` 完成后渐入（timeout 兜底）。滑动手势走 `is-motion-dragging`；边缘开 drawer 用 `openDrawer({ deferShadow: false })`。关闭或 snap 无动画须 `cancelShadowReveal(el)`。
 
 **generation 令牌**：显式 open/close 用 `explicit-open-motion.js` 按元素 `WeakMap`；手势释放用各工厂实例内闭包 `releaseGeneration`（per-binding，与显式路径无关，勿合并）。
 
-**释放动画**：`beginTargetReleaseAnimation(targetEl, direction)`，`direction` 为 `'open'` | `'close'`。`horizontal-drag` 滑到 `0` → open；`createTopSheetOpenGesture` 的 `shouldOpen` → open；`createVerticalDragGesture` 的 `shouldClose` → close。
+**释放动画**：`beginTargetReleaseAnimation(targetEl, direction)`，`direction` 为 `'open'` | `'close'`。滑动手势面板位移**仅**经 WAAPI（`gesture-motion-engine.js`）；CSS 不设 `transform` transition（`drawer.is-expanding` 全屏 scale 除外）。`horizontal-drag` 滑到 `0` → open；`createTopSheetOpenGesture` 的 `shouldOpen` → open；`createVerticalDragGesture` 的 `shouldClose` → close。
 
 ### 手势守卫（`gesture-guards.js`）
 
@@ -223,6 +225,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 点击打开走 `runExplicitOpenAnimation`（WAAPI）+ `shadow-reveal` `motionFinished`；关闭经 `closeScoreSheet` 或下滑手势。
 - 打开后短暂 `is-pointer-guarded` 防误触（仅挡 body 点击，不挡下滑关）；内关 / 壳关均经 `canStartScoreSheetInnerClose` / `canStartScoreSheetShellClose`（release 中、sheet busy、确认框）。
+- 关闭态 `.score-sheet` 用 `visibility: hidden` 防 Android WebView 释放动画结束后一帧重画；`is-open` 或 `is-motion-dragging` 时才 visible。
 - toast 指针事件 `stopPropagation`，不穿透 sheet。
 
 ### toast
@@ -262,6 +265,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 第 2 次复发：读 `~/.agents/skills/hunt/SKILL.md` 定根因。
 - 「设置不生效」：grep `hidden`/`display`/同类设置；`display:grid` 盖 `[hidden]` 时加 `display:none !important`。
+- scoreSheet 下滑关闭后底部闪现：不要继续调 transform 顺序；关闭态直接 `visibility:hidden`，手势态靠 `is-motion-dragging` 显示。
 
 ### dev.ps1 / 无线 adb
 

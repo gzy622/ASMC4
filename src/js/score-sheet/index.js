@@ -15,13 +15,25 @@ import {
   nextExplicitMotionGeneration,
   prepareExplicitOpenTransform,
   runExplicitOpenAnimation,
+  runExplicitCloseAnimation,
 } from "../gestures/explicit-open-motion.js";
-import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
+import { snapMotionLayerClosed } from "../gestures/pointer-drag-lifecycle.js";
+import { clearLayerMotionDrag } from "../gestures/layer-motion-state.js";
 
 let releaseScoreSheetPointerGuard = null;
 
 function closedScoreSheetPx() {
   return scoreSheet.offsetHeight;
+}
+
+function resetScoreSheetState() {
+  setCurrentScoringStudent(null);
+  setScoreInputValue("0");
+  setNoteInputValue("");
+  scoreStudentSerial.textContent = "--";
+  scoreStudentName.textContent = "--";
+  scoreNoteInput.value = "";
+  scoreNoteClear.classList.remove("is-visible");
 }
 
 export function openScoreSheet(student, guardPointer = false) {
@@ -71,22 +83,47 @@ export function openScoreSheet(student, guardPointer = false) {
   if (guardPointer) armScoreSheetPointerGuard();
 }
 
-export function closeScoreSheet() {
+export function closeScoreSheet({ animate = true, fromGesture = false } = {}) {
   traceEvent("scoreSheet.close");
   clearScoreSheetPointerGuard();
   setSuppressNextCardClick(false);
-  setCurrentScoringStudent(null);
-  setScoreInputValue("0");
-  setNoteInputValue("");
-  scoreStudentSerial.textContent = "--";
-  scoreStudentName.textContent = "--";
-  scoreNoteInput.value = "";
-  scoreNoteClear.classList.remove("is-visible");
-  nextExplicitMotionGeneration(scoreSheet);
-  cancelMotionAnimation(scoreSheet);
   cancelShadowReveal(scoreSheet);
-  clearExplicitMotionStyles(scoreSheet);
-  scoreSheet.classList.remove("is-open");
+
+  if (!scoreSheet.classList.contains("is-open")) {
+    resetScoreSheetState();
+    return;
+  }
+
+  if (fromGesture) {
+    scoreSheet.classList.remove("is-open");
+    scoreSheet.setAttribute("aria-hidden", "true");
+    resetScoreSheetState();
+    scoreSheet.style.willChange = "";
+    clearLayerMotionDrag(scoreSheet);
+    return;
+  }
+
+  const generation = nextExplicitMotionGeneration(scoreSheet);
+  cancelMotionAnimation(scoreSheet);
+
+  if (animate) {
+    runExplicitCloseAnimation({
+      el: scoreSheet,
+      axis: "y",
+      toPx: closedScoreSheetPx(),
+      generation,
+      busyKey: "sheet",
+      onComplete: () => {
+        scoreSheet.classList.remove("is-open");
+        scoreSheet.setAttribute("aria-hidden", "true");
+        resetScoreSheetState();
+      },
+    });
+    return;
+  }
+
+  resetScoreSheetState();
+  snapMotionLayerClosed(scoreSheet);
   scoreSheet.setAttribute("aria-hidden", "true");
 }
 
@@ -131,7 +168,7 @@ export function confirmScore() {
   const displayName = getDisplayName(currentScoringStudent, studentIndex >= 0 ? studentIndex : 0);
   saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
   scheduleRender();
-  closeScoreSheet();
+  closeScoreSheet({ animate: false });
 
   announce(message, { action: "undo", assignmentId: assignment.id });
 }

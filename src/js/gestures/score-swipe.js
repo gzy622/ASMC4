@@ -6,7 +6,7 @@ import { isUiTransitionBusy } from "../runtime.js";
 
 createVerticalDragGesture(scoreSheet, {
   closeDirection: +1,
-  onClose: closeScoreSheet,
+  onClose: () => closeScoreSheet({ fromGesture: true }),
   busyKey: "sheet",
   traceLabel: "scoreSheet.close",
   shouldStart: event => canStartScoreSheetInnerClose(event, isUiTransitionBusy("sheet")),
@@ -18,5 +18,5 @@ createVerticalDragGesture(appShell, {
   busyKey: "sheet",
   traceLabel: "scoreSheet.close.shell",
   shouldStart: event => canStartScoreSheetShellClose(event, isUiTransitionBusy("sheet")),
-  onClose: closeScoreSheet,
+  onClose: () => closeScoreSheet({ fromGesture: true }),
 });

@@ -39,68 +39,60 @@
 | 字段 | 值 |
 |------|-----|
 | **最后更新** | 2026-07-06 |
-| **当前阶段** | 三阶段收尾（余 D2 架构债待 repro） |
-| **阶段进度** | 阶段 1 = 100% · 阶段 2 = 100% · 阶段 3 ≈ 98% |
-| **短期目标** | 见下方「短期目标（本批）」 |
+| **当前阶段** | 三阶段收官完成（维护模式） |
+| **阶段进度** | 阶段 1 = 100% · 阶段 2 = 100% · 阶段 3 = 100% |
+| **短期目标** | 无待办（见下方「维护模式」） |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | S23：D8 `drawer-fullscreen` 独立编排保留；S24：D2 WAAPI/CSS 双轨记为架构约束，无 repro 不动 |
+| **最近决策** | S29：D2-C `no-anim` 仅 snap；显式 WAAPI 不再挂 class，D2 收官 |
 
 ### 短期目标（本批）
 
-一次会话只做 **1～2 项**，做完勾掉并更新「当前快照」。
+三阶段任务已全部完成。后续手势改动走常规 bugfix / 功能立项，不再从此表取短期项。
+
+- [x] **S25** P3：收官——CodeGraph 模块数对齐（9→15）、tracker 标记维护模式
+- [x] **S26** P3：D10——top-sheet `::after` 阴影，与 drawer/scoreSheet 统一；调阴影改 `design-tokens.css` 三个 token
+- [x] **S27** P1：D2-A——drawer / top-sheet / score-sheet 去掉 CSS `transform` transition；位移仅 WAAPI
+- [x] **S28** P1：D2-B——瞬时开/关路径统一；`snapMotionLayerOpen` / `snapMotionLayerClosed`
+- [x] **S29** P1：D2-C——`no-anim` 收拢为 `withNoAnimLayer`（仅 snap）；显式 WAAPI 去 `no-anim`
+
+<details>
+<summary>已完成短期目标（S1–S24，归档）</summary>
 
 - [x] **S1** P0：删除 `release-animation.js`，`CodeGraph.md` 改指向 `gesture-motion-engine.js`，重构目标文档「保留不动」列表同步
 - [x] **S2** P1：`clearDrawerMotionStyles` / `clearTopSheetMotionStyles` 收到 `pointer-drag-lifecycle.js`（或单一 `endExplicitMotion` helper）
-
 - [x] **S3** P1：`busyKey` 接线 `setUiTransitionBusy` 或从 API 删除（1.7）
 - [x] **S4** P1：shadow 完成单一路径，弱化无效 `transitionend`（3.2）
 - [x] **S5** P1：`utils/dom.js` toast 路径收拢 `clear*MotionStyles`（3.1 余量）
 - [x] **S6** P2：`drawer.js` / `panels.js` 显式 open 编排抽共享 helper（3.3）
+- [x] **S7** P2：`evaluateSwipeRelease` 统一释放阈值（3.4）
+- [x] **S8** P2：共享 `drawerClosedPx`（3.5）
+- [x] **S9** P2：`createHorizontalDragGesture` 返回 `{ abortRelease }`（3.6）
+- [x] **S10** P3：删除未用 `endLayerDrag` 或明确用途（1.8）
+- [x] **S11** P3：Android `touchmove` 助手抽到 `pointer-drag-lifecycle`（3.7）
+- [x] **S12** P3：`waitForTransition` 通用化（3.9）
+- [x] **S13** P3：横/竖工厂抽 `bindPointerDragLifecycle`（3.8）
+- [x] **S14** P3：评估 score-sheet 内关补 guard（2.4）
+- [x] **S15** P3：评估 `opening` / `closing` phase（3.10）→ **跳过**，现有 phase 够用
+- [x] **S16** P3：选择器与 `press-feedback` 重叠整理（2.5）→ `NAV_CHROME_SELECTOR` 单源
+- [x] **S17** P3：删除 `openDrawer` 死分支 `!shouldAnimate`（D9）
+- [x] **S18** P3：`runExplicitOpenAnimation` 接 `busyKey`，drawer 显式 open 收拢（D6 余量）
+- [x] **S19** P3：`runExplicitCloseAnimation` 收拢 drawer/panels 显式关闭（D6）
+- [x] **S20** P3：scoreSheet 打开迁 WAAPI 显式路径（D7）→ `runExplicitOpenAnimation` + `motionFinished` 阴影
+- [x] **S21** P3：`shadow-reveal` 删无调用方的 `transitionend` 路径（D3）
+- [x] **S22** P3：评估 D4 generation 复制 → **跳过**，显式 `WeakMap` 与手势闭包 `releaseGeneration` 职责不同
+- [x] **S23** P3：评估 D8 `drawer-fullscreen` → **保留**独立编排（多段 expand/opacity，与 `openDrawer` 职责不同）
+- [x] **S24** P3：评估 D2 WAAPI/CSS 双轨 → **记录**，靠 `no-anim`+reflow 防御，无 repro 不拆
 
-> 下一批短期目标（从阶段清单取）：
-> - [x] **S7** P2：`evaluateSwipeRelease` 统一释放阈值（3.4）
-> - [x] **S8** P2：共享 `drawerClosedPx`（3.5）
+</details>
 
-> 再下一批：
-> - [x] **S9** P2：`createHorizontalDragGesture` 返回 `{ abortRelease }`（3.6）
+### 维护模式
 
-> 下一批短期目标（从阶段清单取）：
-> - [x] **S10** P3：删除未用 `endLayerDrag` 或明确用途（1.8）
+重构承诺 F1–F5 已落地。后续：
 
-> 再下一批：
-> - [x] **S11** P3：Android `touchmove` 助手抽到 `pointer-drag-lifecycle`（3.7）
-
-> 下一批短期目标（从阶段清单取）：
-> - [x] **S12** P3：`waitForTransition` 通用化（3.9）
-
-> 再下一批（阶段 3 余量，体量大者放后）：
-> - [x] **S13** P3：横/竖工厂抽 `bindPointerDragLifecycle`（3.8）
-
-> 下一批短期目标（阶段 2/3 余量）：
-> - [x] **S14** P3：评估 score-sheet 内关补 guard（2.4）
-> - [x] **S15** P3：评估 `opening` / `closing` phase（3.10）→ **跳过**，现有 phase 够用
-
-> 下一批（可选余量）：
-> - [x] **S16** P3：选择器与 `press-feedback` 重叠整理（2.5）→ `NAV_CHROME_SELECTOR` 单源
-
-> 下一批短期目标（技术债余量）：
-> - [x] **S17** P3：删除 `openDrawer` 死分支 `!shouldAnimate`（D9）
-> - [x] **S18** P3：`runExplicitOpenAnimation` 接 `busyKey`，drawer 显式 open 收拢（D6 余量）
-
-> 下一批短期目标（技术债余量）：
-> - [x] **S19** P3：`runExplicitCloseAnimation` 收拢 drawer/panels 显式关闭（D6）
-
-> 下一批短期目标（技术债余量）：
-> - [x] **S20** P3：scoreSheet 打开迁 WAAPI 显式路径（D7）→ `runExplicitOpenAnimation` + `motionFinished` 阴影
-
-> 下一批短期目标（技术债余量）：
-> - [x] **S21** P3：`shadow-reveal` 删无调用方的 `transitionend` 路径（D3）
-> - [x] **S22** P3：评估 D4 generation 复制 → **跳过**，显式 `WeakMap` 与手势闭包 `releaseGeneration` 职责不同
-
-> 下一批短期目标（收尾评估）：
-> - [x] **S23** P3：评估 D8 `drawer-fullscreen` → **保留**独立编排（多段 expand/opacity，与 `openDrawer` 职责不同）
-> - [x] **S24** P3：评估 D2 WAAPI/CSS 双轨 → **记录**，靠 `no-anim`+reflow 防御，无 repro 不拆
+- 改手势：先读 CodeGraph「手势」+ `手势和动画重构目标文档.md`；动 `panel-swipe` / 工厂前必读守卫表。
+- 双动画 repro：参考 `scripts/__repro_double_anim.html`，单独立项处理 D2。
+- 本 tracker 仅在新审查录入技术债或复现 D2 时更新「短期目标」。
 
 ---
 
@@ -112,12 +104,12 @@
 |------|------|------|------|
 | **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | 100% | 完成 |
 | **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | 100% | 完成 |
-| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 98% | 收尾 |
+| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | 100% | 完成 |
 
 ```text
-[=======阶段1=======]░░
-[=====阶段2=====]░░░░░░░
-[====阶段3====]░░░░░░░░░░
+[=======阶段1=======]
+[=====阶段2=====]
+[====阶段3====]
 ```
 
 ---
@@ -171,7 +163,7 @@
 | ID | 问题 | 严重度 | 关联任务 | 状态 |
 |----|------|--------|----------|------|
 | D1 | `release-animation.js` 死代码，文档仍写「勿改」 | 高 | 1.6 | ✅ |
-| D2 | WAAPI + CSS transition 双轨，靠 `no-anim` + reflow 防御 | 高 | 3.1, 3.2 | ⏸ 架构约束；有双动画 repro 再立项 |
+| D2 | WAAPI + CSS transition 双轨，靠 `no-anim` + reflow 防御 | 高 | 3.1, 3.2 | ✅ **S27–S29**；位移仅 WAAPI，`no-anim` 仅 snap |
 | D3 | `shadow-reveal` 三路完成（transitionend / timeout / settle 显式调用） | 中 | 3.2 | ✅ |
 | D4 | generation 令牌 4 处复制 | 中 | 3.3 | ✅ 显式 `WeakMap` + 手势闭包双轨，有意不合并 |
 | D5 | `busyKey` 未接线 | 中 | 1.7 | ✅ |
@@ -179,7 +171,7 @@
 | D7 | score-sheet 打开动画路径与其他浮层不一致 | 低 | 3.2 | ✅ |
 | D8 | `drawer-fullscreen` 未复用 shadow-reveal / openDrawer | 低 | 3.9 | ✅ 有意独立；`waitForTransition` 已共享 |
 | D9 | `openDrawer` 死分支（`!shouldAnimate`） | 低 | — | ✅ |
-| D10 | top-sheet 阴影用 `box-shadow`，drawer 用 `::after` | 信息 | — | 记录即可 |
+| D10 | top-sheet 阴影用 `box-shadow`，drawer 用 `::after` | 信息 | — | ✅ **S26**；三滑动手势面板均 `::after` + opacity |
 
 复现资产：`scripts/__repro_double_anim.html`（双动画最小 repro，处理 D2 时参考）。
 
@@ -270,6 +262,11 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-06 | S29：D2-C `withNoAnimLayer`；D2 技术债收官 |
+| 2026-07-06 | S28：D2-B `snapMotionLayerOpen` / `snapMotionLayerClosed` 统一瞬时开/关 |
+| 2026-07-06 | S27：D2-A 去掉滑动手势面板 CSS transform transition；fullscreen 收起 wait 对齐 |
+| 2026-07-06 | S26：D10 top-sheet 阴影迁 `::after`，token 仍为 `--shadow-sheet` |
+| 2026-07-06 | S25：三阶段收官；CodeGraph 15 模块对齐；进入维护模式 |
 | 2026-07-06 | S23+S24：D8 全屏编排保留独立；D2 双轨记为架构约束 |
 | 2026-07-06 | S21+S22：`shadow-reveal` 单路径；D4 generation 双轨记为有意设计 |
 | 2026-07-06 | S20：scoreSheet 打开迁 WAAPI，`shadow-reveal` 走 `motionFinished` |

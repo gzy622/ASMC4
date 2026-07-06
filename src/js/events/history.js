@@ -17,7 +17,7 @@ function isEditableTarget(element) {
 }
 
 function closeTransientEditing() {
-  closeScoreSheet();
+  closeScoreSheet({ animate: false });
   closeConfirm();
 }
 

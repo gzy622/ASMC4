@@ -17,7 +17,7 @@ import {
   runExplicitOpenAnimation,
   runExplicitCloseAnimation,
 } from "../gestures/explicit-open-motion.js";
-import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
+import { snapMotionLayerClosed, snapMotionLayerOpen } from "../gestures/pointer-drag-lifecycle.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -58,14 +58,16 @@ export function getDrawerClosedPx() {
 
 export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
   if (isCrossPanelOpenBlocked()) return;
-  closeScoreSheet();
+  closeScoreSheet({ animate: false });
   clearDocumentSelection();
   const shouldAnimate = withTransitionLock;
   const fromPx = getDrawerClosedPx();
   if (shouldAnimate) {
     prepareExplicitOpenTransform(drawer, "x", fromPx);
+    drawer.classList.add("is-open");
+  } else {
+    snapMotionLayerOpen(drawer);
   }
-  drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
   requestAnimationFrame(() => {
@@ -120,10 +122,9 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   cancelMotionAnimation(drawer);
   endTargetReleaseAnimation(drawer);
   setUiTransitionBusy(false, "drawer");
-  drawer.classList.remove("is-open");
   drawer.classList.remove("is-expanding");
-  clearExplicitMotionStyles(drawer);
   clearDrawerExpandScale();
+  snapMotionLayerClosed(drawer);
   drawer.setAttribute("aria-hidden", "true");
   resetDrawerFilters();
   setThemeColor("#f4f4f4");
@@ -146,22 +147,16 @@ export function snapResetDrawer() {
   blurDrawerFocus();
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
-  drawer.classList.add("no-anim");
   drawer.classList.remove("is-expanding");
-  drawer.classList.remove("is-open");
   clearDrawerExpandScale();
+  snapMotionLayerClosed(drawer);
   drawer.setAttribute("aria-hidden", "true");
-  void drawer.offsetHeight;
-  drawer.classList.remove("no-anim");
 }
 
 export function snapPrepareDrawer() {
   setDrawerExpandScale();
   cancelShadowReveal(drawer);
-  drawer.classList.add("no-anim");
-  drawer.classList.add("is-open");
+  snapMotionLayerOpen(drawer);
   drawer.classList.add("is-expanding");
   drawer.setAttribute("aria-hidden", "false");
-  void drawer.offsetHeight;
-  drawer.classList.remove("no-anim");
 }

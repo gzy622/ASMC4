@@ -227,19 +227,25 @@ export function createVerticalDragGesture(el, {
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
       releaseAnimating = false;
-      endTargetReleaseAnimation(targetEl);
       if (shouldClose) {
         if (traceLabel) traceGesture(traceLabel, "close");
         onClose();
-      } else if (traceLabel) {
-        traceGesture(traceLabel, "cancel");
+      } else {
+        endTargetReleaseAnimation(targetEl);
+        if (traceLabel) traceGesture(traceLabel, "cancel");
       }
     } finally {
       if (generation !== releaseGeneration) {
         activeRelease = null;
         return;
       }
-      clearDragStyles();
+      if (wasDragging && shouldClose && onClose) {
+        endTargetReleaseAnimation(targetEl);
+        targetEl.style.willChange = "";
+        clearLayerMotionDrag(targetEl);
+      } else if (wasDragging) {
+        clearDragStyles();
+      }
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = "";
       }

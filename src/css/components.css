@@ -195,7 +195,6 @@
       transform-origin: left center;
       display: flex;
       flex-direction: column;
-      transition: transform 320ms var(--motion);
       touch-action: none;
     }
 
@@ -276,6 +275,7 @@
     }
 
     html.perf-diagnostics-lite .drawer::after,
+    html.perf-diagnostics-lite .top-sheet::after,
     html.perf-diagnostics-lite .score-sheet::after,
     html.perf-diagnostics-lite .confirm-scrim::after {
       opacity: 0 !important;
@@ -286,18 +286,14 @@
     /* Drag/release only: drop shadow work while transform is animating. */
     .drawer.is-motion-dragging::after,
     .drawer.is-open.is-motion-dragging::after,
+    .top-sheet.is-motion-dragging::after,
+    .top-sheet.is-open.is-motion-dragging::after,
+    .top-sheet.is-dragging.is-motion-dragging::after,
     .score-sheet.is-motion-dragging::after,
     .score-sheet.is-open.is-motion-dragging::after {
       opacity: 0;
       box-shadow: none;
       transition: none;
-    }
-
-    .top-sheet.is-motion-dragging,
-    .top-sheet.is-open.is-motion-dragging,
-    .top-sheet.is-dragging.is-motion-dragging {
-      box-shadow: none;
-      transition: box-shadow 0ms var(--motion);
     }
 
     .score-sheet.is-motion-dragging,
@@ -643,11 +639,19 @@
       opacity: 1;
       pointer-events: none;
       z-index: 60;
-      transition:
-        transform 320ms var(--motion),
-        box-shadow 280ms var(--motion);
       transform: translateY(-100%);
       background: var(--bg);
+    }
+
+    .top-sheet::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: var(--shadow-sheet);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 280ms var(--motion);
     }
     #quickPanel {
       max-height: 100dvh;
@@ -713,9 +717,9 @@
       transform: translateY(0);
       will-change: transform;
     }
-    .top-sheet.is-open:not(.is-shadow-pending):not(.is-motion-dragging),
-    .top-sheet.is-dragging:not(.is-shadow-pending):not(.is-motion-dragging) {
-      box-shadow: var(--shadow-sheet);
+    .top-sheet.is-open:not(.is-shadow-pending):not(.is-motion-dragging)::after,
+    .top-sheet.is-dragging:not(.is-shadow-pending):not(.is-motion-dragging)::after {
+      opacity: 1;
     }
 
     .top-sheet.is-dragging {
@@ -1249,7 +1253,7 @@
       border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
       box-shadow: none;
       transform: translateY(100%);
-      transition: transform 320ms var(--motion);
+      visibility: hidden;
       touch-action: none;
     }
 
@@ -1267,6 +1271,11 @@
     .score-sheet.is-open {
       transform: translateY(0);
       will-change: transform;
+      visibility: visible;
+    }
+
+    .score-sheet.is-motion-dragging {
+      visibility: visible;
     }
 
     .score-sheet.is-open.is-pointer-guarded .score-sheet-body {

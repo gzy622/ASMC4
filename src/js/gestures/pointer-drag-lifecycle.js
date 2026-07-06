@@ -52,10 +52,40 @@ export function clearExplicitMotionStyles(targetEl) {
   targetEl.style.transition = "";
 }
 
+/** Block child opacity transitions during instant class toggles (snap only). */
+export function withNoAnimLayer(targetEl, mutate) {
+  targetEl.classList.add("no-anim");
+  mutate();
+  void targetEl.offsetHeight;
+  targetEl.classList.remove("no-anim");
+}
+
+function snapMotionLayerStyles(targetEl, mutate) {
+  withNoAnimLayer(targetEl, () => {
+    mutate();
+    targetEl.style.willChange = "";
+  });
+}
+
+/** Instant close: drop is-open before clearing inline transform (avoid open-state flash). */
+export function snapMotionLayerClosed(targetEl) {
+  snapMotionLayerStyles(targetEl, () => {
+    targetEl.classList.remove("is-open");
+    targetEl.style.transform = "";
+  });
+  clearLayerMotionDrag(targetEl);
+}
+
+/** Instant open: strip inline transform, set is-open (no WAAPI). */
+export function snapMotionLayerOpen(targetEl) {
+  snapMotionLayerStyles(targetEl, () => {
+    targetEl.style.transform = "";
+    targetEl.classList.add("is-open");
+  });
+}
+
 export function endExplicitMotion(targetEl) {
   clearExplicitMotionStyles(targetEl);
-  targetEl.classList.remove("no-anim");
-  void targetEl.offsetHeight;
 }
 
 export function capturePointer(bindEl, event) {

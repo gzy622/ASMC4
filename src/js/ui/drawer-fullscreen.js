@@ -29,7 +29,7 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
   beginTargetExplicitOpenAnimation(panel);
 
   try {
-    closeScoreSheet();
+    closeScoreSheet({ animate: false });
     closeFloatingPanels();
 
     renderFn();
@@ -114,10 +114,7 @@ export async function closeDrawerFullscreenPanel(panel) {
 
   await new Promise(resolve => requestAnimationFrame(resolve));
   contractDrawer();
-  await waitForTransition(drawer, {
-    property: "transform",
-    timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
-  }).promise;
+  await waitForAnimationFrame();
 
   setThemeColor("#f4f4f4");
 

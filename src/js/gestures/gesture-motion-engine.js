@@ -139,11 +139,15 @@ export function animateMotionRelease(
   const finished = Promise.all(animations.map(animation => animation.finished.catch(() => undefined)))
     .then(() => {
       if (cancelled) return;
+      animations.forEach((animation) => {
+        if (typeof animation.commitStyles === "function") {
+          animation.commitStyles();
+        }
+      });
       el.style.transform = toTransform;
       if (secondaryTarget) {
         secondaryTarget.el.style[secondaryTarget.prop] = secondaryTarget.toValue;
       }
-      animations.forEach(animation => animation.cancel());
       activeAnimations.delete(el);
     });
 
