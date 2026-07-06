@@ -45,12 +45,6 @@ export function beginLayerDrag(el) {
   setPhase(el, "dragging");
 }
 
-export function endLayerDrag(el) {
-  if (getState(el).phase === "dragging") {
-    setPhase(el, "idle");
-  }
-}
-
 export function clearLayerMotionDrag(el) {
   const state = getState(el);
   if (state.phase === "dragging" || state.phase === "settling-open" || state.phase === "settling-close") {

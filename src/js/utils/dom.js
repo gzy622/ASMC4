@@ -5,6 +5,61 @@ import { canUndo, canRedo, pruneAssignmentHistoryIfOrphan } from "../state.js";
 const TOAST_DURATION_MS = 3200;
 const TOAST_FEEDBACK_DURATION_MS = 4200;
 const TOAST_FADE_MS = 180;
+
+/** CSS transitionend + timeout；`cancel()` 可提前拆除监听，promise 不再 resolve。 */
+export function waitForTransition(el, { property = null, timeoutMs = 400, onTimeout = null } = {}) {
+  let settled = false;
+  let resolvePromise = () => {};
+  let timer = null;
+  let deferTimer = null;
+
+  const cleanup = () => {
+    el.removeEventListener("transitionend", onEnd);
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    if (deferTimer) {
+      clearTimeout(deferTimer);
+      deferTimer = null;
+    }
+  };
+
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    resolvePromise();
+  };
+
+  const cancel = () => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+  };
+
+  const onEnd = (event) => {
+    if (event.target !== el) return;
+    if (property && event.propertyName !== property) return;
+    finish();
+  };
+
+  const promise = new Promise(resolve => {
+    resolvePromise = resolve;
+    el.addEventListener("transitionend", onEnd);
+    timer = setTimeout(() => {
+      const extraMs = onTimeout?.() ?? 0;
+      if (extraMs > 0) {
+        deferTimer = setTimeout(finish, extraMs);
+        return;
+      }
+      finish();
+    }, timeoutMs);
+  });
+
+  return { promise, cancel };
+}
+
 let toastTimer = null;
 let abortToastDismiss = () => {};
 let toastSwipeDismissing = false;

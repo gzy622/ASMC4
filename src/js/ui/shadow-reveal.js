@@ -4,6 +4,7 @@ import {
   endLayerExplicitOpen,
   setLayerShadowPending,
 } from "../gestures/layer-motion-state.js";
+import { waitForTransition } from "../utils/dom.js";
 
 const MAX_EXPLICIT_OPEN_MS = 380;
 const SETTLE_FALLBACK_MS = 60;
@@ -40,27 +41,29 @@ export function beginShadowRevealAfterOpen(el, { onSettled, motionFinished } = {
   beginLayerExplicitOpen(el);
   setLayerShadowPending(el, true);
 
-  const state = { onEnd: null, timer: null, onSettled };
+  const state = { cancelTransitionWait: null, timer: null, onSettled };
   const useTransitionEnd = !motionFinished;
+  const fallbackMs = Math.max(PANEL_TRANSITION_MS, MAX_EXPLICIT_OPEN_MS) + SETTLE_FALLBACK_MS;
 
   if (useTransitionEnd) {
-    state.onEnd = (event) => {
-      if (event.target !== el || event.propertyName !== "transform") return;
+    const { promise, cancel } = waitForTransition(el, {
+      property: "transform",
+      timeoutMs: fallbackMs,
+      onTimeout: () => (el.classList.contains("no-anim") ? SETTLE_FALLBACK_MS : 0),
+    });
+    state.cancelTransitionWait = cancel;
+    promise.then(() => {
+      if (!pendingByEl.has(el)) return;
       finishShadowReveal(el);
-    };
-    el.addEventListener("transitionend", state.onEnd);
+    });
   } else {
     bindMotionFinished(el, motionFinished);
+    state.timer = setTimeout(() => {
+      if (!pendingByEl.has(el)) return;
+      finishShadowReveal(el);
+    }, fallbackMs);
   }
 
-  state.timer = setTimeout(() => {
-    if (!pendingByEl.has(el)) return;
-    if (useTransitionEnd && el.classList.contains("no-anim")) {
-      state.timer = setTimeout(() => finishShadowReveal(el), SETTLE_FALLBACK_MS);
-      return;
-    }
-    finishShadowReveal(el);
-  }, Math.max(PANEL_TRANSITION_MS, MAX_EXPLICIT_OPEN_MS) + SETTLE_FALLBACK_MS);
   pendingByEl.set(el, state);
 }
 
@@ -69,7 +72,7 @@ export function cancelShadowReveal(el) {
   endLayerExplicitOpen(el);
   setLayerShadowPending(el, false);
   if (!state) return;
-  if (state.onEnd) el.removeEventListener("transitionend", state.onEnd);
+  state.cancelTransitionWait?.();
   if (state.timer) clearTimeout(state.timer);
   pendingByEl.delete(el);
 }

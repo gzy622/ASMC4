@@ -90,11 +90,12 @@ DOM（`index.html` + `dom-refs.js`）：
 | `gesture-guards.js` | 手势开始判断、触点排除、浮层互斥查询 |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
 | `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
-| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理 |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、Android `touchmove` 滚动拦截 |
+| `utils/dom.js` | toast、`waitForTransition`（transitionend + timeout） |
 | `swipe-release.js` | `evaluateSwipeRelease` 统一横/竖滑释放阈值 |
 | `explicit-open-motion.js` | 点击打开 WAAPI 编排、generation 令牌 |
 | `drag-gesture.js` | 垂直拖动、`createTopSheetOpenGesture` |
-| `horizontal-drag.js` | 水平拖动 |
+| `horizontal-drag.js` | 水平拖动；返回 `{ abortRelease }` |
 | `panel-swipe.js` | quickPanel 四类动作 + newAssignment 关闭 |
 | `drawer-gestures.js` / `score-swipe.js` / `toast-swipe.js` | 各浮层手势绑定 |
 | `gesture-motion-engine.js` | WAAPI 释放动画、`animateMotionRelease`（**勿改**算法参数） |

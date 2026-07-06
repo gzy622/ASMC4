@@ -1,7 +1,7 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
 import { drawer } from "../dom-refs.js";
 import { getState } from "../state.js";
-import { setThemeColor } from "../utils/dom.js";
+import { setThemeColor, waitForTransition } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { closeFloatingPanels } from "./panels.js";
 import { expandDrawer, contractDrawer, snapResetDrawer, snapPrepareDrawer } from "./drawer.js";
@@ -19,26 +19,6 @@ const TRANSITION_TIMEOUT_PAD = 80;
 
 function waitForAnimationFrame() {
   return new Promise(resolve => requestAnimationFrame(resolve));
-}
-
-function waitForTransition(el, { property = null, timeoutMs = 400 } = {}) {
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      el.removeEventListener("transitionend", onEnd);
-      clearTimeout(timer);
-      resolve();
-    };
-    const onEnd = (event) => {
-      if (event.target !== el) return;
-      if (property && event.propertyName !== property) return;
-      finish();
-    };
-    el.addEventListener("transitionend", onEnd);
-    const timer = setTimeout(finish, timeoutMs);
-  });
 }
 
 export async function openDrawerFullscreenPanel(panel, renderFn) {
@@ -61,7 +41,7 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
       await waitForTransition(drawer, {
         property: "transform",
         timeoutMs: DRAWER_OPEN_DURATION + TRANSITION_TIMEOUT_PAD,
-      });
+      }).promise;
     }
 
     void drawer.offsetWidth;
@@ -70,7 +50,7 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
     await waitForTransition(drawer, {
       property: "transform",
       timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
-    });
+    }).promise;
 
     panel.classList.remove("is-closing");
     panel.classList.add("is-open");
@@ -78,7 +58,7 @@ export async function openDrawerFullscreenPanel(panel, renderFn) {
     await waitForTransition(panel, {
       property: "opacity",
       timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-    });
+    }).promise;
 
     snapResetDrawer();
   } finally {
@@ -98,7 +78,7 @@ export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
   await waitForTransition(fromPanel, {
     property: "opacity",
     timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-  });
+  }).promise;
   fromPanel.classList.remove("is-closing");
 
   renderFn();
@@ -109,7 +89,7 @@ export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
   await waitForTransition(toPanel, {
     property: "opacity",
     timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-  });
+  }).promise;
 
   snapResetDrawer();
   setUiTransitionBusy(false, "drawer-fullscreen");
@@ -125,7 +105,7 @@ export async function closeDrawerFullscreenPanel(panel) {
   await waitForTransition(panel, {
     property: "opacity",
     timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-  });
+  }).promise;
   panel.classList.remove("is-closing");
 
   snapPrepareDrawer();
@@ -137,7 +117,7 @@ export async function closeDrawerFullscreenPanel(panel) {
   await waitForTransition(drawer, {
     property: "transform",
     timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
-  });
+  }).promise;
 
   setThemeColor("#f4f4f4");
 

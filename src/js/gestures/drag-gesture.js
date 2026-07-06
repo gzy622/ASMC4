@@ -11,6 +11,7 @@ import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtim
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
+  bindAndroidTouchmoveGuard,
   capturePointer,
   clearMotionDragStyles,
   createTransformBatcher,
@@ -263,13 +264,11 @@ export function createVerticalDragGesture(el, {
   el.addEventListener("pointerup", handlePointerUp);
   el.addEventListener("pointercancel", handlePointerCancel);
 
-  // Android WebView: prevent native scroll when vertical gesture is detected
-  el.addEventListener("touchmove", (event) => {
-    if (activePointerId === null || startY === null) return;
-    if (Math.abs(event.touches[0].clientY - startY) > DRAG_START_THRESHOLD) {
-      event.preventDefault();
-    }
-  }, { passive: false });
+  bindAndroidTouchmoveGuard(
+    el,
+    () => activePointerId !== null && startY !== null,
+    (event) => Math.abs(event.touches[0].clientY - startY) > DRAG_START_THRESHOLD,
+  );
 
   return { abortRelease };
 }
@@ -501,14 +500,14 @@ export function createTopSheetOpenGesture(bindEl, {
   bindEl.addEventListener("pointerup", handlePointerUp);
   bindEl.addEventListener("pointercancel", handlePointerCancel);
 
-  // Android WebView: prevent native scroll when pull-down gesture is detected
-  bindEl.addEventListener("touchmove", (event) => {
-    if (activePointerId === null || startY === null) return;
-    const dy = event.touches[0].clientY - startY;
-    if (dragging || (dy > DRAG_START_THRESHOLD && canPull(event))) {
-      event.preventDefault();
-    }
-  }, { passive: false });
+  bindAndroidTouchmoveGuard(
+    bindEl,
+    () => activePointerId !== null && startY !== null,
+    (event) => {
+      const dy = event.touches[0].clientY - startY;
+      return dragging || (dy > DRAG_START_THRESHOLD && canPull(event));
+    },
+  );
 
   return { abortRelease };
 }

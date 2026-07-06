@@ -133,3 +133,13 @@ export function restoreAfterDragAbort({
   }
   releasePointerFn();
 }
+
+/** Android WebView: block native scroll once factory predicates say a drag is active. */
+export function bindAndroidTouchmoveGuard(bindEl, getActive, shouldPreventDefault) {
+  bindEl.addEventListener("touchmove", (event) => {
+    if (!getActive()) return;
+    if (shouldPreventDefault(event)) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+}

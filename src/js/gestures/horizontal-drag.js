@@ -1,11 +1,12 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
-import { beginLayerDrag, isLayerMotionDragging } from "./layer-motion-state.js";
+import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtime.js";
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
+  bindAndroidTouchmoveGuard,
   capturePointer,
   clearMotionDragStyles,
   createTransformBatcher,
@@ -62,6 +63,28 @@ export function createHorizontalDragGesture(bindEl, {
     motion.clear();
     dragBasePx = 0;
     if (busyKey && wasDragging) setUiTransitionBusy(false, busyKey);
+  }
+
+  function abortRelease() {
+    releaseGeneration += 1;
+    activeRelease?.cancel();
+    activeRelease = null;
+    flushTransform();
+    releasePointer(bindEl, activePointerId);
+    releaseDirection(activePointerId);
+    startX = null;
+    startY = null;
+    dragging = false;
+    dragBasePx = 0;
+    activePointerId = null;
+    motion.clear();
+    clearLayerMotionDrag(targetEl);
+    if (busyKey) setUiTransitionBusy(false, busyKey);
+    if (releaseAnimating) {
+      releaseAnimating = false;
+      endTargetReleaseAnimation(targetEl);
+      clearDragStyles();
+    }
   }
 
   bindEl.addEventListener("pointerdown", (event) => {
@@ -208,13 +231,15 @@ export function createHorizontalDragGesture(bindEl, {
     resetDragState();
   });
 
-  // Android WebView: prevent native scroll when horizontal gesture is detected
-  bindEl.addEventListener("touchmove", (event) => {
-    if (activePointerId === null || startX === null) return;
-    const dx = Math.abs(event.touches[0].clientX - startX);
-    const dy = Math.abs(event.touches[0].clientY - startY);
-    if (dx > DRAG_START_THRESHOLD && dx > dy * DRAG_SLOPE) {
-      event.preventDefault();
-    }
-  }, { passive: false });
+  bindAndroidTouchmoveGuard(
+    bindEl,
+    () => activePointerId !== null && startX !== null,
+    (event) => {
+      const dx = Math.abs(event.touches[0].clientX - startX);
+      const dy = Math.abs(event.touches[0].clientY - startY);
+      return dx > DRAG_START_THRESHOLD && dx > dy * DRAG_SLOPE;
+    },
+  );
+
+  return { abortRelease };
 }

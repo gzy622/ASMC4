@@ -40,11 +40,11 @@
 |------|-----|
 | **最后更新** | 2026-07-06 |
 | **当前阶段** | 阶段 3 进行中 |
-| **阶段进度** | 阶段 1 ≈ 95% · 阶段 2 ≈ 50% · 阶段 3 ≈ 45% |
+| **阶段进度** | 阶段 1 ≈ 98% · 阶段 2 ≈ 50% · 阶段 3 ≈ 55% |
 | **短期目标** | 见下方「短期目标（本批）」 |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | S7 新增 `swipe-release.js` 统一横/竖释放阈值；S8 `getDrawerClosedPx` 从 `drawer.js` 导出供手势复用 |
+| **最近决策** | 双端（浏览器 + Android）手动验收 S1–S12 全部通过 |
 
 ### 短期目标（本批）
 
@@ -63,7 +63,19 @@
 > - [x] **S8** P2：共享 `drawerClosedPx`（3.5）
 
 > 再下一批：
-> - [ ] **S9** P2：`createHorizontalDragGesture` 返回 `{ abortRelease }`（3.6）
+> - [x] **S9** P2：`createHorizontalDragGesture` 返回 `{ abortRelease }`（3.6）
+
+> 下一批短期目标（从阶段清单取）：
+> - [x] **S10** P3：删除未用 `endLayerDrag` 或明确用途（1.8）
+
+> 再下一批：
+> - [x] **S11** P3：Android `touchmove` 助手抽到 `pointer-drag-lifecycle`（3.7）
+
+> 下一批短期目标（从阶段清单取）：
+> - [x] **S12** P3：`waitForTransition` 通用化（3.9）
+
+> 再下一批（阶段 3 余量，体量大者放后）：
+> - [ ] **S13** P3：横/竖工厂抽 `bindPointerDragLifecycle`（3.8）
 
 ---
 
@@ -73,9 +85,9 @@
 
 | 阶段 | 目标 | 进度 | 状态 |
 |------|------|------|------|
-| **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | ≈ 95% | 进行中 |
+| **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | ≈ 98% | 进行中 |
 | **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | ≈ 50% | 进行中 |
-| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 40% | 进行中 |
+| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 55% | 进行中 |
 
 ```text
 [=======阶段1=======]░░
@@ -98,7 +110,7 @@
 | 1.5 | motion class 不散落 `classList`（审查已确认） | — | ✅ 完成 | `is-open` / `no-anim` 仍手写，属预期 |
 | 1.6 | 删除 `release-animation.js`，文档对齐 `gesture-motion-engine.js` | P0 | ✅ 完成 | **短期 S1** |
 | 1.7 | `busyKey`：工厂接入 `setUiTransitionBusy` 或从 API 删除 | P1 | ✅ 完成 | **短期 S3** |
-| 1.8 | 删除未用 `endLayerDrag` 或明确其用途 | P3 | ⬜ 待做 | 全库无调用 |
+| 1.8 | 删除未用 `endLayerDrag` 或明确其用途 | P3 | ✅ 完成 | **短期 S10**；已删，由 release/clear 路径覆盖 |
 
 ### 阶段 2 — 手势入口整理
 
@@ -119,10 +131,10 @@
 | 3.3 | `drawer.js` / `panels.js` 显式 open 编排抽共享 helper | P2 | ✅ 完成 | **短期 S6**；`explicit-open-motion.js` |
 | 3.4 | `evaluateSwipeRelease` 统一释放阈值 | P2 | ✅ 完成 | **短期 S7**；`swipe-release.js` |
 | 3.5 | 共享 `drawerClosedPx` | P2 | ✅ 完成 | **短期 S8**；`getDrawerClosedPx` |
-| 3.6 | `createHorizontalDragGesture` 返回 `{ abortRelease }` | P2 | ⬜ 待做 | 与垂直 API 对齐 |
-| 3.7 | Android `touchmove` 助手抽到 `pointer-drag-lifecycle` | P3 | ⬜ 待做 | |
+| 3.6 | `createHorizontalDragGesture` 返回 `{ abortRelease }` | P2 | ✅ 完成 | **短期 S9**；与垂直 API 对齐 |
+| 3.7 | Android `touchmove` 助手抽到 `pointer-drag-lifecycle` | P3 | ✅ 完成 | **短期 S11**；`bindAndroidTouchmoveGuard` |
 | 3.8 | 横/竖工厂合并或抽 `bindPointerDragLifecycle` | P3 | ⬜ 待做 | 体量大，最后做 |
-| 3.9 | `waitForTransition` 通用化 | P3 | ⬜ 待做 | `drawer-fullscreen` + `shadow-reveal` |
+| 3.9 | `waitForTransition` 通用化 | P3 | ✅ 完成 | **短期 S12**；`utils/dom.js` |
 | 3.10 | 完整 phase：`opening` / `closing`（文档建议状态机） | P3 | ⬜ 可选 | 非必须，现有 settling 已够用 |
 
 **图例**：✅ 完成 · 🔄 进行中 · ⬜ 待做 · ⏸ 暂停 · ❌ 放弃（须写原因）
@@ -140,7 +152,7 @@
 | D5 | `busyKey` 未接线 | 中 | 1.7 | ✅ |
 | D6 | `uiTransitionBusy` 与 layer phase 双轨 | 中 | 1.7 | 🔄 手势期已接线，显式 open 仍手写 |
 | D7 | score-sheet 打开动画路径与其他浮层不一致 | 低 | 3.2 | ⬜ |
-| D8 | `drawer-fullscreen` 未复用 shadow-reveal / openDrawer | 低 | 3.9 | ⬜ |
+| D8 | `drawer-fullscreen` 未复用 shadow-reveal / openDrawer | 低 | 3.9 | 🔄 `waitForTransition` 已共享；编排仍独立 |
 | D9 | `openDrawer` 死分支（`!shouldAnimate`） | 低 | — | ⬜ |
 | D10 | top-sheet 阴影用 `box-shadow`，drawer 用 `::after` | 信息 | — | 记录即可 |
 
@@ -167,15 +179,17 @@
 
 ### 必测（任意手势改动）
 
-- [ ] quickPanel：列表顶下拉够/不够阈值；内滑关；壳层关；操作记录视图不误关
-- [ ] drawer：边缘开；内/壳关；关后列表可点可滚；搜索筛选不触发横滑
-- [ ] 浮层冲突：确认框阻断；A 打开中 B 不能开；A 关闭中 B 可开
-- [ ] 异常：快速连滑无残留 transform；半路 cancel 界面正常
+- [x] quickPanel：列表顶下拉够/不够阈值；内滑关；壳层关；操作记录视图不误关
+- [x] drawer：边缘开；内/壳关；关后列表可点可滚；搜索筛选不触发横滑
+- [x] 浮层冲突：确认框阻断；A 打开中 B 不能开；A 关闭中 B 可开
+- [x] 异常：快速连滑无残留 transform；半路 cancel 界面正常
 
 ### 针对 D2 / 显式打开改动时加测
 
-- [ ] drawer / top-sheet **点击打开**：无闪开闪关、无双动画（可参考 `__repro_double_anim.html` 思路）
-- [ ] 阴影：点击打开稍后渐入；拖动打开不叠 shadow-pending 污染
+- [x] drawer / top-sheet **点击打开**：无闪开闪关、无双动画（可参考 `__repro_double_anim.html` 思路）
+- [x] 阴影：点击打开稍后渐入；拖动打开不叠 shadow-pending 污染
+
+> **验收记录**：2026-07-06，用户双端（浏览器 + Android）手动测试通过。
 
 ---
 
@@ -231,6 +245,11 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-06 | 验收：用户双端手动测试 S1–S12 相关场景全部通过 |
+| 2026-07-06 | S12：`waitForTransition` 通用化至 `utils/dom.js`，`drawer-fullscreen` + `shadow-reveal` 复用 |
+| 2026-07-06 | S11：`bindAndroidTouchmoveGuard` 收拢横/竖工厂 Android touchmove |
+| 2026-07-06 | S10：删除未用 `endLayerDrag`（`layer-motion-state.js`） |
+| 2026-07-06 | S9：`horizontal-drag.js` 返回 `abortRelease`，与 `drag-gesture.js` 垂直工厂 API 对齐 |
 | 2026-07-06 | S7+S8：`swipe-release.js` 统一释放阈值；`getDrawerClosedPx` 共享 drawer 关闭位移 |
 | 2026-07-06 | S5+S6：toast 收拢 `clearExplicitMotionStyles`；新增 `explicit-open-motion.js`，drawer/panels 点击打开与 generation 统一 |
 | 2026-07-06 | S3+S4：`busyKey` 接线三工厂；`shadow-reveal` 增 `motionFinished`，drawer/panels WAAPI 路径不再依赖 `transitionend` |
