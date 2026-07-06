@@ -4,8 +4,8 @@ import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
-
-const DRAWER_TRANSITION_MS = 320;
+import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
+import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -33,23 +33,25 @@ function clearDrawerExpandScale() {
   drawer.style.removeProperty("--drawer-expand-scale");
 }
 
-export function openDrawer({ withTransitionLock = true } = {}) {
+export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
   closeScoreSheet();
   clearDocumentSelection();
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
+  if (deferShadow) beginShadowRevealAfterOpen(drawer);
   setThemeColor("#f4f4f4");
   requestAnimationFrame(() => {
     renderAssignmentList(getState());
   });
   if (withTransitionLock) {
     setUiTransitionBusy(true, "drawer");
-    setTimeout(() => setUiTransitionBusy(false, "drawer"), DRAWER_TRANSITION_MS);
+    setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
   }
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
   setSuppressNextCardClick(false);
+  cancelShadowReveal(drawer);
   drawer.classList.remove("is-open");
   drawer.classList.remove("is-expanding");
   drawer.style.transform = "";
@@ -59,7 +61,7 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   setThemeColor("#f4f4f4");
   if (withTransitionLock) {
     setUiTransitionBusy(true, "drawer");
-    setTimeout(() => setUiTransitionBusy(false, "drawer"), DRAWER_TRANSITION_MS);
+    setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
   }
 }
 
@@ -74,6 +76,7 @@ export function contractDrawer() {
 
 export function snapResetDrawer() {
   setSuppressNextCardClick(false);
+  cancelShadowReveal(drawer);
   drawer.classList.add("no-anim");
   drawer.classList.remove("is-expanding");
   drawer.classList.remove("is-open");
@@ -85,6 +88,7 @@ export function snapResetDrawer() {
 
 export function snapPrepareDrawer() {
   setDrawerExpandScale();
+  cancelShadowReveal(drawer);
   drawer.classList.add("no-anim");
   drawer.classList.add("is-open");
   drawer.classList.add("is-expanding");

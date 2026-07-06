@@ -19,6 +19,7 @@
 - 持久字段只在 `state.js`；临时 UI 态在 `runtime.js`（如打分输入，**不含** `scoreStep10Mode`）。
 - 偏好 switch：`events/settings.js` 绑定，用 `ui/switch-bind.js` 的 `bindSettingSwitch()`。
 - 浮层关闭栈：只用 `ui/floating-layers.js` 的 `closeTopmostFloatingLayer()`，勿复制顺序。
+- `ui/shadow-reveal.js`：点击打开 drawer / top-sheet 时加 `is-shadow-pending`，展开后再渐入阴影；滑动手势用 `is-motion-dragging`，边缘开 drawer 传 `deferShadow: false`；关闭须 `cancelShadowReveal(el)`。
 - 状态变更后优先 `scheduleRender()`；business 尽量不 import `render/` 子模块。
 
 ## 验证

@@ -84,9 +84,13 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### `is-motion-dragging`（渲染轻量化，勿混用）
 
-通用手势在真实拖动开始时给 `targetEl` / `sheetEl` 加 `is-motion-dragging`，释放动画结束、取消、打断后的 abort、`pointercancel` 路径移除。仅表示**正在拖拽或释放动画中**，供 CSS 临时关掉伪元素/面板阴影以降低 `DrawFn_DrawGL` 尖峰；静止 `.is-open` 仍保留原阴影。
+通用手势在真实拖动开始时给 `targetEl` / `sheetEl` 加 `is-motion-dragging`，释放动画结束、取消、打断后的 abort、`pointercancel` 路径移除。仅表示**正在拖拽或释放动画中**，供 CSS 临时关掉阴影以降低 `DrawFn_DrawGL` 尖峰（drawer/score-sheet 关 `::after`，top-sheet 关元素 `box-shadow`）；静止 `.is-open` 仍保留原阴影。
 
 **不得**用于：浮层关闭栈、`blocksQuickPanelPull()`、quickPanel 打开态判断。那些语义继续只用 `is-open` / `is-dragging`（下拉预览占用）。
+
+### `is-shadow-pending`（点击打开阴影延后）
+
+点击打开 drawer / top-sheet 时由 `ui/shadow-reveal.js` 加 `is-shadow-pending`，`transform` 展开结束后再渐入阴影（top-sheet 用元素 `box-shadow`，drawer 用 `::after`）。滑动手势释放走 `is-motion-dragging`，**不得**叠 `is-shadow-pending`（边缘开 drawer：`openDrawer({ deferShadow: false })`）。关闭或 snap 无动画路径须 `cancelShadowReveal(el)`。
 
 ### 收起释放动画（`motion-registry.js`）
 

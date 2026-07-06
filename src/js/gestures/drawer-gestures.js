@@ -43,7 +43,7 @@ createHorizontalDragGesture(appShell, {
   onRelease: (dx, wasDragging, velocity) => {
     if (shouldReleaseBySwipe(dx, velocity, +1)) {
       setSuppressNextCardClick(true);
-      openDrawer({ withTransitionLock: false });
+      openDrawer({ withTransitionLock: false, deferShadow: false });
     }
   },
 });

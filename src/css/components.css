@@ -215,7 +215,7 @@
       will-change: transform;
     }
 
-    .drawer.is-open::after {
+    .drawer.is-open:not(.is-shadow-pending)::after {
       opacity: 1;
     }
 
@@ -271,7 +271,6 @@
     }
 
     html.perf-diagnostics-lite .drawer::after,
-    html.perf-diagnostics-lite .top-sheet::after,
     html.perf-diagnostics-lite .score-sheet::after,
     html.perf-diagnostics-lite .confirm-scrim::after {
       opacity: 0 !important;
@@ -282,8 +281,6 @@
     /* Drag/release only: drop shadow work while transform is animating. */
     .drawer.is-motion-dragging::after,
     .drawer.is-open.is-motion-dragging::after,
-    .top-sheet.is-motion-dragging::after,
-    .top-sheet.is-open.is-motion-dragging::after,
     .score-sheet.is-motion-dragging::after,
     .score-sheet.is-open.is-motion-dragging::after {
       opacity: 0;
@@ -293,7 +290,13 @@
 
     .top-sheet.is-motion-dragging,
     .top-sheet.is-open.is-motion-dragging,
-    .top-sheet.is-dragging.is-motion-dragging,
+    .top-sheet.is-dragging.is-motion-dragging {
+      box-shadow: none;
+      transition:
+        transform 320ms var(--motion),
+        box-shadow 0ms var(--motion);
+    }
+
     .score-sheet.is-motion-dragging,
     .score-sheet.is-open.is-motion-dragging {
       box-shadow: none;
@@ -626,7 +629,9 @@
       opacity: 1;
       pointer-events: none;
       z-index: 60;
-      transition: transform 320ms var(--motion);
+      transition:
+        transform 320ms var(--motion),
+        box-shadow 280ms var(--motion);
       transform: translateY(-100%);
       background: var(--bg);
     }
@@ -688,32 +693,19 @@
     .quick-panel-view.is-view-fading {
       opacity: 0;
     }
-    .top-sheet::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      box-shadow: var(--shadow-sheet);
-      opacity: 0;
-      pointer-events: none;
-    }
 
     .top-sheet.is-open {
       pointer-events: auto;
       transform: translateY(0);
       will-change: transform;
     }
-    .top-sheet.is-open,
-    .top-sheet.is-dragging {
+    .top-sheet.is-open:not(.is-shadow-pending):not(.is-motion-dragging),
+    .top-sheet.is-dragging:not(.is-shadow-pending):not(.is-motion-dragging) {
       box-shadow: var(--shadow-sheet);
     }
 
     .top-sheet.is-dragging {
       will-change: transform;
-    }
-
-    .top-sheet.is-open::after {
-      opacity: 1;
     }
 
     .panel-head {
