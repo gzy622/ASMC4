@@ -27,6 +27,13 @@ function resetDrawerFilters() {
   if (drawerSubjectFilter) drawerSubjectFilter.value = "";
 }
 
+function blurDrawerFocus() {
+  const active = document.activeElement;
+  if (active && drawer.contains(active)) {
+    active.blur();
+  }
+}
+
 function getDrawerExpandScale() {
   const drawerWidth = drawer.offsetWidth;
   if (!drawerWidth) return 1;
@@ -93,6 +100,7 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
+  blurDrawerFocus();
   const hadDrawerLayer = drawer.classList.contains("is-open")
     || drawer.classList.contains("is-expanding");
   const shouldAnimate = withTransitionLock && hadDrawerLayer;
@@ -148,6 +156,7 @@ export function contractDrawer() {
 }
 
 export function snapResetDrawer() {
+  blurDrawerFocus();
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
   drawer.classList.add("no-anim");
