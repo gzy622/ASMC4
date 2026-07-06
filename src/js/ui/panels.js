@@ -7,6 +7,7 @@ import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
+import { endQuickPanelPullPreview } from "../gestures/layer-motion-state.js";
 
 let abortQuickPanelOpenDrag = () => {};
 
@@ -16,7 +17,7 @@ export function registerQuickPanelOpenDragAbort(fn) {
 
 function teardownQuickPanelDrag() {
   abortQuickPanelOpenDrag();
-  quickPanel.classList.remove("is-dragging");
+  endQuickPanelPullPreview();
 }
 
 export function openNewAssignmentPanel() {

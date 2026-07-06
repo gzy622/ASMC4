@@ -1,7 +1,10 @@
 import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
-import { beginTargetExplicitOpenAnimation, endTargetExplicitOpenAnimation } from "../gestures/motion-registry.js";
+import {
+  beginLayerExplicitOpen,
+  endLayerExplicitOpen,
+  setLayerShadowPending,
+} from "../gestures/layer-motion-state.js";
 
-const SHADOW_PENDING_CLASS = "is-shadow-pending";
 const SETTLE_FALLBACK_MS = 40;
 const pendingByEl = new WeakMap();
 
@@ -13,8 +16,8 @@ function finishShadowReveal(el) {
 
 export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
   cancelShadowReveal(el);
-  beginTargetExplicitOpenAnimation(el);
-  el.classList.add(SHADOW_PENDING_CLASS);
+  beginLayerExplicitOpen(el);
+  setLayerShadowPending(el, true);
 
   const state = { onEnd: null, timer: null, onSettled };
 
@@ -30,13 +33,10 @@ export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
 
 export function cancelShadowReveal(el) {
   const state = pendingByEl.get(el);
-  endTargetExplicitOpenAnimation(el);
-  if (!state) {
-    el.classList.remove(SHADOW_PENDING_CLASS);
-    return;
-  }
+  endLayerExplicitOpen(el);
+  setLayerShadowPending(el, false);
+  if (!state) return;
   if (state.onEnd) el.removeEventListener("transitionend", state.onEnd);
   if (state.timer) clearTimeout(state.timer);
   pendingByEl.delete(el);
-  el.classList.remove(SHADOW_PENDING_CLASS);
 }

@@ -11,10 +11,15 @@ import { restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent
 import { FLOATING_LAYER_ELS } from "../ui/floating-layers.js";
 import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
 import { isLayerOpenForGestureBlock, isTargetReleaseAnimating } from "./motion-registry.js";
+import {
+  beginQuickPanelPullPreview,
+  endQuickPanelPullPreview,
+  isQuickPanelPullPreview,
+} from "./layer-motion-state.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
 function blocksQuickPanelPull() {
-  if (quickPanel.classList.contains("is-dragging")) return true;
+  if (isQuickPanelPullPreview()) return true;
   if (isTargetReleaseAnimating(quickPanel)) return true;
   return FLOATING_LAYER_ELS.some(el => isLayerOpenForGestureBlock(el));
 }
@@ -25,12 +30,12 @@ function canPullQuickPanel() {
 }
 
 function cancelTopSheetOpen() {
-  quickPanel.classList.remove("is-dragging");
+  endQuickPanelPullPreview();
 }
 
 function finishTopSheetOpen() {
   commitQuickPanelOpen();
-  quickPanel.classList.remove("is-dragging");
+  endQuickPanelPullPreview();
 }
 
 function bindTopSheetCloseGesture(panel) {
@@ -63,7 +68,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     if (!quickPanel.classList.contains("is-open")) {
       commitQuickPanelOpen();
     }
-    quickPanel.classList.remove("is-dragging");
+    endQuickPanelPullPreview();
     setUiTransitionBusy(false, "panel");
   }
 
@@ -114,7 +119,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   onPrepare: () => {
     restoreQuickPanelViewFromPreference();
     refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
-    quickPanel.classList.add("is-dragging");
+    beginQuickPanelPullPreview();
   },
   onOpen: finishTopSheetOpen,
   onCancel: cancelTopSheetOpen,

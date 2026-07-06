@@ -82,6 +82,17 @@ DOM（`index.html` + `dom-refs.js`）：
 
 模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
 
+### 运动状态（`layer-motion-state.js`）
+
+浮层运动态的**单一事实来源**。拖动、释放动画、点击打开阴影延后、quickPanel 下拉预览均经此模块登记；`motion-registry.js` 仅 re-export 查询/登记 API 供旧调用方。视觉 class（`is-motion-dragging`、`is-dragging`、`is-shadow-pending`）由模块同步写入，业务代码勿直接 `classList` 操作这三项。
+
+| phase | 含义 | 同步 class |
+|-------|------|-----------|
+| `dragging` | 手指拖动中 | `is-motion-dragging` |
+| `settling-open` / `settling-close` | 释放动画中 | `is-motion-dragging` |
+| `explicit-opening` | 点击打开动画中 | —（配合 `is-shadow-pending`） |
+| pullPreview | quickPanel 下拉预览 | `is-dragging` |
+
 ### `is-motion-dragging`（渲染轻量化，勿混用）
 
 通用手势在真实拖动开始时给 `targetEl` / `sheetEl` 加 `is-motion-dragging`，释放动画结束、取消、打断后的 abort、`pointercancel` 路径移除。仅表示**正在拖拽或释放动画中**，供 CSS 临时关掉阴影以降低 `DrawFn_DrawGL` 尖峰（drawer/score-sheet 关 `::after`，top-sheet 关元素 `box-shadow`）；静止 `.is-open` 仍保留原阴影。
@@ -90,9 +101,9 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### `is-shadow-pending`（点击打开阴影延后）
 
-点击打开 drawer / top-sheet 时由 `ui/shadow-reveal.js` 加 `is-shadow-pending`，`transform` 展开结束后再渐入阴影（top-sheet 用元素 `box-shadow`，drawer 用 `::after`）。同时 `beginTargetExplicitOpenAnimation(el)` 登记打开动画。滑动手势释放走 `is-motion-dragging`，**不得**叠 `is-shadow-pending`（边缘开 drawer：`openDrawer({ deferShadow: false })`）。关闭或 snap 无动画路径须 `cancelShadowReveal(el)`（会 `endTargetExplicitOpenAnimation`）。
+点击打开 drawer / top-sheet 时由 `ui/shadow-reveal.js` 调 `layer-motion-state` 登记 `explicit-opening` 并加 `is-shadow-pending`，`transform` 展开结束后再渐入阴影（top-sheet 用元素 `box-shadow`，drawer 用 `::after`）。滑动手势释放走 `is-motion-dragging`，**不得**叠 `is-shadow-pending`（边缘开 drawer：`openDrawer({ deferShadow: false })`）。关闭或 snap 无动画路径须 `cancelShadowReveal(el)`。
 
-### 释放动画与打开互斥（`motion-registry.js`）
+### 释放动画与打开互斥（`layer-motion-state.js` / `motion-registry.js`）
 
 `beginTargetReleaseAnimation(targetEl, direction)`：`direction` 为 `'open'` | `'close'`（默认 `'close'`）。手势释放时按目标态传入：`horizontal-drag` 滑到 `0` 为 open；`createTopSheetOpenGesture` 的 `shouldOpen` 为 open；`createVerticalDragGesture` 的 `shouldClose` 为 close。
 

@@ -1,11 +1,10 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
+import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
-
-const MOTION_DRAGGING_CLASS = "is-motion-dragging";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -34,10 +33,6 @@ export function createHorizontalDragGesture(bindEl, {
   let pendingTransform = null;
   let rafId = null;
   let dragBasePx = 0;
-
-  function setMotionDragging(active) {
-    targetEl.classList.toggle(MOTION_DRAGGING_CLASS, active);
-  }
 
   function scheduleTransform(value) {
     pendingTransform = value;
@@ -69,7 +64,7 @@ export function createHorizontalDragGesture(bindEl, {
     targetEl.style.willChange = "";
     void targetEl.offsetWidth;
     targetEl.style.transition = "";
-    setMotionDragging(false);
+    clearLayerMotionDrag(targetEl);
   }
 
   function isPrimaryMouseButton(event) {
@@ -93,7 +88,7 @@ export function createHorizontalDragGesture(bindEl, {
   }
 
   function resetDragState({ restoreTarget = false } = {}) {
-    const hadMotion = targetEl.classList.contains(MOTION_DRAGGING_CLASS);
+    const hadMotion = dragging;
     flushTransform();
     if ((restoreTarget && dragging) || hadMotion) {
       clearDragStyles();
@@ -170,7 +165,7 @@ export function createHorizontalDragGesture(bindEl, {
           return;
         }
         dragging = true;
-        setMotionDragging(true);
+        beginLayerDrag(targetEl);
         if (traceLabel) traceGesture(traceLabel, "dragStart");
         capturePointer(event);
         targetEl.style.transition = "none";
@@ -217,8 +212,7 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
 
     if (!wasDragging) {
-      // Interrupted release then lifted without re-dragging.
-      if (targetEl.classList.contains(MOTION_DRAGGING_CLASS)) {
+      if (isLayerMotionDragging(targetEl)) {
         clearDragStyles();
       }
       return;
@@ -244,7 +238,6 @@ export function createHorizontalDragGesture(bindEl, {
       if (generation !== releaseGeneration) return;
       releaseAnimating = false;
       endTargetReleaseAnimation(targetEl);
-      setMotionDragging(false);
       if (onRelease) onRelease(dx, wasDragging, velocity);
       if (traceLabel) traceGesture(traceLabel, "close");
     } finally {
