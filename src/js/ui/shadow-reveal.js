@@ -14,6 +14,11 @@ function finishShadowReveal(el) {
   onSettled?.();
 }
 
+export function settleShadowRevealAfterOpen(el) {
+  if (!pendingByEl.has(el)) return;
+  requestAnimationFrame(() => finishShadowReveal(el));
+}
+
 export function beginShadowRevealAfterOpen(el, { onSettled } = {}) {
   cancelShadowReveal(el);
   beginLayerExplicitOpen(el);

@@ -120,17 +120,33 @@ export async function waitForPid(adbPath, device, packageName) {
   throw new Error(`App 未运行，无法找到进程：${packageName}`);
 }
 
-export async function findWebViewSocket(adbPath, device, pid) {
+function pickWebViewSocket(sockets, pid) {
   const preferred = `webview_devtools_remote_${pid}`;
-  const raw = await adb(adbPath, ["shell", "cat", "/proc/net/unix"], device);
-  const sockets = [...raw.matchAll(/@?(webview_devtools_remote[^\s]*)/g)].map(match => match[1]);
-
   if (sockets.includes(preferred)) return preferred;
   if (sockets.length === 1) return sockets[0];
   if (sockets.length > 1) {
     const samePid = sockets.find(socket => socket.endsWith(`_${pid}`));
     if (samePid) return samePid;
     throw new Error(`发现多个 WebView 调试端口，无法自动判断：${sockets.join(", ")}`);
+  }
+  return null;
+}
+
+export async function findWebViewSocket(adbPath, device, pid) {
+  const raw = await adb(adbPath, ["shell", "cat", "/proc/net/unix"], device);
+  const sockets = [...raw.matchAll(/@?(webview_devtools_remote[^\s]*)/g)].map(match => match[1]);
+  const socketName = pickWebViewSocket(sockets, pid);
+  if (socketName) return socketName;
+  throw new Error("没有发现 WebView 调试端口。请确认安装的是 debug 版，且 WebView debugging 已开启。");
+}
+
+export async function waitForWebViewSocket(adbPath, device, pid) {
+  for (let i = 0; i < 24; i += 1) {
+    const raw = await adb(adbPath, ["shell", "cat", "/proc/net/unix"], device);
+    const sockets = [...raw.matchAll(/@?(webview_devtools_remote[^\s]*)/g)].map(match => match[1]);
+    const socketName = pickWebViewSocket(sockets, pid);
+    if (socketName) return socketName;
+    await sleep(250);
   }
   throw new Error("没有发现 WebView 调试端口。请确认安装的是 debug 版，且 WebView debugging 已开启。");
 }
@@ -273,7 +289,7 @@ export async function connectWebView({
   }
 
   const pid = await waitForPid(adbPath, device, packageName);
-  const socketName = await findWebViewSocket(adbPath, device, pid);
+  const socketName = await waitForWebViewSocket(adbPath, device, pid);
   const forwardPort = await forwardWebView(adbPath, device, socketName, port);
   const target = await findTarget(forwardPort, targetQuery);
 

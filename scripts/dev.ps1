@@ -9,6 +9,7 @@
     dev.ps1 adb                      网页 adb
     dev.ps1 android                  安卓应用 adb 安装
     dev.ps1 apk                      导出 APK
+    dev.ps1 apk release              导出 release APK
     dev.ps1 pair                     无线 adb 配对
     dev.ps1 -Surface web -Target lan
 
@@ -19,7 +20,7 @@ param(
     [ValidateSet('web', 'android', 'apk', 'full', 'pair', '')]
     [string]$Surface = '',
 
-    [ValidateSet('pc', 'lan', 'adb', '')]
+    [ValidateSet('pc', 'lan', 'adb', 'debug', 'release', '')]
     [string]$Target = '',
 
     [ValidateSet('pc', 'lan', 'usb', '')]
@@ -331,7 +332,19 @@ function Show-DevMenu {
         '2' { return @{ Surface = 'web'; Target = 'lan' } }
         '3' { return @{ Surface = 'web'; Target = 'adb' } }
         '4' { return @{ Surface = 'android'; Target = '' } }
-        '5' { return @{ Surface = 'apk'; Target = '' } }
+        '5' {
+            Write-Host ''
+            Write-Host '  APK 类型:'
+            Write-Host '  1  debug    2  release'
+            $apkPick = Read-Host '  选择 1-2（回车按配置/default）'
+            $apkVariant = switch ($apkPick.Trim()) {
+                '1' { 'debug' }
+                '2' { 'release' }
+                '' { '' }
+                default { throw '无效的 APK 类型选择。' }
+            }
+            return @{ Surface = 'apk'; Target = $apkVariant }
+        }
         '6' {
             Write-Host ''
             Write-Host '  本会话网页访问方式:'
@@ -614,7 +627,12 @@ if ($Surface -eq 'web') {
 } elseif ($Surface -eq 'android') {
     Start-AndroidDev
 } elseif ($Surface -eq 'apk') {
-    & (Join-Path $ProjectRoot 'scripts/build-apk.ps1')
+    $apkArgs = @()
+    if ($Target -in @('debug', 'release')) {
+        $apkArgs += '-Variant'
+        $apkArgs += $Target
+    }
+    & (Join-Path $ProjectRoot 'scripts/build-apk.ps1') @apkArgs
 } elseif ($Surface -eq 'pair') {
     Start-AdbPairFlow
 } else {

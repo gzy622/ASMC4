@@ -5,14 +5,36 @@ import { closeDrawer } from "./drawer.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
-import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
+import { beginShadowRevealAfterOpen, cancelShadowReveal, settleShadowRevealAfterOpen } from "./shadow-reveal.js";
+import {
+  beginTargetReleaseAnimation,
+  endTargetReleaseAnimation,
+  isCrossPanelOpenBlocked,
+} from "../gestures/motion-registry.js";
+import { animateMotionRelease } from "../gestures/gesture-motion-engine.js";
 import { endQuickPanelPullPreview } from "../gestures/layer-motion-state.js";
 
 let abortQuickPanelOpenDrag = () => {};
+const panelMotionGenerations = new WeakMap();
+let pendingNewAssignmentFocusFrame = 0;
 
 export function registerQuickPanelOpenDragAbort(fn) {
   abortQuickPanelOpenDrag = fn;
+}
+
+function cancelPendingNewAssignmentFocus() {
+  if (!pendingNewAssignmentFocusFrame) return;
+  cancelAnimationFrame(pendingNewAssignmentFocusFrame);
+  pendingNewAssignmentFocusFrame = 0;
+}
+
+function scheduleNewAssignmentFocus() {
+  cancelPendingNewAssignmentFocus();
+  pendingNewAssignmentFocusFrame = requestAnimationFrame(() => {
+    pendingNewAssignmentFocusFrame = 0;
+    if (!newAssignmentPanel.classList.contains("is-open")) return;
+    newAssignmentTitleInput.focus();
+  });
 }
 
 function teardownQuickPanelDrag() {
@@ -22,8 +44,8 @@ function teardownQuickPanelDrag() {
 
 export function openNewAssignmentPanel() {
   if (isCrossPanelOpenBlocked()) return;
-  closeDrawer();
-  closeFloatingPanels({ restoreFocus: false });
+  closeDrawer({ withTransitionLock: false });
+  closeFloatingPanels({ restoreFocus: false, animate: false });
 
   quickPanel.classList.remove("is-open");
   quickPanel.setAttribute("aria-hidden", "true");
@@ -34,11 +56,10 @@ export function openNewAssignmentPanel() {
   newAssignmentPanel.setAttribute("aria-hidden", "false");
   beginShadowRevealAfterOpen(newAssignmentPanel, {
     onSettled: () => {
-      if (newAssignmentPanel.classList.contains("is-open")) {
-        newAssignmentTitleInput.focus();
-      }
+      scheduleNewAssignmentFocus();
     },
   });
+  animateTopSheetOpen(newAssignmentPanel);
 }
 
 function blurTopSheetFocus() {
@@ -48,9 +69,61 @@ function blurTopSheetFocus() {
   }
 }
 
-export function closeFloatingPanels({ restoreFocus = true } = {}) {
-  const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
+function closedTopSheetDelta(panel) {
+  return -panel.offsetHeight;
+}
 
+function clearTopSheetMotionStyles(panel) {
+  panel.style.transition = "";
+  panel.style.transform = "";
+  panel.style.willChange = "";
+}
+
+function nextPanelMotionGeneration(panel) {
+  const generation = (panelMotionGenerations.get(panel) || 0) + 1;
+  panelMotionGenerations.set(panel, generation);
+  return generation;
+}
+
+function currentPanelMotionGeneration(panel) {
+  return panelMotionGenerations.get(panel) || 0;
+}
+
+function animateTopSheetOpen(panel, { onSettled } = {}) {
+  const fromDelta = closedTopSheetDelta(panel);
+  const generation = nextPanelMotionGeneration(panel);
+  panel.style.transition = "none";
+  panel.style.transform = `translateY(${fromDelta}px)`;
+  animateMotionRelease(panel, "y", fromDelta, 0, 0).finished.then(() => {
+    if (generation !== currentPanelMotionGeneration(panel)) return;
+    clearTopSheetMotionStyles(panel);
+    settleShadowRevealAfterOpen(panel);
+    onSettled?.();
+  });
+}
+
+function animateTopSheetClose(panel, onClosed) {
+  const toDelta = closedTopSheetDelta(panel);
+  const generation = nextPanelMotionGeneration(panel);
+  beginTargetReleaseAnimation(panel, "close");
+  panel.style.transition = "none";
+  panel.style.transform = "translateY(0)";
+  animateMotionRelease(panel, "y", 0, toDelta, 0).finished.then(() => {
+    if (generation !== currentPanelMotionGeneration(panel)) return;
+    panel.classList.remove("is-open");
+    panel.setAttribute("aria-hidden", "true");
+    clearTopSheetMotionStyles(panel);
+    endTargetReleaseAnimation(panel);
+    onClosed?.();
+  });
+}
+
+export function closeFloatingPanels({ restoreFocus = true, animate = true } = {}) {
+  const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
+  const shouldAnimateQuickPanel = animate && quickPanel.classList.contains("is-open");
+  const shouldAnimateNewAssignmentPanel = animate && newAssignmentPanel.classList.contains("is-open");
+
+  cancelPendingNewAssignmentFocus();
   blurTopSheetFocus();
   closeScoreSheet();
   teardownQuickPanelDrag();
@@ -58,11 +131,23 @@ export function closeFloatingPanels({ restoreFocus = true } = {}) {
   cancelShadowReveal(quickPanel);
   cancelShadowReveal(newAssignmentPanel);
 
-  quickPanel.classList.remove("is-open");
-  quickPanel.setAttribute("aria-hidden", "true");
+  if (shouldAnimateQuickPanel) {
+    animateTopSheetClose(quickPanel);
+  } else {
+    nextPanelMotionGeneration(quickPanel);
+    quickPanel.classList.remove("is-open");
+    quickPanel.setAttribute("aria-hidden", "true");
+    clearTopSheetMotionStyles(quickPanel);
+  }
 
-  newAssignmentPanel.classList.remove("is-open");
-  newAssignmentPanel.setAttribute("aria-hidden", "true");
+  if (shouldAnimateNewAssignmentPanel) {
+    animateTopSheetClose(newAssignmentPanel);
+  } else {
+    nextPanelMotionGeneration(newAssignmentPanel);
+    newAssignmentPanel.classList.remove("is-open");
+    newAssignmentPanel.setAttribute("aria-hidden", "true");
+    clearTopSheetMotionStyles(newAssignmentPanel);
+  }
 
   closeConfirm();
 
@@ -73,14 +158,15 @@ export function closeFloatingPanels({ restoreFocus = true } = {}) {
 
 export function openQuickPanel({ focusName = false } = {}) {
   if (isCrossPanelOpenBlocked()) return;
-  closeDrawer();
-  closeFloatingPanels({ restoreFocus: false });
+  closeDrawer({ withTransitionLock: false });
+  closeFloatingPanels({ restoreFocus: false, animate: false });
   restoreQuickPanelViewFromPreference();
   refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
 
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
   beginShadowRevealAfterOpen(quickPanel);
+  animateTopSheetOpen(quickPanel);
 
   if (focusName) {
     requestAnimationFrame(() => quickRenameInput?.focus());

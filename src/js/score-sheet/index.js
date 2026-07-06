@@ -9,6 +9,7 @@ import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
+import { beginShadowRevealAfterOpen, cancelShadowReveal } from "../ui/shadow-reveal.js";
 
 let releaseScoreSheetPointerGuard = null;
 
@@ -44,6 +45,7 @@ export function openScoreSheet(student, guardPointer = false) {
   hapticLight();
   scoreSheet.classList.add("is-open");
   scoreSheet.setAttribute("aria-hidden", "false");
+  beginShadowRevealAfterOpen(scoreSheet);
   if (guardPointer) armScoreSheetPointerGuard();
 }
 
@@ -58,6 +60,7 @@ export function closeScoreSheet() {
   scoreStudentName.textContent = "--";
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
+  cancelShadowReveal(scoreSheet);
   scoreSheet.classList.remove("is-open");
   scoreSheet.setAttribute("aria-hidden", "true");
 }

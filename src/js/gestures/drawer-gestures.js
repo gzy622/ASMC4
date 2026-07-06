@@ -28,6 +28,7 @@ createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
   getBasePx: drawerClosedPx,
+  useNonlinearMotion: true,
   traceLabel: "drawer.edgeSwipe",
   shouldStart: canStartDrawerEdgeOpen,
   shouldContinueMove: canContinueDrawerEdgeOpen,
@@ -51,6 +52,7 @@ createHorizontalDragGesture(appShell, {
 createHorizontalDragGesture(drawer, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
+  useNonlinearMotion: true,
   traceLabel: "drawer.close",
   shouldStart: canStartDrawerInnerClose,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
@@ -64,6 +66,7 @@ createHorizontalDragGesture(drawer, {
 createHorizontalDragGesture(appShell, {
   targetEl: drawer,
   getClosedPx: drawerClosedPx,
+  useNonlinearMotion: true,
   traceLabel: "drawer.shellClose",
   shouldStart: canStartDrawerShellClose,
   getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,

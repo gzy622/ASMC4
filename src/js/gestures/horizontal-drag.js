@@ -1,5 +1,5 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
-import { animateRelease } from "./release-animation.js";
+import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
 import { beginLayerDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection } from "../runtime.js";
@@ -26,6 +26,7 @@ export function createHorizontalDragGesture(bindEl, {
   onProgress,
   getReleaseSecondary,
   onRelease,
+  useNonlinearMotion = false,
   busyKey = "drawer",
   traceLabel,
 }) {
@@ -112,8 +113,11 @@ export function createHorizontalDragGesture(bindEl, {
 
     const closedPx = getClosedPx();
     const clamped = Math.max(closedPx, Math.min(0, dragBasePx + dx));
+    const visualPx = useNonlinearMotion
+      ? mapInteractiveDelta(clamped, closedPx, 0)
+      : clamped;
     motion.track(clamped);
-    scheduleTransform(`translateX(${clamped}px)`);
+    scheduleTransform(`translateX(${visualPx}px)`);
     if (onProgress) {
       const range = -closedPx;
       onProgress(range > 0 ? (clamped - closedPx) / range : 0);
@@ -131,6 +135,9 @@ export function createHorizontalDragGesture(bindEl, {
     const dx = event.clientX - startX;
     const wasDragging = dragging;
     const releasedPx = motion.current;
+    const releaseFromPx = useNonlinearMotion
+      ? mapInteractiveDelta(releasedPx, getClosedPx(), 0)
+      : releasedPx;
     const velocity = motion.velocity;
     const closedPx = getClosedPx();
     const basePx = getBasePx();
@@ -161,12 +168,12 @@ export function createHorizontalDragGesture(bindEl, {
     const generation = ++releaseGeneration;
     releaseAnimating = true;
     beginTargetReleaseAnimation(targetEl, targetPx === 0 ? "open" : "close");
-    targetEl.style.transform = `translateX(${releasedPx}px)`;
+    targetEl.style.transform = `translateX(${releaseFromPx}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ releasedPx, closedPx, toPx: targetPx })
       : null;
     try {
-      activeRelease = animateRelease(targetEl, "x", releasedPx, targetPx, velocity, secondaryTarget);
+      activeRelease = animateMotionRelease(targetEl, "x", releaseFromPx, targetPx, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
       releaseAnimating = false;

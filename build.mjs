@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { readFileSync, writeFileSync, mkdirSync, watch } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, watch } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -29,6 +29,7 @@ function formatBuildTimestamp(date = new Date()) {
 async function build() {
   const buildVersion = formatBuildVersion();
   const buildTimestamp = formatBuildTimestamp();
+  rmSync(dist, { recursive: true, force: true });
   mkdirSync(join(dist, "js"), { recursive: true });
   mkdirSync(join(dist, "css"), { recursive: true });
 

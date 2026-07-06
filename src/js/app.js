@@ -9,7 +9,7 @@ import "./native-shim.js";
 import "./utils/back-guard.js";
 import { fillSubjectSelect, fillDrawerSubjectFilter } from "./utils/subject-select.js";
 import { BUILD_TIMESTAMP } from "./build-version.js";
-import { quickSubjectSelect, newAssignmentSubjectInput, drawerSubjectFilter, settingsVersion, bootMask, studentGrid } from "./dom-refs.js";
+import { quickSubjectSelect, newAssignmentSubjectInput, drawerSubjectFilter, drawerVersion, bootMask, studentGrid } from "./dom-refs.js";
 import { setThemeColor } from "./utils/dom.js";
 import {
   createDebugTraceApi,
@@ -35,8 +35,8 @@ fillSubjectSelect(quickSubjectSelect);
 fillSubjectSelect(newAssignmentSubjectInput);
 fillDrawerSubjectFilter(drawerSubjectFilter);
 
-if (settingsVersion) {
-  settingsVersion.textContent = BUILD_TIMESTAMP
+if (drawerVersion) {
+  drawerVersion.textContent = BUILD_TIMESTAMP
     ? `构建时间 ${BUILD_TIMESTAMP}`
     : "构建时间 开发环境";
 }

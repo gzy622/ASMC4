@@ -3,7 +3,7 @@ import { hideToast, registerToastDismissAbort, setToastSwipeDismissing } from ".
 import { canStartToastDismiss } from "./gesture-guards.js";
 import { createVerticalDragGesture } from "./drag-gesture.js";
 
-const TOAST_DISMISS_THRESHOLD = 48;
+const TOAST_DISMISS_THRESHOLD = 30;
 const TOAST_DISMISS_EXTRA_PX = 24;
 
 function toastDismissDistance(el) {

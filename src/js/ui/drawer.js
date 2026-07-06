@@ -5,8 +5,15 @@ import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
 import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
 import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
-import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
+import { beginShadowRevealAfterOpen, cancelShadowReveal, settleShadowRevealAfterOpen } from "./shadow-reveal.js";
+import {
+  beginTargetReleaseAnimation,
+  endTargetReleaseAnimation,
+  isCrossPanelOpenBlocked,
+} from "../gestures/motion-registry.js";
+import { animateMotionRelease, cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
+
+let drawerMotionGeneration = 0;
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -34,10 +41,22 @@ function clearDrawerExpandScale() {
   drawer.style.removeProperty("--drawer-expand-scale");
 }
 
+function drawerClosedPx() {
+  return -1.2 * drawer.offsetWidth;
+}
+
+function clearDrawerMotionStyles() {
+  drawer.style.transition = "";
+  drawer.style.transform = "";
+  drawer.style.willChange = "";
+}
+
 export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
   if (isCrossPanelOpenBlocked()) return;
   closeScoreSheet();
   clearDocumentSelection();
+  const shouldAnimate = withTransitionLock;
+  const fromPx = drawerClosedPx();
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   if (deferShadow) beginShadowRevealAfterOpen(drawer);
@@ -47,18 +66,58 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
   });
   if (withTransitionLock) {
     setUiTransitionBusy(true, "drawer");
-    setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
+    if (!shouldAnimate) {
+      setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
+    }
   }
+  if (!shouldAnimate) return;
+  const generation = ++drawerMotionGeneration;
+  drawer.style.transition = "none";
+  drawer.style.transform = `translateX(${fromPx}px)`;
+  animateMotionRelease(drawer, "x", fromPx, 0, 0).finished.then(() => {
+    if (generation !== drawerMotionGeneration) return;
+    clearDrawerMotionStyles();
+    settleShadowRevealAfterOpen(drawer);
+    setUiTransitionBusy(false, "drawer");
+  });
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
   const hadDrawerLayer = drawer.classList.contains("is-open")
     || drawer.classList.contains("is-expanding");
+  const shouldAnimate = withTransitionLock && hadDrawerLayer;
+  const toPx = drawerClosedPx();
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
+
+  if (shouldAnimate) {
+    const generation = ++drawerMotionGeneration;
+    setUiTransitionBusy(true, "drawer");
+    beginTargetReleaseAnimation(drawer, "close");
+    drawer.style.transition = "none";
+    drawer.style.transform = "translateX(0)";
+    animateMotionRelease(drawer, "x", 0, toPx, 0).finished.then(() => {
+      if (generation !== drawerMotionGeneration) return;
+      drawer.classList.remove("is-open");
+      drawer.classList.remove("is-expanding");
+      clearDrawerMotionStyles();
+      clearDrawerExpandScale();
+      drawer.setAttribute("aria-hidden", "true");
+      resetDrawerFilters();
+      setThemeColor("#f4f4f4");
+      endTargetReleaseAnimation(drawer);
+      setUiTransitionBusy(false, "drawer");
+    });
+    return;
+  }
+
+  drawerMotionGeneration += 1;
+  cancelMotionAnimation(drawer);
+  endTargetReleaseAnimation(drawer);
+  setUiTransitionBusy(false, "drawer");
   drawer.classList.remove("is-open");
   drawer.classList.remove("is-expanding");
-  drawer.style.transform = "";
+  clearDrawerMotionStyles();
   clearDrawerExpandScale();
   drawer.setAttribute("aria-hidden", "true");
   resetDrawerFilters();

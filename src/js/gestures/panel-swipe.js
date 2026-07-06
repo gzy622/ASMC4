@@ -54,6 +54,7 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   onOpen: commitQuickPanelPullOpen,
   onCancel: cancelQuickPanelPullPreview,
+  useNonlinearMotion: true,
   busyKey: "panel",
   traceLabel: "quickPanel.pullOpen",
 });
@@ -64,8 +65,9 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
   const closeOpts = {
     closeDirection: -1,
     targetEl: quickPanel,
-    onClose: closeFloatingPanels,
+    onClose: () => closeFloatingPanels({ animate: false }),
     onDragStart: () => prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease),
+    useNonlinearMotion: true,
     busyKey: "panel",
   };
 
@@ -82,7 +84,7 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
     targetEl: quickPanel,
     onDragStart: () => prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease),
     shouldStart: canStartQuickPanelShellClose,
-    onClose: closeFloatingPanels,
+    onClose: () => closeFloatingPanels({ animate: false }),
     busyKey: "panel",
     traceLabel: "quickPanel.close.shell",
   });
@@ -91,8 +93,9 @@ function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
 function bindTopSheetCloseGesture(panel) {
   createVerticalDragGesture(panel, {
     closeDirection: -1,
-    onClose: closeFloatingPanels,
+    onClose: () => closeFloatingPanels({ animate: false }),
     shouldStart: () => canStartTopSheetInnerClose(panel),
+    useNonlinearMotion: true,
     busyKey: "panel",
     traceLabel: "newAssignment.close",
   });
@@ -101,7 +104,8 @@ function bindTopSheetCloseGesture(panel) {
     closeDirection: -1,
     targetEl: panel,
     shouldStart: event => canStartTopSheetShellClose(panel, event),
-    onClose: closeFloatingPanels,
+    onClose: () => closeFloatingPanels({ animate: false }),
+    useNonlinearMotion: true,
     busyKey: "panel",
     traceLabel: "newAssignment.close.shell",
   });

@@ -98,7 +98,10 @@ function Format-LastDevLabel {
             }
         }
         'android' { return '4 安卓应用' }
-        'apk' { return '5 导出 APK' }
+        'apk' {
+            if ($Choice.Target -in @('debug', 'release')) { return "5 导出 APK ($($Choice.Target))" }
+            return '5 导出 APK'
+        }
         'full' {
             $t = switch ($Choice.Target) {
                 'pc' { '本机' }

@@ -5,7 +5,7 @@ import {
   MIN_FLING_DISTANCE,
   VERTICAL_CLOSE_THRESHOLD
 } from "./constants.js";
-import { animateRelease } from "./release-animation.js";
+import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
 import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection } from "../runtime.js";
@@ -33,6 +33,7 @@ export function createVerticalDragGesture(el, {
   getReleaseSecondary,
   getCloseTargetPx,
   busyKey = "gesture",
+  useNonlinearMotion = false,
   formatTransform = (delta) => `translateY(${delta}px)`,
   traceLabel,
 }) {
@@ -140,8 +141,18 @@ export function createVerticalDragGesture(el, {
       clamped = Math.max(0, dragBaseDelta + dy);
     }
 
+    const closeTargetPx = getCloseTargetPx
+      ? getCloseTargetPx(targetEl)
+      : targetEl.offsetHeight;
+    const visualDelta = useNonlinearMotion
+      ? mapInteractiveDelta(
+        clamped,
+        closeDirection < 0 ? -closeTargetPx : 0,
+        closeDirection < 0 ? 0 : closeTargetPx
+      )
+      : clamped;
     motion.track(clamped);
-    scheduleTransform(formatTransform(clamped));
+    scheduleTransform(formatTransform(visualDelta));
     if (onProgress) {
       const range = targetEl.offsetHeight;
       onProgress(range > 0 ? 1 - Math.abs(clamped) / range : 0);
@@ -164,6 +175,13 @@ export function createVerticalDragGesture(el, {
       ? getCloseTargetPx(targetEl)
       : targetEl.offsetHeight;
     const targetDelta = shouldClose ? closeDirection * closeTargetPx : 0;
+    const releaseFromDelta = useNonlinearMotion
+      ? mapInteractiveDelta(
+        delta,
+        closeDirection < 0 ? -closeTargetPx : 0,
+        closeDirection < 0 ? 0 : closeTargetPx
+      )
+      : delta;
 
     flushTransform();
     releasePointer(el, activePointerId);
@@ -187,12 +205,20 @@ export function createVerticalDragGesture(el, {
     const generation = releaseGeneration;
     releaseAnimating = true;
     beginTargetReleaseAnimation(targetEl, shouldClose ? "close" : "open");
-    targetEl.style.transform = formatTransform(delta);
+    targetEl.style.transform = formatTransform(releaseFromDelta);
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, targetDelta })
       : null;
     try {
-      activeRelease = animateRelease(targetEl, "y", delta, targetDelta, velocity, secondaryTarget, formatTransform);
+      activeRelease = animateMotionRelease(
+        targetEl,
+        "y",
+        releaseFromDelta,
+        targetDelta,
+        velocity,
+        secondaryTarget,
+        formatTransform
+      );
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
       releaseAnimating = false;
@@ -256,6 +282,7 @@ export function createTopSheetOpenGesture(bindEl, {
   getReleaseSecondary,
   keepSecondaryOnOpen = false,
   busyKey = "panel",
+  useNonlinearMotion = false,
   traceLabel,
 }) {
   let releaseGeneration = 0;
@@ -355,8 +382,11 @@ export function createTopSheetOpenGesture(bindEl, {
 
     const minDelta = closedDelta();
     const clamped = Math.min(0, Math.max(minDelta, dragBaseDelta + dy));
+    const visualDelta = useNonlinearMotion
+      ? mapInteractiveDelta(clamped, minDelta, 0)
+      : clamped;
     motion.track(clamped);
-    scheduleTransform(`translateY(${clamped}px)`);
+    scheduleTransform(`translateY(${visualDelta}px)`);
     if (onProgress) {
       const range = sheetEl.offsetHeight;
       onProgress(range > 0 ? (clamped - minDelta) / range : 0);
@@ -379,6 +409,9 @@ export function createTopSheetOpenGesture(bindEl, {
       || (openedDistance >= MIN_FLING_DISTANCE && velocity >= FLING_VELOCITY_THRESHOLD)
     );
     const targetDelta = shouldOpen ? 0 : minDelta;
+    const releaseFromDelta = useNonlinearMotion
+      ? mapInteractiveDelta(delta, minDelta, 0)
+      : delta;
 
     flushTransform();
     releasePointer(bindEl, activePointerId);
@@ -403,7 +436,7 @@ export function createTopSheetOpenGesture(bindEl, {
     const generation = ++releaseGeneration;
     releaseAnimating = true;
     beginTargetReleaseAnimation(sheetEl, shouldOpen ? "open" : "close");
-    sheetEl.style.transform = `translateY(${delta}px)`;
+    sheetEl.style.transform = `translateY(${releaseFromDelta}px)`;
     const secondaryTarget = getReleaseSecondary
       ? getReleaseSecondary({ delta, minDelta, targetDelta })
       : null;
@@ -413,7 +446,7 @@ export function createTopSheetOpenGesture(bindEl, {
     }
 
     try {
-      activeRelease = animateRelease(sheetEl, "y", delta, targetDelta, velocity, secondaryTarget);
+      activeRelease = animateMotionRelease(sheetEl, "y", releaseFromDelta, targetDelta, velocity, secondaryTarget);
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;
       if (!shouldOpen) {

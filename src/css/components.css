@@ -246,13 +246,15 @@
 
     .drawer-filter,
     .drawer-list,
-    .drawer-actions {
+    .drawer-actions,
+    .drawer-version {
       transition: opacity 180ms var(--motion);
     }
 
     .drawer.is-expanding .drawer-filter,
     .drawer.is-expanding .drawer-list,
-    .drawer.is-expanding .drawer-actions {
+    .drawer.is-expanding .drawer-actions,
+    .drawer.is-expanding .drawer-version {
       opacity: 0;
     }
 
@@ -292,9 +294,7 @@
     .top-sheet.is-open.is-motion-dragging,
     .top-sheet.is-dragging.is-motion-dragging {
       box-shadow: none;
-      transition:
-        transform 320ms var(--motion),
-        box-shadow 0ms var(--motion);
+      transition: box-shadow 0ms var(--motion);
     }
 
     .score-sheet.is-motion-dragging,
@@ -376,10 +376,21 @@
 
     .drawer-actions {
       flex-shrink: 0;
-      padding: 10px 14px 14px;
+      padding: 10px 14px 0;
       border-top: 1px solid var(--line);
       display: flex;
       gap: 10px;
+    }
+
+    .drawer-version {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 10px 14px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .drawer-action-btn.full {
@@ -1247,6 +1258,7 @@
       box-shadow: var(--shadow-sheet-bottom);
       opacity: 0;
       pointer-events: none;
+      transition: opacity 280ms var(--motion);
     }
 
     .score-sheet.is-open {
@@ -1258,7 +1270,7 @@
       pointer-events: none;
     }
 
-    .score-sheet.is-open::after {
+    .score-sheet.is-open:not(.is-shadow-pending)::after {
       opacity: 1;
     }
 
@@ -1899,20 +1911,6 @@
       color: var(--muted);
       padding: 0 4px 6px;
       letter-spacing: 0.2px;
-    }
-
-    .settings-version-section {
-      margin-top: 4px;
-    }
-
-    .settings-version {
-      margin: 0;
-      padding: 8px 4px 0;
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      user-select: none;
-      -webkit-user-select: none;
     }
 
     .settings-data-row {
