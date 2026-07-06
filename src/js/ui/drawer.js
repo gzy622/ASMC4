@@ -46,9 +46,17 @@ function drawerClosedPx() {
 }
 
 function clearDrawerMotionStyles() {
-  drawer.style.transition = "";
+  drawer.style.transition = "none";
   drawer.style.transform = "";
   drawer.style.willChange = "";
+  void drawer.offsetHeight;
+  drawer.style.transition = "";
+}
+
+function endDrawerExplicitMotion() {
+  clearDrawerMotionStyles();
+  drawer.classList.remove("no-anim");
+  void drawer.offsetHeight;
 }
 
 export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
@@ -57,6 +65,10 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
   clearDocumentSelection();
   const shouldAnimate = withTransitionLock;
   const fromPx = drawerClosedPx();
+  if (shouldAnimate) {
+    drawer.classList.add("no-anim");
+    drawer.style.transform = `translateX(${fromPx}px)`;
+  }
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   if (deferShadow) beginShadowRevealAfterOpen(drawer);
@@ -72,11 +84,9 @@ export function openDrawer({ withTransitionLock = true, deferShadow = true } = {
   }
   if (!shouldAnimate) return;
   const generation = ++drawerMotionGeneration;
-  drawer.style.transition = "none";
-  drawer.style.transform = `translateX(${fromPx}px)`;
   animateMotionRelease(drawer, "x", fromPx, 0, 0).finished.then(() => {
     if (generation !== drawerMotionGeneration) return;
-    clearDrawerMotionStyles();
+    endDrawerExplicitMotion();
     settleShadowRevealAfterOpen(drawer);
     setUiTransitionBusy(false, "drawer");
   });
@@ -93,19 +103,19 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
   if (shouldAnimate) {
     const generation = ++drawerMotionGeneration;
     setUiTransitionBusy(true, "drawer");
+    drawer.classList.add("no-anim");
     beginTargetReleaseAnimation(drawer, "close");
-    drawer.style.transition = "none";
     drawer.style.transform = "translateX(0)";
     animateMotionRelease(drawer, "x", 0, toPx, 0).finished.then(() => {
       if (generation !== drawerMotionGeneration) return;
       drawer.classList.remove("is-open");
       drawer.classList.remove("is-expanding");
-      clearDrawerMotionStyles();
       clearDrawerExpandScale();
       drawer.setAttribute("aria-hidden", "true");
       resetDrawerFilters();
       setThemeColor("#f4f4f4");
       endTargetReleaseAnimation(drawer);
+      endDrawerExplicitMotion();
       setUiTransitionBusy(false, "drawer");
     });
     return;

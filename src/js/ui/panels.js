@@ -52,6 +52,7 @@ export function openNewAssignmentPanel() {
 
   newAssignmentTitleInput.value = makeDefaultAssignmentTitle();
   if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
+  beginTopSheetExplicitMotion(newAssignmentPanel);
   newAssignmentPanel.classList.add("is-open");
   newAssignmentPanel.setAttribute("aria-hidden", "false");
   beginShadowRevealAfterOpen(newAssignmentPanel, {
@@ -74,9 +75,24 @@ function closedTopSheetDelta(panel) {
 }
 
 function clearTopSheetMotionStyles(panel) {
-  panel.style.transition = "";
+  panel.style.transition = "none";
   panel.style.transform = "";
   panel.style.willChange = "";
+  void panel.offsetHeight;
+  panel.style.transition = "";
+}
+
+function beginTopSheetExplicitMotion(panel) {
+  const fromDelta = closedTopSheetDelta(panel);
+  panel.classList.add("no-anim");
+  panel.style.transform = `translateY(${fromDelta}px)`;
+  return fromDelta;
+}
+
+function endTopSheetExplicitMotion(panel) {
+  clearTopSheetMotionStyles(panel);
+  panel.classList.remove("no-anim");
+  void panel.offsetHeight;
 }
 
 function nextPanelMotionGeneration(panel) {
@@ -92,11 +108,9 @@ function currentPanelMotionGeneration(panel) {
 function animateTopSheetOpen(panel, { onSettled } = {}) {
   const fromDelta = closedTopSheetDelta(panel);
   const generation = nextPanelMotionGeneration(panel);
-  panel.style.transition = "none";
-  panel.style.transform = `translateY(${fromDelta}px)`;
   animateMotionRelease(panel, "y", fromDelta, 0, 0).finished.then(() => {
     if (generation !== currentPanelMotionGeneration(panel)) return;
-    clearTopSheetMotionStyles(panel);
+    endTopSheetExplicitMotion(panel);
     settleShadowRevealAfterOpen(panel);
     onSettled?.();
   });
@@ -105,15 +119,15 @@ function animateTopSheetOpen(panel, { onSettled } = {}) {
 function animateTopSheetClose(panel, onClosed) {
   const toDelta = closedTopSheetDelta(panel);
   const generation = nextPanelMotionGeneration(panel);
+  panel.classList.add("no-anim");
   beginTargetReleaseAnimation(panel, "close");
-  panel.style.transition = "none";
   panel.style.transform = "translateY(0)";
   animateMotionRelease(panel, "y", 0, toDelta, 0).finished.then(() => {
     if (generation !== currentPanelMotionGeneration(panel)) return;
     panel.classList.remove("is-open");
     panel.setAttribute("aria-hidden", "true");
-    clearTopSheetMotionStyles(panel);
     endTargetReleaseAnimation(panel);
+    endTopSheetExplicitMotion(panel);
     onClosed?.();
   });
 }
@@ -163,6 +177,7 @@ export function openQuickPanel({ focusName = false } = {}) {
   restoreQuickPanelViewFromPreference();
   refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
 
+  beginTopSheetExplicitMotion(quickPanel);
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");
   beginShadowRevealAfterOpen(quickPanel);

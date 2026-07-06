@@ -259,7 +259,9 @@
     }
 
     .drawer.no-anim,
-    .drawer.no-anim * {
+    .drawer.no-anim *,
+    .top-sheet.no-anim,
+    .top-sheet.no-anim * {
       transition: none !important;
     }
 
