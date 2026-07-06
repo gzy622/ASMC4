@@ -11,6 +11,16 @@ import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./l
 import { claimDirection, releaseDirection } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
+import {
+  beginDragMotion,
+  capturePointer,
+  clearMotionDragStyles,
+  createTransformBatcher,
+  createVelocityTracker,
+  isPrimaryPointerButton,
+  releasePointer,
+  restoreAfterDragAbort,
+} from "./pointer-drag-lifecycle.js";
 
 export function createVerticalDragGesture(el, {
   closeDirection,
@@ -30,99 +40,34 @@ export function createVerticalDragGesture(el, {
   let startY = null;
   let startX = null;
   let dragging = false;
-  let currentDelta = 0;
   let activePointerId = null;
-  let lastMoveAt = 0;
-  let lastVelocity = 0;
   let releaseAnimating = false;
   let releaseGeneration = 0;
   let activeRelease = null;
-  let pendingTransform = null;
-  let rafId = null;
   let dragBaseDelta = 0;
 
-  function scheduleTransform(value) {
-    pendingTransform = value;
-    if (rafId === null) {
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (pendingTransform !== null) {
-          targetEl.style.transform = pendingTransform;
-          pendingTransform = null;
-        }
-      });
-    }
-  }
-
-  function flushTransform() {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-    if (pendingTransform !== null) {
-      targetEl.style.transform = pendingTransform;
-      pendingTransform = null;
-    }
-  }
+  const { schedule: scheduleTransform, flush: flushTransform } = createTransformBatcher(targetEl);
+  const motion = createVelocityTracker();
 
   function clearDragStyles() {
-    targetEl.style.transition = "none";
-    targetEl.style.transform = "";
-    targetEl.style.willChange = "";
-    void targetEl.offsetWidth;
-    targetEl.style.transition = "";
-    clearLayerMotionDrag(targetEl);
-  }
-
-  function isPrimaryMouseButton(event) {
-    return event.pointerType !== "mouse" || event.button === 0;
-  }
-
-  function capturePointer(event) {
-    if (el.setPointerCapture && !el.hasPointerCapture(event.pointerId)) {
-      el.setPointerCapture(event.pointerId);
-    }
-  }
-
-  function releasePointer() {
-    if (
-      activePointerId !== null
-      && el.releasePointerCapture
-      && el.hasPointerCapture(activePointerId)
-    ) {
-      el.releasePointerCapture(activePointerId);
-    }
+    clearMotionDragStyles(targetEl);
   }
 
   function resetDragState({ restoreTarget = false } = {}) {
-    const hadMotion = dragging;
-    flushTransform();
-    if ((restoreTarget && dragging) || hadMotion) {
-      clearDragStyles();
-    } else if (dragging) {
-      targetEl.style.willChange = "";
-    }
-    releasePointer();
+    restoreAfterDragAbort({
+      targetEl,
+      wasDragging: dragging,
+      restoreTarget,
+      flushTransform,
+      clearDragStyles,
+      releasePointer: () => releasePointer(el, activePointerId),
+    });
     releaseDirection(activePointerId);
     startY = null;
     startX = null;
     dragging = false;
-    currentDelta = 0;
+    motion.clear();
     activePointerId = null;
-    lastMoveAt = 0;
-    lastVelocity = 0;
-  }
-
-  function trackVelocity(nextDelta) {
-    const now = performance.now();
-    if (lastMoveAt > 0) {
-      const elapsed = now - lastMoveAt;
-      if (elapsed > 0) {
-        lastVelocity = (nextDelta - currentDelta) / elapsed;
-      }
-    }
-    currentDelta = nextDelta;
-    lastMoveAt = now;
   }
 
   function readCurrentDelta() {
@@ -135,15 +80,14 @@ export function createVerticalDragGesture(el, {
     activeRelease?.cancel();
     activeRelease = null;
     flushTransform();
-    releasePointer();
+    releasePointer(el, activePointerId);
     releaseDirection(activePointerId);
     startY = null;
     startX = null;
     dragging = false;
-    currentDelta = 0;
     dragBaseDelta = 0;
     activePointerId = null;
-    lastMoveAt = 0;
+    motion.clear();
     clearLayerMotionDrag(targetEl);
     if (releaseAnimating) {
       releaseAnimating = false;
@@ -155,16 +99,14 @@ export function createVerticalDragGesture(el, {
   function handlePointerDown(event) {
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
-    if (!isPrimaryMouseButton(event)) return;
+    if (!isPrimaryPointerButton(event)) return;
     if (!shouldStart(event)) return;
     activePointerId = event.pointerId;
     releaseDirection(event.pointerId);
     startY = event.clientY;
     startX = event.clientX;
     dragBaseDelta = 0;
-    currentDelta = dragBaseDelta;
-    lastMoveAt = performance.now();
-    lastVelocity = 0;
+    motion.reset(dragBaseDelta);
     if (traceLabel) traceGesture(traceLabel, "pointerdown");
   }
 
@@ -194,11 +136,9 @@ export function createVerticalDragGesture(el, {
       beginLayerDrag(targetEl);
       if (traceLabel) traceGesture(traceLabel, "dragStart");
       if (onDragStart) onDragStart(event);
-      capturePointer(event);
-      targetEl.style.transition = "none";
-      targetEl.style.willChange = "transform";
-      currentDelta = dragBaseDelta;
-      lastVelocity = 0;
+      capturePointer(el, event);
+      beginDragMotion(targetEl);
+      motion.reset(dragBaseDelta);
     }
 
     let clamped;
@@ -208,7 +148,7 @@ export function createVerticalDragGesture(el, {
       clamped = Math.max(0, dragBaseDelta + dy);
     }
 
-    trackVelocity(clamped);
+    motion.track(clamped);
     scheduleTransform(formatTransform(clamped));
     if (onProgress) {
       const range = targetEl.offsetHeight;
@@ -221,8 +161,8 @@ export function createVerticalDragGesture(el, {
     if (event.pointerId !== activePointerId) return;
     if (startY === null) return;
     const wasDragging = dragging;
-    const delta = currentDelta;
-    const velocity = lastVelocity;
+    const delta = motion.current;
+    const velocity = motion.velocity;
     const flingingOpen = velocity * closeDirection <= -FLING_VELOCITY_THRESHOLD;
     const shouldClose = !flingingOpen && (
       Math.abs(delta) >= threshold
@@ -234,12 +174,11 @@ export function createVerticalDragGesture(el, {
     const targetDelta = shouldClose ? closeDirection * closeTargetPx : 0;
 
     flushTransform();
-    releasePointer();
+    releasePointer(el, activePointerId);
     releaseDirection(event.pointerId);
     startY = null;
     startX = null;
     dragging = false;
-    currentDelta = 0;
     activePointerId = null;
 
     if (!wasDragging) {
@@ -333,102 +272,37 @@ export function createTopSheetOpenGesture(bindEl, {
   let startX = null;
   let dragging = false;
   let activePointerId = null;
-  let currentDelta = 0;
-  let lastMoveAt = 0;
-  let lastVelocity = 0;
   let releaseAnimating = false;
-  let pendingTransform = null;
-  let rafId = null;
   let dragBaseDelta = 0;
+
+  const { schedule: scheduleTransform, flush: flushTransform } = createTransformBatcher(sheetEl);
+  const motion = createVelocityTracker();
 
   function closedDelta() {
     return -sheetEl.offsetHeight;
   }
 
-  function scheduleTransform(value) {
-    pendingTransform = value;
-    if (rafId === null) {
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (pendingTransform !== null) {
-          sheetEl.style.transform = pendingTransform;
-          pendingTransform = null;
-        }
-      });
-    }
-  }
-
-  function flushTransform() {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-    if (pendingTransform !== null) {
-      sheetEl.style.transform = pendingTransform;
-      pendingTransform = null;
-    }
-  }
-
   function clearDragStyles() {
-    sheetEl.style.transition = "none";
-    sheetEl.style.transform = "";
-    sheetEl.style.willChange = "";
-    void sheetEl.offsetWidth;
-    sheetEl.style.transition = "";
-    clearLayerMotionDrag(sheetEl);
-  }
-
-  function isPrimaryMouseButton(event) {
-    return event.pointerType !== "mouse" || event.button === 0;
-  }
-
-  function capturePointer(event) {
-    if (bindEl.setPointerCapture && !bindEl.hasPointerCapture(event.pointerId)) {
-      bindEl.setPointerCapture(event.pointerId);
-    }
-  }
-
-  function releasePointer() {
-    if (
-      activePointerId !== null
-      && bindEl.releasePointerCapture
-      && bindEl.hasPointerCapture(activePointerId)
-    ) {
-      bindEl.releasePointerCapture(activePointerId);
-    }
+    clearMotionDragStyles(sheetEl);
   }
 
   function resetDragState({ restoreTarget = false, notifyCancel = false } = {}) {
     const wasDragging = dragging;
-    const hadMotion = wasDragging;
-    flushTransform();
-    if ((restoreTarget && wasDragging) || hadMotion) {
-      clearDragStyles();
-    } else if (wasDragging) {
-      sheetEl.style.willChange = "";
-    }
-    releasePointer();
+    restoreAfterDragAbort({
+      targetEl: sheetEl,
+      wasDragging,
+      restoreTarget,
+      flushTransform,
+      clearDragStyles,
+      releasePointer: () => releasePointer(bindEl, activePointerId),
+    });
     releaseDirection(activePointerId);
     startY = null;
     startX = null;
     dragging = false;
     activePointerId = null;
-    currentDelta = 0;
-    lastMoveAt = 0;
-    lastVelocity = 0;
-    if ((wasDragging || hadMotion) && notifyCancel && onCancel) onCancel();
-  }
-
-  function trackVelocity(nextDelta) {
-    const now = performance.now();
-    if (lastMoveAt > 0) {
-      const elapsed = now - lastMoveAt;
-      if (elapsed > 0) {
-        lastVelocity = (nextDelta - currentDelta) / elapsed;
-      }
-    }
-    currentDelta = nextDelta;
-    lastMoveAt = now;
+    motion.clear();
+    if (wasDragging && notifyCancel && onCancel) onCancel();
   }
 
   function readCurrentDelta() {
@@ -439,7 +313,7 @@ export function createTopSheetOpenGesture(bindEl, {
   function handlePointerDown(event) {
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
-    if (!isPrimaryMouseButton(event)) return;
+    if (!isPrimaryPointerButton(event)) return;
     if (!canStart(event)) return;
     if (!canPull(event)) return;
     activePointerId = event.pointerId;
@@ -448,9 +322,7 @@ export function createTopSheetOpenGesture(bindEl, {
     startX = event.clientX;
     dragging = false;
     dragBaseDelta = closedDelta();
-    currentDelta = dragBaseDelta;
-    lastMoveAt = performance.now();
-    lastVelocity = 0;
+    motion.reset(dragBaseDelta);
     if (traceLabel) traceGesture(traceLabel, "pointerdown");
   }
 
@@ -489,18 +361,16 @@ export function createTopSheetOpenGesture(bindEl, {
       dragging = true;
       beginLayerDrag(sheetEl);
       if (traceLabel) traceGesture(traceLabel, "dragStart");
-      capturePointer(event);
+      capturePointer(bindEl, event);
       if (onPrepare) onPrepare();
-      sheetEl.style.transition = "none";
-      sheetEl.style.willChange = "transform";
-      currentDelta = dragBaseDelta;
-      lastVelocity = 0;
+      beginDragMotion(sheetEl);
+      motion.reset(dragBaseDelta);
       event.preventDefault();
     }
 
     const minDelta = closedDelta();
     const clamped = Math.min(0, Math.max(minDelta, dragBaseDelta + dy));
-    trackVelocity(clamped);
+    motion.track(clamped);
     scheduleTransform(`translateY(${clamped}px)`);
     if (onProgress) {
       const range = sheetEl.offsetHeight;
@@ -514,8 +384,8 @@ export function createTopSheetOpenGesture(bindEl, {
     if (startY === null) return;
 
     const wasDragging = dragging;
-    const delta = currentDelta;
-    const velocity = lastVelocity;
+    const delta = motion.current;
+    const velocity = motion.velocity;
     const minDelta = closedDelta();
     const openedDistance = delta - minDelta;
     const flingingClose = velocity <= -FLING_VELOCITY_THRESHOLD;
@@ -526,15 +396,12 @@ export function createTopSheetOpenGesture(bindEl, {
     const targetDelta = shouldOpen ? 0 : minDelta;
 
     flushTransform();
-    releasePointer();
+    releasePointer(bindEl, activePointerId);
     releaseDirection(event.pointerId);
     startY = null;
     startX = null;
     dragging = false;
     activePointerId = null;
-    currentDelta = 0;
-    lastMoveAt = 0;
-    lastVelocity = 0;
 
     if (!wasDragging) {
       if (isLayerMotionDragging(sheetEl)) {

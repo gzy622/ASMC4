@@ -81,7 +81,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ## 手势
 
-模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`。手势开始判断与触点区域规则集中在 `gesture-guards.js`；浮层互斥查询仍走 `layer-motion-state.js` / `motion-registry.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
+模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`（垂直）与 `horizontal-drag.js`（水平）。**公共 pointer 生命周期**（RAF transform 批处理、pointer capture、速度跟踪、拖动样式清理）在 `pointer-drag-lifecycle.js`；方向判定、阈值、quickPanel 下拉等特殊规则仍留在各工厂与 `gesture-guards.js`。手势开始判断与触点区域规则集中在 `gesture-guards.js`；浮层互斥查询仍走 `layer-motion-state.js` / `motion-registry.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
 
 ### 手势守卫（`gesture-guards.js`）
 

@@ -1,10 +1,20 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE } from "./constants.js";
 import { animateRelease } from "./release-animation.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
-import { beginLayerDrag, clearLayerMotionDrag, isLayerMotionDragging } from "./layer-motion-state.js";
+import { beginLayerDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection } from "../runtime.js";
 import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
+import {
+  beginDragMotion,
+  capturePointer,
+  clearMotionDragStyles,
+  createTransformBatcher,
+  createVelocityTracker,
+  isPrimaryPointerButton,
+  releasePointer,
+  restoreAfterDragAbort,
+} from "./pointer-drag-lifecycle.js";
 
 export function createHorizontalDragGesture(bindEl, {
   targetEl,
@@ -24,99 +34,34 @@ export function createHorizontalDragGesture(bindEl, {
   let startY = null;
   let dragging = false;
   let activePointerId = null;
-  let currentPx = 0;
-  let lastMoveAt = 0;
-  let lastVelocity = 0;
   let releaseAnimating = false;
   let releaseGeneration = 0;
   let activeRelease = null;
-  let pendingTransform = null;
-  let rafId = null;
   let dragBasePx = 0;
 
-  function scheduleTransform(value) {
-    pendingTransform = value;
-    if (rafId === null) {
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        if (pendingTransform !== null) {
-          targetEl.style.transform = pendingTransform;
-          pendingTransform = null;
-        }
-      });
-    }
-  }
-
-  function flushTransform() {
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-    if (pendingTransform !== null) {
-      targetEl.style.transform = pendingTransform;
-      pendingTransform = null;
-    }
-  }
+  const { schedule: scheduleTransform, flush: flushTransform } = createTransformBatcher(targetEl);
+  const motion = createVelocityTracker();
 
   function clearDragStyles() {
-    targetEl.style.transition = "none";
-    targetEl.style.transform = "";
-    targetEl.style.willChange = "";
-    void targetEl.offsetWidth;
-    targetEl.style.transition = "";
-    clearLayerMotionDrag(targetEl);
-  }
-
-  function isPrimaryMouseButton(event) {
-    return event.pointerType !== "mouse" || event.button === 0;
-  }
-
-  function capturePointer(event) {
-    if (bindEl.setPointerCapture && !bindEl.hasPointerCapture(event.pointerId)) {
-      bindEl.setPointerCapture(event.pointerId);
-    }
-  }
-
-  function releasePointer() {
-    if (
-      activePointerId !== null
-      && bindEl.releasePointerCapture
-      && bindEl.hasPointerCapture(activePointerId)
-    ) {
-      bindEl.releasePointerCapture(activePointerId);
-    }
+    clearMotionDragStyles(targetEl);
   }
 
   function resetDragState({ restoreTarget = false } = {}) {
-    const hadMotion = dragging;
-    flushTransform();
-    if ((restoreTarget && dragging) || hadMotion) {
-      clearDragStyles();
-    } else if (dragging) {
-      targetEl.style.willChange = "";
-    }
-    releasePointer();
+    restoreAfterDragAbort({
+      targetEl,
+      wasDragging: dragging,
+      restoreTarget,
+      flushTransform,
+      clearDragStyles,
+      releasePointer: () => releasePointer(bindEl, activePointerId),
+    });
     releaseDirection(activePointerId);
     startX = null;
     startY = null;
     dragging = false;
     activePointerId = null;
-    currentPx = 0;
+    motion.clear();
     dragBasePx = 0;
-    lastMoveAt = 0;
-    lastVelocity = 0;
-  }
-
-  function trackVelocity(nextPx) {
-    const now = performance.now();
-    if (lastMoveAt > 0) {
-      const elapsed = now - lastMoveAt;
-      if (elapsed > 0) {
-        lastVelocity = (nextPx - currentPx) / elapsed;
-      }
-    }
-    currentPx = nextPx;
-    lastMoveAt = now;
   }
 
   function readCurrentPx() {
@@ -127,7 +72,7 @@ export function createHorizontalDragGesture(bindEl, {
   bindEl.addEventListener("pointerdown", (event) => {
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
-    if (!isPrimaryMouseButton(event)) return;
+    if (!isPrimaryPointerButton(event)) return;
     if (!shouldStart(event)) return;
     activePointerId = event.pointerId;
     releaseDirection(event.pointerId);
@@ -135,9 +80,7 @@ export function createHorizontalDragGesture(bindEl, {
     startY = event.clientY;
     dragging = false;
     dragBasePx = getBasePx();
-    currentPx = dragBasePx;
-    lastMoveAt = performance.now();
-    lastVelocity = 0;
+    motion.reset(dragBasePx);
     if (traceLabel) traceGesture(traceLabel, "pointerdown");
   });
 
@@ -167,11 +110,9 @@ export function createHorizontalDragGesture(bindEl, {
         dragging = true;
         beginLayerDrag(targetEl);
         if (traceLabel) traceGesture(traceLabel, "dragStart");
-        capturePointer(event);
-        targetEl.style.transition = "none";
-        targetEl.style.willChange = "transform";
-        currentPx = dragBasePx;
-        lastVelocity = 0;
+        capturePointer(bindEl, event);
+        beginDragMotion(targetEl);
+        motion.reset(dragBasePx);
       } else {
         return;
       }
@@ -179,7 +120,7 @@ export function createHorizontalDragGesture(bindEl, {
 
     const closedPx = getClosedPx();
     const clamped = Math.max(closedPx, Math.min(0, dragBasePx + dx));
-    trackVelocity(clamped);
+    motion.track(clamped);
     scheduleTransform(`translateX(${clamped}px)`);
     if (onProgress) {
       const range = -closedPx;
@@ -197,14 +138,14 @@ export function createHorizontalDragGesture(bindEl, {
     }
     const dx = event.clientX - startX;
     const wasDragging = dragging;
-    const releasedPx = currentPx;
-    const velocity = lastVelocity;
+    const releasedPx = motion.current;
+    const velocity = motion.velocity;
     const closedPx = getClosedPx();
     const basePx = getBasePx();
     const targetPx = getReleaseTargetPx({ dx, closedPx, basePx, currentPx: releasedPx, velocity });
 
     flushTransform();
-    releasePointer();
+    releasePointer(bindEl, activePointerId);
     releaseDirection(event.pointerId);
     startX = null;
     startY = null;
