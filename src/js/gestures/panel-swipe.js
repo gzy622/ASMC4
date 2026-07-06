@@ -19,6 +19,7 @@ import {
   canStartQuickPanelShellClose,
   canStartTopSheetInnerClose,
   canStartTopSheetShellClose,
+  isPanelVisuallyOpen,
 } from "./gesture-guards.js";
 import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
 
@@ -33,7 +34,7 @@ function commitQuickPanelPullOpen() {
 
 function prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease) {
   abortQuickPanelOpenRelease();
-  if (!quickPanel.classList.contains("is-open")) {
+  if (!isPanelVisuallyOpen(quickPanel)) {
     commitQuickPanelOpen();
   }
   endQuickPanelPullPreview();

@@ -81,123 +81,150 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ## 手势
 
-模块在 `src/js/gestures/`；顶部作业面板集中在 `panel-swipe.js`，通用拖动在 `drag-gesture.js`（垂直）与 `horizontal-drag.js`（水平）。**公共 pointer 生命周期**（RAF transform 批处理、pointer capture、速度跟踪、拖动样式清理）在 `pointer-drag-lifecycle.js`；方向判定、阈值、quickPanel 下拉等特殊规则仍留在各工厂与 `gesture-guards.js`。手势开始判断与触点区域规则集中在 `gesture-guards.js`；浮层互斥查询仍走 `layer-motion-state.js` / `motion-registry.js`。各实例可传 `traceLabel`，启用操作日志时经 `traceGesture` 记录 phase（`pointerdown` / `dragStart` / `release` / `close` / `cancel` 等）。
+`src/js/gestures/` 为手势入口；改交互前先读本节规则，再读对应文件。**勿直接** `classList` 操作 `is-motion-dragging` / `is-dragging` / `is-shadow-pending`，经 `layer-motion-state.js` 登记。
+
+### 模块索引
+
+| 文件 | 职责 |
+|------|------|
+| `gesture-guards.js` | 手势开始判断、触点排除、浮层互斥查询 |
+| `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
+| `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动样式清理 |
+| `drag-gesture.js` | 垂直拖动、`createTopSheetOpenGesture` |
+| `horizontal-drag.js` | 水平拖动 |
+| `panel-swipe.js` | quickPanel 四类动作 + newAssignment 关闭 |
+| `drawer-gestures.js` / `score-swipe.js` / `toast-swipe.js` | 各浮层手势绑定 |
+| `release-animation.js` | 释放动画算法（**勿改**） |
+| `ui/shadow-reveal.js` | 点击打开阴影延后 |
+| `ui/floating-layers.js` | 关闭栈 `closeTopmostFloatingLayer()` |
+
+方向判定、阈值、quickPanel 下拉预览等仍留在各工厂；各实例可传 `traceLabel`，操作日志经 `traceGesture` 记录 phase。
+
+### 浮层开/关方式
+
+| 浮层 | 打开 | 关闭 |
+|------|------|------|
+| **quickPanel** | 列表顶下拉 | 面板内上滑 / 壳层空白上滑 / 关闭栈 / `closeFloatingPanels()` |
+| **newAssignmentPanel** | 点击新建 | 内外上滑 / 关闭栈 |
+| **drawer** | 左边缘横滑 | 内左滑 / 壳层左滑 / 关闭栈 |
+| **scoreSheet** | 点学生卡片 | 下滑 / 壳层下滑 / 关闭栈 |
+| **confirmPanel** | 业务触发 | 返回键 / Esc / 后退优先；阻断底下主要滑动手势 |
+| **settings / roster** | 入口点击 | 关闭栈 |
+| **toast** | `showToast` | 下滑（`is-visible`）/ 定时淡出；**不在**关闭栈 |
+
+**关闭栈顺序**（`closeTopmostFloatingLayer()`）：确认框 → 打分 sheet → 名单编辑 → 设置 → quickPanel/newAssignment → 侧栏。`back-guard.js`、Android 返回键、`navigation.js` Esc 共用。
+
+### 互斥规则
+
+**跨层打开阻塞**（`isLayerOpenForGestureBlock` → `isCrossPanelOpenBlocked()`）：下列任一为真时，`openDrawer` / `openQuickPanel` / `openNewAssignmentPanel` / `openDrawerFullscreenPanel` 早退。
+
+- 静止 `is-open`（且非收起释放中）
+- 打开释放（`settling-open`）
+- 点击/CSS 打开（`explicit-opening` + `is-shadow-pending`）
+- quickPanel 下拉预览（`is-dragging`）
+- drawer 未 `is-open` 时的边缘滑开预览（`dragging` 且非释放中）
+
+**不阻塞跨层打开**：收起释放（`settling-close`）。面板/侧栏收起动画中可立刻打开另一浮层。
+
+**同元素**：`isTargetReleaseAnimating(targetEl)` 期间不接受该元素新手势，不打断旧释放动画。
+
+**确认框**：`isConfirmPanelOpen()` 阻断 quickPanel / newAssignment / scoreSheet 壳层关闭；下拉打开另走 `blocksQuickPanelPull()`。
+
+**方向锁**：同一 pointer 横/竖只能一个方向（`runtime.js` `claimDirection`）。
+
+**关闭手势可见态**：以 `is-open` 为准；仅 `is-dragging`（下拉未 commit）不算已打开。
+
+### 运动状态与视觉 class
+
+`layer-motion-state.js` 为单一事实来源；`motion-registry.js` 对外 re-export。
+
+| phase / 标记 | 含义 | 输出 class |
+|--------------|------|-----------|
+| `dragging` | 手指拖动 | `is-motion-dragging` |
+| `settling-open` / `settling-close` | 释放动画 | `is-motion-dragging` |
+| `explicit-opening` | 点击打开动画 | `is-shadow-pending` |
+| pullPreview | quickPanel 下拉预览 | `is-dragging`（仅 quickPanel） |
+
+其它视觉 class：`is-open`、`is-expanding`（drawer 全屏）、`no-anim`、`is-pointer-guarded`（scoreSheet 防误触）。
+
+`is-motion-dragging` 仅供 CSS 临时关阴影降绘制；不用于关闭栈或占用判断。
+
+**阴影**：点击打开 drawer / top-sheet → `shadow-reveal` 登记 `explicit-opening` + `is-shadow-pending`，展开后再渐入。滑动手势走 `is-motion-dragging`；边缘开 drawer 用 `openDrawer({ deferShadow: false })`。关闭或 snap 无动画须 `cancelShadowReveal(el)`。
+
+**释放动画**：`beginTargetReleaseAnimation(targetEl, direction)`，`direction` 为 `'open'` | `'close'`。`horizontal-drag` 滑到 `0` → open；`createTopSheetOpenGesture` 的 `shouldOpen` → open；`createVerticalDragGesture` 的 `shouldClose` → close。
 
 ### 手势守卫（`gesture-guards.js`）
 
-命名函数替代各文件内联 `shouldStart` / `canStart`；触点 `closest()` 与浮层互斥集中在此，业务手势文件只绑定回调。
+触点 `closest()` 与浮层互斥集中在此；业务文件只绑定回调。
 
 | 函数 | 用途 |
 |------|------|
-| `blocksQuickPanelPull()` / `canQuickPanelPullAtScrollTop()` | quickPanel 下拉打开互斥与列表顶判断 |
-| `blocksDrawerEdgeOpen()` | 边缘开 drawer 时拦 quickPanel / newAssignment / scoreSheet 打开态 |
+| `blocksQuickPanelPull()` / `canQuickPanelPullAtScrollTop()` | 下拉打开互斥与列表顶判断 |
+| `blocksDrawerEdgeOpen()` | 边缘开 drawer 时拦 quickPanel / newAssignment / scoreSheet |
 | `canStartQuickPanelPullOpen` | 下拉预览 + 释放打开 |
 | `canStartQuickPanelInnerClose` | 面板内上滑关闭 |
 | `canStartQuickPanelShellClose` | 面板外上滑关闭 |
 | `canStartTopSheetInnerClose` / `canStartTopSheetShellClose` | newAssignment 内外关闭 |
 | `canStartDrawerEdgeOpen` / `InnerClose` / `ShellClose` | drawer 三类横滑 |
 | `canStartScoreSheetShellClose` | scoreSheet 壳层下滑关闭 |
-| `canStartToastDismiss` | toast 下滑关闭（`is-visible`，非 `is-open`） |
+| `canStartToastDismiss` | toast 下滑关闭 |
 
-触点排除选择器：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`PRIMARY_CHROME_SELECTOR`（顶栏 `.app-bar` 内菜单/图标/标题）、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR` 等；视觉 `is-open` 用 `isPanelVisuallyOpen()`，确认框用 `isConfirmPanelOpen()`。`navigation.js` 的 `bindEmptyAreaClose`（点击空白关浮层）须 `isPrimaryChromeClick()` 早退，与 shell 滑动手势共用「顶栏不算空白」规则。
+| 模块 | 手势 | 守卫 |
+|------|------|------|
+| `panel-swipe.js` | quickPanel 下拉 / 内关 / 壳关 | `canStartQuickPanelPullOpen` 等 |
+| `panel-swipe.js` | newAssignment 内外关 | `canStartTopSheetInnerClose` / `ShellClose` |
+| `drawer-gestures.js` | 边缘 / 内 / 壳 | `canStartDrawerEdgeOpen` 等 |
+| `score-swipe.js` | 壳层下滑 | `canStartScoreSheetShellClose` |
+| `toast-swipe.js` | 下滑关闭 | `canStartToastDismiss`（`stopPropagation` 在 `toast-swipe.js`） |
 
-### 运动状态（`layer-motion-state.js`）
+**触点排除选择器**：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`PRIMARY_CHROME_SELECTOR`（顶栏 `.app-bar` 内菜单/图标/标题）、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR`、`DRAWER_FILTER_SELECTOR`、`QUICK_PANEL_HISTORY_SELECTOR`。`isPanelVisuallyOpen()` / `isConfirmPanelOpen()` / `isToastVisible()` 查可见态。`navigation.js` `bindEmptyAreaClose` 须 `isPrimaryChromeClick()` 早退。
 
-浮层运动态的**单一事实来源**。拖动、释放动画、点击打开阴影延后、quickPanel 下拉预览均经此模块登记；`motion-registry.js` 仅 re-export 查询/登记 API 供旧调用方。视觉 class（`is-motion-dragging`、`is-dragging`、`is-shadow-pending`）由模块同步写入，业务代码勿直接 `classList` 操作这三项。
+关闭栈只管 Esc/后退/返回键 pop；各 `shouldStart` 按场景单独判断（打开与关闭方向相反、toast 用 `is-visible`、shell 关闭排除面板自身 DOM）。
 
-| phase | 含义 | 同步 class |
-|-------|------|-----------|
-| `dragging` | 手指拖动中 | `is-motion-dragging` |
-| `settling-open` / `settling-close` | 释放动画中 | `is-motion-dragging` |
-| `explicit-opening` | 点击打开动画中 | —（配合 `is-shadow-pending`） |
-| pullPreview | quickPanel 下拉预览 | `is-dragging` |
+### quickPanel
 
-### `is-motion-dragging`（渲染轻量化，勿混用）
-
-通用手势在真实拖动开始时给 `targetEl` / `sheetEl` 加 `is-motion-dragging`，释放动画结束、取消、打断后的 abort、`pointercancel` 路径移除。仅表示**正在拖拽或释放动画中**，供 CSS 临时关掉阴影以降低 `DrawFn_DrawGL` 尖峰（drawer/score-sheet 关 `::after`，top-sheet 关元素 `box-shadow`）；静止 `.is-open` 仍保留原阴影。
-
-**不得**用于：浮层关闭栈、关闭手势占用判断。`isLayerOpeningAnimating` 仅在 drawer 未 `is-open` 时把 `is-motion-dragging` 当作边缘滑开预览；quickPanel 下拉预览仍用 `is-dragging`。
-
-### `is-shadow-pending`（点击打开阴影延后）
-
-点击打开 drawer / top-sheet 时由 `ui/shadow-reveal.js` 调 `layer-motion-state` 登记 `explicit-opening` 并加 `is-shadow-pending`，`transform` 展开结束后再渐入阴影（top-sheet 用元素 `box-shadow`，drawer 用 `::after`）。滑动手势释放走 `is-motion-dragging`，**不得**叠 `is-shadow-pending`（边缘开 drawer：`openDrawer({ deferShadow: false })`）。关闭或 snap 无动画路径须 `cancelShadowReveal(el)`。
-
-### 释放动画与打开互斥（`layer-motion-state.js` / `motion-registry.js`）
-
-`beginTargetReleaseAnimation(targetEl, direction)`：`direction` 为 `'open'` | `'close'`（默认 `'close'`）。手势释放时按目标态传入：`horizontal-drag` 滑到 `0` 为 open；`createTopSheetOpenGesture` 的 `shouldOpen` 为 open；`createVerticalDragGesture` 的 `shouldClose` 为 close。
-
-**同一 `targetEl` 释放动画播放中**：不再接受该元素上的新手势（`isTargetReleaseAnimating`），且不会 `interruptRelease` 打断旧动画。
-
-**跨层打开互斥**（`isLayerOpeningAnimating` / `isCrossPanelOpenBlocked`）：
-- 打开释放（`direction === 'open'`）
-- 点击/CSS 打开（`beginTargetExplicitOpenAnimation`：`shadow-reveal`、`drawer-fullscreen` 打开序列）
-- `#quickPanel.is-dragging`（下拉预览）
-- `drawer` 未 `is-open` 且 `is-motion-dragging`（边缘滑开预览）
-
-上述任一成立时，`isLayerOpenForGestureBlock` 为 true，`openDrawer` / `openQuickPanel` / `openNewAssignmentPanel` / `openDrawerFullscreenPanel` 入口 `isCrossPanelOpenBlocked()` 早退。**收起释放**（`direction === 'close'`）不拦跨层打开。静止 `is-open` 仍按原互斥。`blocksQuickPanelPull()` / 边缘开 drawer 用 `isLayerOpenForGestureBlock`，勿再靠全局 `isUiTransitionBusy("panel"|"drawer")` 拦跨层手势。
-
-### `#quickPanel`（顶部 sheet）
-
-| 方向 | 绑定元素 | 条件 |
+| 动作 | 绑定元素 | 守卫 |
 |------|---------|------|
-| 下拉打开 | `scrollContainer` | `canPullQuickPanel()` 且 `blocksQuickPanelPull()` 为 false |
-| 上滑关闭（面板内） | `#quickPanel` | `#quickPanel.is-open` 且不在 `#quickPanelHistoryView` 内 |
-| 上滑关闭（面板外） | `appShell`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
+| 下拉打开 | `scrollContainer` | `canStartQuickPanelPullOpen` + `canQuickPanelPullAtScrollTop` |
+| 面板内上滑关闭 | `#quickPanel` | `canStartQuickPanelInnerClose`（排除 `#quickPanelHistoryView`） |
+| 面板外上滑关闭 | `appShell`（`targetEl: quickPanel`） | `canStartQuickPanelShellClose` |
 
-下拉打开的 `onPrepare` 先 `restoreQuickPanelViewFromPreference()`，再 `refreshQuickPanelContent(shouldShowQuickPanelHistoryContent())`（`ui/history.js` + `render/quickPanel.js`），按偏好或当前 view 刷新标题与内容。
+下拉 `onPrepare`：`restoreQuickPanelViewFromPreference()` → `refreshQuickPanelContent(...)` → `beginQuickPanelPullPreview()`。
 
-`closeFloatingPanels()`（`ui/panels.js`）须 `teardownQuickPanelDrag()`（清 `is-dragging` + abort 下拉预览）并 `resetQuickPanelView()` 做 DOM 清理；**不**清除 `runtime.js` 的 `quickPanelPrefersHistoryView`。重开（点标题 `openQuickPanel` 或下拉 `onPrepare`）由 `restoreQuickPanelViewFromPreference()` 无动画恢复操作记录子视图；点「返回」回主视图会 `setQuickPanelPrefersHistoryView(false)`。
+`closeFloatingPanels()` 须 `teardownQuickPanelDrag()` + `resetQuickPanelView()`；**不**清 `quickPanelPrefersHistoryView`。重开由 `restoreQuickPanelViewFromPreference()` 恢复子视图。
 
-面板下方空白与学生列表同在 `.scroll-container` 内。**`appShell` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
+壳层关闭**不得**排除 `.scroll-container`（面板下空白与学生列表同容器）；排除 `#quickPanel` 即可避免与面板内手势重复。
 
-### 浮层状态（勿混用）
+### drawer
 
-- **关闭栈**（`ui/floating-layers.js` → `closeTopmostFloatingLayer()`）：确认框 → 打分 sheet → 名单编辑 → 设置 → quickPanel/newAssignment → 侧栏。浏览器后退（`back-guard.js`）、Android 返回键（`native-shim.js`）、Esc（`navigation.js`）共用此顺序。
-- `anyFloatingLayerOpen()`（同文件）：上述浮层任一 `is-open`；`back-guard` 的 MutationObserver 也监听 `FLOATING_LAYER_ELS`（含 `#confirmScrim`）。
-- `panel-swipe.js` 内 `blocksQuickPanelPull()` 用 `isLayerOpenForGestureBlock` 遍历 `FLOATING_LAYER_ELS`（含打开动画；收起释放中不算占用）；`shouldStart` 里对 `#confirmPanel` 的单独判断保留。
-- `blocksQuickPanelPull()`：`isLayerOpenForGestureBlock` 任一为 true **或** `isTargetReleaseAnimating(quickPanel)` → 打开手势 `canStart` 用（`is-dragging` 已含在 `isLayerOpeningAnimating` 内）。
-- 关闭手势以 **`is-open` 为准**；勿把仅 `is-dragging`（下拉未 commit）当作已打开，否则 Android 上易闪关。
+- `.drawer:not(.is-open) { pointer-events: none }`：关闭后不挡列表下拉。
+- 切换作业先关 drawer（`assignments.js`）。
+- `.drawer-filter` 内搜索/筛选不参与横滑（`canStartDrawerInnerClose` 放行）。
+- 作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独处理；父项 `:active` 排除 `.assignment-item-actions`。
 
-### 手势 `shouldStart` 边界（勿与关闭栈混用）
+### scoreSheet
 
-关闭栈（`closeTopmostFloatingLayer`）只管 Esc/后退/返回键的**逐层 pop**；各拖动手势的 `shouldStart` 须按场景单独判断——打开/关闭方向不同、可见态类名不同（toast 用 `is-visible`）、shell 关闭须排除面板自身 DOM，且部分实例只拦 confirm 而不拦其它浮层。
+- 打开后短暂 `is-pointer-guarded` 防误触；壳层关闭经 `canStartScoreSheetShellClose(event, isUiTransitionBusy("sheet"))`。
+- toast 指针事件 `stopPropagation`，不穿透 sheet。
 
-| 模块 | 手势 | 守卫函数 |
-|------|------|----------|
-| `panel-swipe.js` | quickPanel 下拉打开 | `canStartQuickPanelPullOpen`（内调 `blocksQuickPanelPull()`） |
-| `panel-swipe.js` | quickPanel 面板内关闭 | `canStartQuickPanelInnerClose` |
-| `panel-swipe.js` | quickPanel 壳层关闭 | `canStartQuickPanelShellClose` |
-| `panel-swipe.js` | newAssignment 内外关闭 | `canStartTopSheetInnerClose` / `canStartTopSheetShellClose` |
-| `drawer-gestures.js` | 边缘/内/壳关闭 | `canStartDrawerEdgeOpen` / `InnerClose` / `ShellClose` |
-| `score-swipe.js` | 打分 sheet 壳关闭 | `canStartScoreSheetShellClose` |
-| `toast-swipe.js` | toast 下滑关闭 | `canStartToastDismiss`（`stopPropagation` 仍在 `toast-swipe.js`） |
+### toast
 
-**为何不能统一成关闭栈或单一 `isConfirmOpen()`：** 打开手势（下拉 quickPanel、边缘开 drawer）与关闭栈方向相反；toast 不在 `FLOATING_LAYER_ELS`；shell 关闭须允许 `.scroll-container` 空白上滑关 panel 但禁止在 panel 内重复绑定；confirm 仅阻断部分 shell 手势，侧栏/ toast 有独立规则。改手势前先对照上表，勿把 `anyFloatingLayerOpen()` 塞进所有 `shouldStart`。
+- 仅 `is-visible` 响应下滑；阈值 48px；`formatTransform` 含 `translateX(-50%)`。
+- `showToast` 先 `abortToastDismiss()`；手势关闭与定时淡出 (`is-fading-out`) 互不打架。
+- 关闭后孤儿 `assignmentId` 调 `pruneAssignmentHistoryIfOrphan()`。
 
-### 侧栏与触摸
+### 验收清单
 
-`.drawer:not(.is-open) { pointer-events: none }`（`components.css`）：侧栏关断后勿挡 `scrollContainer` 下拉。切换作业应先关 drawer 再改状态（`assignments.js`）。
+**quickPanel**：列表顶下拉（够/不够阈值）；内外上滑关闭；操作记录视图轻微上滑不误关；主/操作记录切换高度不变；快速连滑无残留 transform。
 
-侧栏作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独接 `is-pressed`；父项 `.assignment-item` 的 `:active` / `is-pressed` 须排除 `.assignment-item-actions` 与操作钮，避免点编辑/删除时整条缩放。
+**drawer**：边缘开 / 内关 / 壳关；筛选可输入；关闭后列表可滚动点击；切作业先关 drawer。
 
-侧栏筛选行（`.drawer-filter`）里的搜索框和科目筛选不参与侧栏横向拖动；`drawer-gestures.js` 里要直接放行这两个控件，避免输入/点选时误触发抽屉滑动。
+**scoreSheet**：点开、防误触、下滑关；打开后其它入口不抢手势；toast 不穿透。
 
-### `#appToast`
+**浮层冲突**：确认框阻断底下手势；打开动画中不可交叉打开；收起动画中可交叉；同元素释放中不能再滑自己。
 
-- 底栏居中 pill（`left: 50%` + `translateX(-50%)`）；下滑关闭：`toast-swipe.js` → `createVerticalDragGesture`（`closeDirection: 1`，`formatTransform` 含 `translateX(-50%)`），仅 `is-visible` 时响应；阈值 48px。
-- 关闭位移：`getCloseTargetPx` → `offsetHeight + 24`；释放动画同样走 `formatTransform`，并同步淡出 `opacity`。
-- `showToast` 先 `abortToastDismiss()`，再 `clearToastInlineStyles()`；若 toast 仍可见或正在 `is-fading-out`，只更新文案与撤回/重做按钮并续期定时器。
-- `hideToast()` 来自手势关闭时不再 abort 当前 release；非手势关闭先 abort。定时关闭走 `is-fading-out` 淡出（`transitionend` + 超时兜底），手势关闭仍 `transition: none` 直隐。
-- 关闭后若 toast 带 `assignmentId` 且作业已不在列表，调 `pruneAssignmentHistoryIfOrphan()` 释放 Map。
-- 可见态 `.app-toast.is-visible` 设 `touch-action: none`，toast 指针事件须阻止冒泡，避免穿透到底层 sheet 手势。
-
-### 改手势后手动测
-
-1. 列表顶下拉打开；面板内、**面板下空白**、学生区上滑关闭。
-2. 打开后立刻上滑关闭；侧栏切换后立刻下拉。
-3. toast 显示时框内下滑关闭；轻点「撤回/重做」不误关；连续打分/撤回时 toast 仍可点、可滑、不挡点击。
-4. Android WebView：`is-dragging` 与 `pointercancel` 不闪退；快速拖动/半途取消/释放中再触摸后无残留 `is-motion-dragging`。
-5. 侧栏或面板**收起**动画中：可立刻边缘开侧栏 / 下拉开面板（交叉）；**打开**动画中（含点击展开、`is-shadow-pending`、边缘滑释放、下拉预览）不可交叉打开；同一元素释放中不能再滑自己；旧收起动画不被新手势打断。
+**异常**：快速来回滑无残留 transform；`pointercancel` 后界面干净；Android 不闪关；返回键/Esc 关闭顺序不变。
 
 ## Agent 会话
 

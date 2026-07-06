@@ -3,7 +3,6 @@ import { animateRelease } from "./release-animation.js";
 import { beginTargetReleaseAnimation, endTargetReleaseAnimation } from "./motion-registry.js";
 import { beginLayerDrag, isLayerMotionDragging } from "./layer-motion-state.js";
 import { claimDirection, releaseDirection } from "../runtime.js";
-import { parseTransformAxis } from "../utils/transform.js";
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
@@ -62,11 +61,6 @@ export function createHorizontalDragGesture(bindEl, {
     activePointerId = null;
     motion.clear();
     dragBasePx = 0;
-  }
-
-  function readCurrentPx() {
-    const transform = targetEl.style.transform || getComputedStyle(targetEl).transform;
-    return parseTransformAxis(transform, "X");
   }
 
   bindEl.addEventListener("pointerdown", (event) => {
