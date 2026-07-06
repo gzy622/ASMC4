@@ -45,11 +45,9 @@ export function createHorizontalDragGesture(bindEl, {
     clearMotionDragStyles(targetEl);
   }
 
-  function resetDragState({ restoreTarget = false } = {}) {
+  function resetDragState() {
     restoreAfterDragAbort({
-      targetEl,
       wasDragging: dragging,
-      restoreTarget,
       flushTransform,
       clearDragStyles,
       releasePointer: () => releasePointer(bindEl, activePointerId),
@@ -196,7 +194,7 @@ export function createHorizontalDragGesture(bindEl, {
   bindEl.addEventListener("pointercancel", (event) => {
     if (event.pointerId !== activePointerId) return;
     if (traceLabel) traceGesture(traceLabel, "pointercancel");
-    resetDragState({ restoreTarget: true });
+    resetDragState();
   });
 
   // Android WebView: prevent native scroll when horizontal gesture is detected

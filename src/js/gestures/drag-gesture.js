@@ -52,11 +52,9 @@ export function createVerticalDragGesture(el, {
     clearMotionDragStyles(targetEl);
   }
 
-  function resetDragState({ restoreTarget = false } = {}) {
+  function resetDragState() {
     restoreAfterDragAbort({
-      targetEl,
       wasDragging: dragging,
-      restoreTarget,
       flushTransform,
       clearDragStyles,
       releasePointer: () => releasePointer(el, activePointerId),
@@ -226,7 +224,7 @@ export function createVerticalDragGesture(el, {
   function handlePointerCancel(event) {
     if (event.pointerId !== activePointerId) return;
     if (traceLabel) traceGesture(traceLabel, "pointercancel");
-    resetDragState({ restoreTarget: true });
+    resetDragState();
   }
 
   el.addEventListener("pointerdown", handlePointerDown);
@@ -280,12 +278,10 @@ export function createTopSheetOpenGesture(bindEl, {
     clearMotionDragStyles(sheetEl);
   }
 
-  function resetDragState({ restoreTarget = false, notifyCancel = false } = {}) {
+  function resetDragState({ notifyCancel = false } = {}) {
     const wasDragging = dragging;
     restoreAfterDragAbort({
-      targetEl: sheetEl,
       wasDragging,
-      restoreTarget,
       flushTransform,
       clearDragStyles,
       releasePointer: () => releasePointer(bindEl, activePointerId),
@@ -454,7 +450,7 @@ export function createTopSheetOpenGesture(bindEl, {
       handlePointerUp(event);
       return;
     }
-    resetDragState({ restoreTarget: true });
+    resetDragState();
   }
 
   bindEl.addEventListener("pointerdown", handlePointerDown);

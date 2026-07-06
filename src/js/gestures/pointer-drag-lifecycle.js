@@ -108,18 +108,14 @@ export function createVelocityTracker() {
 }
 
 export function restoreAfterDragAbort({
-  targetEl,
   wasDragging,
-  restoreTarget,
   flushTransform,
   clearDragStyles,
   releasePointer: releasePointerFn,
 }) {
   flushTransform();
-  if ((restoreTarget && wasDragging) || wasDragging) {
+  if (wasDragging) {
     clearDragStyles();
-  } else if (wasDragging) {
-    targetEl.style.willChange = "";
   }
   releasePointerFn();
 }
