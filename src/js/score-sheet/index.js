@@ -10,8 +10,19 @@ import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "../ui/shadow-reveal.js";
+import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
+import {
+  nextExplicitMotionGeneration,
+  prepareExplicitOpenTransform,
+  runExplicitOpenAnimation,
+} from "../gestures/explicit-open-motion.js";
+import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
 
 let releaseScoreSheetPointerGuard = null;
+
+function closedScoreSheetPx() {
+  return scoreSheet.offsetHeight;
+}
 
 export function openScoreSheet(student, guardPointer = false) {
   traceEvent("scoreSheet.open", {
@@ -43,9 +54,20 @@ export function openScoreSheet(student, guardPointer = false) {
   updateScoreDisplay();
 
   hapticLight();
+  const fromPx = closedScoreSheetPx();
+  prepareExplicitOpenTransform(scoreSheet, "y", fromPx);
   scoreSheet.classList.add("is-open");
   scoreSheet.setAttribute("aria-hidden", "false");
-  beginShadowRevealAfterOpen(scoreSheet);
+  const generation = nextExplicitMotionGeneration(scoreSheet);
+  runExplicitOpenAnimation({
+    el: scoreSheet,
+    axis: "y",
+    fromPx,
+    generation,
+    onMotionStarted: (anim) => {
+      beginShadowRevealAfterOpen(scoreSheet, { motionFinished: anim.finished });
+    },
+  });
   if (guardPointer) armScoreSheetPointerGuard();
 }
 
@@ -60,7 +82,10 @@ export function closeScoreSheet() {
   scoreStudentName.textContent = "--";
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
+  nextExplicitMotionGeneration(scoreSheet);
+  cancelMotionAnimation(scoreSheet);
   cancelShadowReveal(scoreSheet);
+  clearExplicitMotionStyles(scoreSheet);
   scoreSheet.classList.remove("is-open");
   scoreSheet.setAttribute("aria-hidden", "true");
 }

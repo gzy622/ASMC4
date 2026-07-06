@@ -7,18 +7,15 @@ import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 import {
-  beginTargetReleaseAnimation,
-  endTargetReleaseAnimation,
   isCrossPanelOpenBlocked,
 } from "../gestures/motion-registry.js";
-import { animateMotionRelease } from "../gestures/gesture-motion-engine.js";
 import {
-  isExplicitMotionStale,
   nextExplicitMotionGeneration,
   prepareExplicitOpenTransform,
   runExplicitOpenAnimation,
+  runExplicitCloseAnimation,
 } from "../gestures/explicit-open-motion.js";
-import { endExplicitMotion, clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
+import { clearExplicitMotionStyles } from "../gestures/pointer-drag-lifecycle.js";
 import { endQuickPanelPullPreview } from "../gestures/layer-motion-state.js";
 
 let abortQuickPanelOpenDrag = () => {};
@@ -102,18 +99,17 @@ function animateTopSheetOpen(panel, { onSettled, shadowOnSettled } = {}) {
 }
 
 function animateTopSheetClose(panel, onClosed) {
-  const toDelta = closedTopSheetDelta(panel);
   const generation = nextExplicitMotionGeneration(panel);
-  panel.classList.add("no-anim");
-  beginTargetReleaseAnimation(panel, "close");
-  panel.style.transform = "translateY(0)";
-  animateMotionRelease(panel, "y", 0, toDelta, 0).finished.then(() => {
-    if (isExplicitMotionStale(panel, generation)) return;
-    panel.classList.remove("is-open");
-    panel.setAttribute("aria-hidden", "true");
-    endTargetReleaseAnimation(panel);
-    endExplicitMotion(panel);
-    onClosed?.();
+  runExplicitCloseAnimation({
+    el: panel,
+    axis: "y",
+    toPx: closedTopSheetDelta(panel),
+    generation,
+    onComplete: () => {
+      panel.classList.remove("is-open");
+      panel.setAttribute("aria-hidden", "true");
+      onClosed?.();
+    },
   });
 }
 

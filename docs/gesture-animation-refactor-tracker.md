@@ -39,12 +39,12 @@
 | 字段 | 值 |
 |------|-----|
 | **最后更新** | 2026-07-06 |
-| **当前阶段** | 三阶段收尾 |
-| **阶段进度** | 阶段 1 ≈ 98% · 阶段 2 ≈ 90% · 阶段 3 ≈ 90% |
+| **当前阶段** | 三阶段收尾（余 D2 架构债待 repro） |
+| **阶段进度** | 阶段 1 = 100% · 阶段 2 = 100% · 阶段 3 ≈ 98% |
 | **短期目标** | 见下方「短期目标（本批）」 |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | S16：`NAV_CHROME_SELECTOR` 单源，guards 与 press-feedback 共用 |
+| **最近决策** | S23：D8 `drawer-fullscreen` 独立编排保留；S24：D2 WAAPI/CSS 双轨记为架构约束，无 repro 不动 |
 
 ### 短期目标（本批）
 
@@ -84,6 +84,24 @@
 > 下一批（可选余量）：
 > - [x] **S16** P3：选择器与 `press-feedback` 重叠整理（2.5）→ `NAV_CHROME_SELECTOR` 单源
 
+> 下一批短期目标（技术债余量）：
+> - [x] **S17** P3：删除 `openDrawer` 死分支 `!shouldAnimate`（D9）
+> - [x] **S18** P3：`runExplicitOpenAnimation` 接 `busyKey`，drawer 显式 open 收拢（D6 余量）
+
+> 下一批短期目标（技术债余量）：
+> - [x] **S19** P3：`runExplicitCloseAnimation` 收拢 drawer/panels 显式关闭（D6）
+
+> 下一批短期目标（技术债余量）：
+> - [x] **S20** P3：scoreSheet 打开迁 WAAPI 显式路径（D7）→ `runExplicitOpenAnimation` + `motionFinished` 阴影
+
+> 下一批短期目标（技术债余量）：
+> - [x] **S21** P3：`shadow-reveal` 删无调用方的 `transitionend` 路径（D3）
+> - [x] **S22** P3：评估 D4 generation 复制 → **跳过**，显式 `WeakMap` 与手势闭包 `releaseGeneration` 职责不同
+
+> 下一批短期目标（收尾评估）：
+> - [x] **S23** P3：评估 D8 `drawer-fullscreen` → **保留**独立编排（多段 expand/opacity，与 `openDrawer` 职责不同）
+> - [x] **S24** P3：评估 D2 WAAPI/CSS 双轨 → **记录**，靠 `no-anim`+reflow 防御，无 repro 不拆
+
 ---
 
 ## 三阶段总览
@@ -92,9 +110,9 @@
 
 | 阶段 | 目标 | 进度 | 状态 |
 |------|------|------|------|
-| **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | ≈ 98% | 进行中 |
-| **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | ≈ 90% | 基本完成 |
-| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 90% | 基本完成 |
+| **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | 100% | 完成 |
+| **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | 100% | 完成 |
+| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 98% | 收尾 |
 
 ```text
 [=======阶段1=======]░░
@@ -124,7 +142,7 @@
 | ID | 任务 | 优先级 | 状态 | 备注 |
 |----|------|--------|------|------|
 | 2.1 | `gesture-guards.js` `canStart*` / `blocks*` 集中 | — | ✅ 完成 | |
-| 2.2 | `panel-swipe.js` 四类动作分段可读 | — | ✅ 基本完成 | 核心逻辑仍在 `drag-gesture` 工厂 |
+| 2.2 | `panel-swipe.js` 四类动作分段可读 | — | ✅ 完成 | 四段注释 + 守卫分离 |
 | 2.3 | `CodeGraph.md`「手势」改为规则说明为主 | — | ✅ 基本完成 | 随实现变更需持续维护 |
 | 2.4 | score-sheet 内关补 guard（若需要） | P3 | ✅ 完成 | **短期 S14**；`canStartScoreSheetInnerClose` |
 | 2.5 | 选择器与 `press-feedback` 重叠整理 | P3 | ✅ 完成 | **短期 S16**；`NAV_CHROME_SELECTOR` |
@@ -134,7 +152,7 @@
 | ID | 任务 | 优先级 | 状态 | 备注 |
 |----|------|--------|------|------|
 | 3.1 | 统一 `clear*MotionStyles` + reflow 收尾 | P1 | ✅ 完成 | drawer/top-sheet/toast 均走 `pointer-drag-lifecycle` |
-| 3.2 | shadow 完成单一路径（WAAPI 感知，弱化无效 `transitionend`） | P1 | ✅ 完成 | **短期 S4**；scoreSheet 仍走 CSS `transitionend` |
+| 3.2 | shadow 完成单一路径（WAAPI 感知，弱化无效 `transitionend`） | P1 | ✅ 完成 | **短期 S4**；scoreSheet 打开已迁 WAAPI（S20） |
 | 3.3 | `drawer.js` / `panels.js` 显式 open 编排抽共享 helper | P2 | ✅ 完成 | **短期 S6**；`explicit-open-motion.js` |
 | 3.4 | `evaluateSwipeRelease` 统一释放阈值 | P2 | ✅ 完成 | **短期 S7**；`swipe-release.js` |
 | 3.5 | 共享 `drawerClosedPx` | P2 | ✅ 完成 | **短期 S8**；`getDrawerClosedPx` |
@@ -153,14 +171,14 @@
 | ID | 问题 | 严重度 | 关联任务 | 状态 |
 |----|------|--------|----------|------|
 | D1 | `release-animation.js` 死代码，文档仍写「勿改」 | 高 | 1.6 | ✅ |
-| D2 | WAAPI + CSS transition 双轨，靠 `no-anim` + reflow 防御 | 高 | 3.1, 3.2 | ⬜ |
-| D3 | `shadow-reveal` 三路完成（transitionend / timeout / settle 显式调用） | 中 | 3.2 | 🔄 WAAPI 已单路径；CSS 仍 transitionend+timeout |
-| D4 | generation 令牌 4 处复制 | 中 | 3.3 | 🔄 drawer/panels 已收；其它路径待查 |
+| D2 | WAAPI + CSS transition 双轨，靠 `no-anim` + reflow 防御 | 高 | 3.1, 3.2 | ⏸ 架构约束；有双动画 repro 再立项 |
+| D3 | `shadow-reveal` 三路完成（transitionend / timeout / settle 显式调用） | 中 | 3.2 | ✅ |
+| D4 | generation 令牌 4 处复制 | 中 | 3.3 | ✅ 显式 `WeakMap` + 手势闭包双轨，有意不合并 |
 | D5 | `busyKey` 未接线 | 中 | 1.7 | ✅ |
-| D6 | `uiTransitionBusy` 与 layer phase 双轨 | 中 | 1.7 | 🔄 手势期已接线，显式 open 仍手写 |
-| D7 | score-sheet 打开动画路径与其他浮层不一致 | 低 | 3.2 | ⬜ |
-| D8 | `drawer-fullscreen` 未复用 shadow-reveal / openDrawer | 低 | 3.9 | 🔄 `waitForTransition` 已共享；编排仍独立 |
-| D9 | `openDrawer` 死分支（`!shouldAnimate`） | 低 | — | ⬜ |
+| D6 | `uiTransitionBusy` 与 layer phase 双轨 | 中 | 1.7 | ✅ 显式 open/close 已接 `busyKey`；手势期工厂早已接线 |
+| D7 | score-sheet 打开动画路径与其他浮层不一致 | 低 | 3.2 | ✅ |
+| D8 | `drawer-fullscreen` 未复用 shadow-reveal / openDrawer | 低 | 3.9 | ✅ 有意独立；`waitForTransition` 已共享 |
+| D9 | `openDrawer` 死分支（`!shouldAnimate`） | 低 | — | ✅ |
 | D10 | top-sheet 阴影用 `box-shadow`，drawer 用 `::after` | 信息 | — | 记录即可 |
 
 复现资产：`scripts/__repro_double_anim.html`（双动画最小 repro，处理 D2 时参考）。
@@ -252,6 +270,11 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-06 | S23+S24：D8 全屏编排保留独立；D2 双轨记为架构约束 |
+| 2026-07-06 | S21+S22：`shadow-reveal` 单路径；D4 generation 双轨记为有意设计 |
+| 2026-07-06 | S20：scoreSheet 打开迁 WAAPI，`shadow-reveal` 走 `motionFinished` |
+| 2026-07-06 | S19：`runExplicitCloseAnimation` 收拢 drawer/panels 显式关闭 |
+| 2026-07-06 | S17+S18：`openDrawer` 删死分支；`runExplicitOpenAnimation` 接 `busyKey` |
 | 2026-07-06 | S16：`NAV_CHROME_SELECTOR` 单源，`press-feedback` 复用 |
 | 2026-07-06 | S15：评估 3.10，决定不增 `opening`/`closing` phase |
 | 2026-07-06 | S14：`canStartScoreSheetInnerClose`（release/busy/confirm），`score-swipe` 内关接线 |
