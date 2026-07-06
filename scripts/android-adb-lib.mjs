@@ -236,6 +236,11 @@ export class CdpClient {
     this.handlers.set(method, handlers);
   }
 
+  off(method, handler) {
+    const handlers = this.handlers.get(method) || [];
+    this.handlers.set(method, handlers.filter(item => item !== handler));
+  }
+
   close() {
     this.ws?.close();
   }

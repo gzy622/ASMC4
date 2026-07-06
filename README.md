@@ -57,7 +57,7 @@ dev.cmd
 npm run debug:record
 ```
 
-脚本会启动 debug App、连接 WebView、清空并开启应用内操作日志，同步录制 WebView trace 与 `logcat`。在手机上复现问题后，在终端按回车结束。
+脚本会启动 debug App、连接 WebView。准备就绪后，按回车开始录制并清空应用内操作日志，同步抓 WebView trace 与 `logcat`；复现完成后再按回车结束并保存。保存完成后，可继续按回车开始下一次录制。
 
 输出目录：`traces/debug/<时间戳>/`，含 `summary.md`（人读摘要）、`manifest.json`、`app-trace.json`、`webview-trace.json`、`logcat.txt`。
 

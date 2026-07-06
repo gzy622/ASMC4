@@ -163,15 +163,18 @@ function startLogcatCapture(adbPath, device, pid) {
   };
 }
 
-async function recordWebViewTrace(client) {
+async function recordWebViewTrace(client, rl) {
   const events = [];
   let completeResolve;
   const complete = new Promise(resolve => { completeResolve = resolve; });
 
-  client.on("Tracing.dataCollected", params => {
+  const onDataCollected = params => {
     if (Array.isArray(params.value)) events.push(...params.value);
-  });
-  client.on("Tracing.tracingComplete", completeResolve);
+  };
+  const onTracingComplete = () => completeResolve();
+
+  client.on("Tracing.dataCollected", onDataCollected);
+  client.on("Tracing.tracingComplete", onTracingComplete);
 
   const startedAt = new Date();
   await client.send("Tracing.start", {
@@ -180,14 +183,17 @@ async function recordWebViewTrace(client) {
     options: "sampling-frequency=10000",
   });
 
-  const rl = readline.createInterface({ input, output });
   await rl.question("已开始录制。请在手机上复现问题，完成后按回车停止...");
-  rl.close();
 
-  await client.send("Tracing.end");
-  await complete;
+  try {
+    await client.send("Tracing.end");
+    await complete;
+  } finally {
+    client.off("Tracing.dataCollected", onDataCollected);
+    client.off("Tracing.tracingComplete", onTracingComplete);
+  }
+
   const endedAt = new Date();
-
   return {
     events,
     startedAt,
@@ -306,6 +312,88 @@ function buildSummary({ meta, appTrace, webviewRecording, logcatText }) {
   return lines.join("\n");
 }
 
+async function saveDebugRecording({
+  args,
+  packageName,
+  device,
+  pid,
+  socketName,
+  port,
+  target,
+  webviewRecording,
+  appTraceJson,
+  logcatText,
+}) {
+  const startedAt = webviewRecording.startedAt;
+  const endedAt = webviewRecording.endedAt;
+  const stamp = timestampForFile(startedAt);
+  const outDir = path.resolve(args.outDir, stamp);
+  await fs.mkdir(path.join(outDir, "screens"), { recursive: true });
+
+  const meta = {
+    generatedBy: "scripts/android-debug-record.mjs",
+    scriptVersion: SCRIPT_VERSION,
+    startedAt: startedAt.toISOString(),
+    endedAt: endedAt.toISOString(),
+    durationSeconds: webviewRecording.durationSeconds,
+    packageName,
+    device,
+    pid,
+    socketName,
+    port,
+    targetTitle: target.title,
+    targetUrl: target.url,
+  };
+
+  const files = {
+    appTrace: "app-trace.json",
+    webviewTrace: "webview-trace.json",
+    logcat: "logcat.txt",
+    summary: "summary.md",
+    screens: "screens/",
+  };
+
+  const appTracePath = path.join(outDir, files.appTrace);
+  const webviewTracePath = path.join(outDir, files.webviewTrace);
+  const logcatPath = path.join(outDir, files.logcat);
+  const summaryPath = path.join(outDir, files.summary);
+  const manifestPath = path.join(outDir, "manifest.json");
+
+  let appTrace = null;
+  try {
+    appTrace = JSON.parse(appTraceJson);
+  } catch {
+    appTrace = { parseError: true, raw: appTraceJson };
+  }
+
+  await fs.writeFile(appTracePath, appTraceJson, "utf8");
+  await fs.writeFile(webviewTracePath, JSON.stringify({
+    traceEvents: webviewRecording.events,
+    metadata: meta,
+  }), "utf8");
+  await fs.writeFile(logcatPath, logcatText, "utf8");
+  await fs.writeFile(summaryPath, buildSummary({
+    meta,
+    appTrace,
+    webviewRecording,
+    logcatText,
+  }), "utf8");
+  await fs.writeFile(manifestPath, JSON.stringify({
+    ...meta,
+    directory: outDir,
+    files,
+  }, null, 2), "utf8");
+
+  return {
+    outDir,
+    summaryPath,
+    manifestPath,
+    appTracePath,
+    webviewTracePath,
+    logcatPath,
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -342,92 +430,58 @@ async function main() {
 
   const client = new CdpClient(target.webSocketDebuggerUrl);
   await client.connect();
+  const rl = readline.createInterface({ input, output });
 
   try {
     await waitForDebugTraceApi(client);
-    await resetAndEnableAppTrace(client);
-
-    await adb(adbPath, ["logcat", "-c"], device).catch(() => {});
-    const logcatCapture = startLogcatCapture(adbPath, device, pid);
 
     console.log("");
-    console.log("准备就绪：应用内 trace 已清空并开启，logcat 与 WebView trace 同步录制。");
+    console.log("准备就绪。按回车开始录制，Ctrl+C 退出。");
 
-    const webviewRecording = await recordWebViewTrace(client);
-    const appTraceJson = await exportAppTraceJson(client);
-    const logcatText = await logcatCapture.stop();
+    for (;;) {
+      await rl.question("");
+      await resetAndEnableAppTrace(client);
+      await adb(adbPath, ["logcat", "-c"], device).catch(() => {});
+      const logcatCapture = startLogcatCapture(adbPath, device, pid);
 
-    const startedAt = webviewRecording.startedAt;
-    const endedAt = webviewRecording.endedAt;
-    const stamp = timestampForFile(startedAt);
-    const outDir = path.resolve(args.outDir, stamp);
-    await fs.mkdir(path.join(outDir, "screens"), { recursive: true });
+      let webviewRecording;
+      let appTraceJson;
+      let logcatText;
+      try {
+        webviewRecording = await recordWebViewTrace(client, rl);
+        appTraceJson = await exportAppTraceJson(client);
+      } finally {
+        logcatText = await logcatCapture.stop();
+      }
 
-    const meta = {
-      generatedBy: "scripts/android-debug-record.mjs",
-      scriptVersion: SCRIPT_VERSION,
-      startedAt: startedAt.toISOString(),
-      endedAt: endedAt.toISOString(),
-      durationSeconds: webviewRecording.durationSeconds,
-      packageName,
-      device,
-      pid,
-      socketName,
-      port,
-      targetTitle: target.title,
-      targetUrl: target.url,
-    };
+      const saved = await saveDebugRecording({
+        args,
+        packageName,
+        device,
+        pid,
+        socketName,
+        port,
+        target,
+        webviewRecording,
+        appTraceJson,
+        logcatText,
+      });
 
-    const files = {
-      appTrace: "app-trace.json",
-      webviewTrace: "webview-trace.json",
-      logcat: "logcat.txt",
-      summary: "summary.md",
-      screens: "screens/",
-    };
-
-    const appTracePath = path.join(outDir, files.appTrace);
-    const webviewTracePath = path.join(outDir, files.webviewTrace);
-    const logcatPath = path.join(outDir, files.logcat);
-    const summaryPath = path.join(outDir, files.summary);
-    const manifestPath = path.join(outDir, "manifest.json");
-
-    let appTrace = null;
-    try {
-      appTrace = JSON.parse(appTraceJson);
-    } catch {
-      appTrace = { parseError: true, raw: appTraceJson };
+      console.log("");
+      console.log("完成。生成目录：");
+      console.log(saved.outDir);
+      console.log("");
+      console.log("文件：");
+      console.log(`- ${saved.summaryPath}`);
+      console.log(`- ${saved.manifestPath}`);
+      console.log(`- ${saved.appTracePath}`);
+      console.log(`- ${saved.webviewTracePath}`);
+      console.log(`- ${saved.logcatPath}`);
+      console.log("");
+      console.log("按回车开始下一次录制，Ctrl+C 退出。");
     }
-
-    await fs.writeFile(appTracePath, appTraceJson, "utf8");
-    await fs.writeFile(webviewTracePath, JSON.stringify({
-      traceEvents: webviewRecording.events,
-      metadata: meta,
-    }), "utf8");
-    await fs.writeFile(logcatPath, logcatText, "utf8");
-    await fs.writeFile(summaryPath, buildSummary({
-      meta,
-      appTrace,
-      webviewRecording,
-      logcatText,
-    }), "utf8");
-    await fs.writeFile(manifestPath, JSON.stringify({
-      ...meta,
-      directory: outDir,
-      files,
-    }, null, 2), "utf8");
-
-    console.log("");
-    console.log("完成。生成目录：");
-    console.log(outDir);
-    console.log("");
-    console.log("文件：");
-    console.log(`- ${summaryPath}`);
-    console.log(`- ${manifestPath}`);
-    console.log(`- ${appTracePath}`);
-    console.log(`- ${webviewTracePath}`);
-    console.log(`- ${logcatPath}`);
   } finally {
+    rl.close();
     client.close();
   }
 }

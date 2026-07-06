@@ -61,7 +61,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 
 - 设置页「启用操作日志」开关；内存环形缓冲（最多 800 条），可导出 JSON。
 - `traceEvent` / `traceStep` / `traceGesture`；手势工厂可选 `traceLabel`（启用时才写入）。
-- **adb bug 复现**：`npm run debug:record`（`scripts/android-debug-record.mjs`）经 CDP 调用 `window.__ASMC4_DEBUG_TRACE__`（`createDebugTraceApi()`，`app.js` 安装）清空并开启 trace，同步抓 WebView trace + 包级 `logcat`，落盘 `traces/debug/<时间戳>/`（`summary.md`、`manifest.json`、`app-trace.json`、`webview-trace.json`、`logcat.txt`）。智能体默认读 `traces/debug/` 最新目录；`npm run debug:record -- --latest` 打印路径。性能采样仍用 `npm run trace:android`（`traces/android/`）。共用 `scripts/android-adb-lib.mjs`（adb / WebView / CDP）。
+- **adb bug 复现**：`npm run debug:record`（`scripts/android-debug-record.mjs`）经 CDP 调用 `window.__ASMC4_DEBUG_TRACE__`（`createDebugTraceApi()`，`app.js` 安装）；准备后按回车开始，清空并开启 trace，同步抓 WebView trace + 包级 `logcat`，再按回车结束并落盘 `traces/debug/<时间戳>/`（`summary.md`、`manifest.json`、`app-trace.json`、`webview-trace.json`、`logcat.txt`），保存后可继续按回车开始下一次。智能体默认读 `traces/debug/` 最新目录；`npm run debug:record -- --latest` 打印路径。性能采样仍用 `npm run trace:android`（`traces/android/`）。共用 `scripts/android-adb-lib.mjs`（adb / WebView / CDP）。
 
 ## 打分 sheet
 
