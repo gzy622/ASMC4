@@ -6,7 +6,7 @@ import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtim
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
-  bindAndroidTouchmoveGuard,
+  bindPointerDragLifecycle,
   capturePointer,
   clearMotionDragStyles,
   createTransformBatcher,
@@ -87,7 +87,7 @@ export function createHorizontalDragGesture(bindEl, {
     }
   }
 
-  bindEl.addEventListener("pointerdown", (event) => {
+  function handlePointerDown(event) {
     if (releaseAnimating) return;
     if (activePointerId !== null) return;
     if (!isPrimaryPointerButton(event)) return;
@@ -100,9 +100,9 @@ export function createHorizontalDragGesture(bindEl, {
     dragBasePx = getBasePx();
     motion.reset(dragBasePx);
     if (traceLabel) traceGesture(traceLabel, "pointerdown");
-  });
+  }
 
-  bindEl.addEventListener("pointermove", (event) => {
+  function handlePointerMove(event) {
     if (event.pointerId !== activePointerId) return;
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
@@ -149,9 +149,9 @@ export function createHorizontalDragGesture(bindEl, {
       onProgress(range > 0 ? (clamped - closedPx) / range : 0);
     }
     event.preventDefault();
-  }, { passive: false });
+  }
 
-  bindEl.addEventListener("pointerup", async (event) => {
+  async function handlePointerUp(event) {
     if (event.pointerId !== activePointerId) return;
     if (startX === null) return;
     if (!shouldContinueMove(event)) {
@@ -223,23 +223,28 @@ export function createHorizontalDragGesture(bindEl, {
       dragBasePx = 0;
       activeRelease = null;
     }
-  });
+  }
 
-  bindEl.addEventListener("pointercancel", (event) => {
+  function handlePointerCancel(event) {
     if (event.pointerId !== activePointerId) return;
     if (traceLabel) traceGesture(traceLabel, "pointercancel");
     resetDragState();
-  });
+  }
 
-  bindAndroidTouchmoveGuard(
-    bindEl,
-    () => activePointerId !== null && startX !== null,
-    (event) => {
-      const dx = Math.abs(event.touches[0].clientX - startX);
-      const dy = Math.abs(event.touches[0].clientY - startY);
-      return dx > DRAG_START_THRESHOLD && dx > dy * DRAG_SLOPE;
+  bindPointerDragLifecycle(bindEl, {
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerCancel,
+    androidTouchmove: {
+      getActive: () => activePointerId !== null && startX !== null,
+      shouldPreventDefault: (event) => {
+        const dx = Math.abs(event.touches[0].clientX - startX);
+        const dy = Math.abs(event.touches[0].clientY - startY);
+        return dx > DRAG_START_THRESHOLD && dx > dy * DRAG_SLOPE;
+      },
     },
-  );
+  });
 
   return { abortRelease };
 }

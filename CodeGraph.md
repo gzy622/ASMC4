@@ -77,7 +77,7 @@ DOM（`index.html` + `dom-refs.js`）：
 - 小数点后最多 2 位；×10 模式禁用小数点。
 - 确认（`score-sheet/index.js` `confirmScore`）：`parseFloat`，badge 四舍五入到 2 位小数。
 
-按压反馈：`press-feedback.js` 含 `.score-display-backspace`。
+按压反馈：`press-feedback.js` 从 `gesture-guards` 复用 `NAV_CHROME_SELECTOR`；含 `.score-display-backspace` 等专用项。
 
 ## 手势
 
@@ -90,7 +90,7 @@ DOM（`index.html` + `dom-refs.js`）：
 | `gesture-guards.js` | 手势开始判断、触点排除、浮层互斥查询 |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
 | `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
-| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、Android `touchmove` 滚动拦截 |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
 | `utils/dom.js` | toast、`waitForTransition`（transitionend + timeout） |
 | `swipe-release.js` | `evaluateSwipeRelease` 统一横/竖滑释放阈值 |
 | `explicit-open-motion.js` | 点击打开 WAAPI 编排、generation 令牌 |
@@ -149,6 +149,8 @@ DOM（`index.html` + `dom-refs.js`）：
 | `explicit-opening` | 点击打开动画 | `is-shadow-pending` |
 | pullPreview | quickPanel 下拉预览 | `is-dragging`（仅 quickPanel） |
 
+重构目标文档中的 `opening` / `closing` 不单独建 phase：`explicit-opening` 承担点击打开，`settling-close` 承担手势释放关闭；程序关依赖 `is-open` 移除 + `cancelShadowReveal`。
+
 其它视觉 class：`is-open`、`is-expanding`（drawer 全屏）、`no-anim`、`is-pointer-guarded`（scoreSheet 防误触）。
 
 `is-motion-dragging` 仅供 CSS 临时关阴影降绘制；不用于关闭栈或占用判断。
@@ -170,6 +172,7 @@ DOM（`index.html` + `dom-refs.js`）：
 | `canStartQuickPanelShellClose` | 面板外上滑关闭 |
 | `canStartTopSheetInnerClose` / `canStartTopSheetShellClose` | newAssignment 内外关闭 |
 | `canStartDrawerEdgeOpen` / `InnerClose` / `ShellClose` | drawer 三类横滑 |
+| `canStartScoreSheetInnerClose` | scoreSheet 内下滑关闭 |
 | `canStartScoreSheetShellClose` | scoreSheet 壳层下滑关闭 |
 | `canStartToastDismiss` | toast 下滑关闭 |
 
@@ -178,10 +181,10 @@ DOM（`index.html` + `dom-refs.js`）：
 | `panel-swipe.js` | quickPanel 下拉 / 内关 / 壳关 | `canStartQuickPanelPullOpen` 等 |
 | `panel-swipe.js` | newAssignment 内外关 | `canStartTopSheetInnerClose` / `ShellClose` |
 | `drawer-gestures.js` | 边缘 / 内 / 壳 | `canStartDrawerEdgeOpen` 等 |
-| `score-swipe.js` | 壳层下滑 | `canStartScoreSheetShellClose` |
+| `score-swipe.js` | 内 / 壳下滑 | `canStartScoreSheetInnerClose` / `ShellClose` |
 | `toast-swipe.js` | 下滑关闭 | `canStartToastDismiss`（`stopPropagation` 在 `toast-swipe.js`） |
 
-**触点排除选择器**：`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`PRIMARY_CHROME_SELECTOR`（顶栏 `.app-bar` 内菜单/图标/标题）、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR`、`DRAWER_FILTER_SELECTOR`、`QUICK_PANEL_HISTORY_SELECTOR`。`isPanelVisuallyOpen()` / `isConfirmPanelOpen()` / `isToastVisible()` 查可见态。`navigation.js` `bindEmptyAreaClose` 须 `isPrimaryChromeClick()` 早退。
+**触点排除选择器**：`NAV_CHROME_SELECTOR`（与 `press-feedback` 共用）、`FORM_CONTROL_SELECTOR`、`FLOATING_UI_EXCLUDE_SELECTOR`、`PRIMARY_CHROME_SELECTOR`（顶栏 `.app-bar` 内菜单/图标/标题）、`QUICK_PANEL_SHELL_EXCLUDE_SELECTOR`、`OTHER_MODAL_PANELS_SELECTOR`、`DRAWER_FILTER_SELECTOR`、`QUICK_PANEL_HISTORY_SELECTOR`。`isPanelVisuallyOpen()` / `isConfirmPanelOpen()` / `isToastVisible()` 查可见态。`navigation.js` `bindEmptyAreaClose` 须 `isPrimaryChromeClick()` 早退。
 
 关闭栈只管 Esc/后退/返回键 pop；各 `shouldStart` 按场景单独判断（打开与关闭方向相反、toast 用 `is-visible`、shell 关闭排除面板自身 DOM）。
 
@@ -208,7 +211,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### scoreSheet
 
-- 打开后短暂 `is-pointer-guarded` 防误触；壳层关闭经 `canStartScoreSheetShellClose(event, isUiTransitionBusy("sheet"))`。
+- 打开后短暂 `is-pointer-guarded` 防误触（仅挡 body 点击，不挡下滑关）；内关 / 壳关均经 `canStartScoreSheetInnerClose` / `canStartScoreSheetShellClose`（release 中、sheet busy、确认框）。
 - toast 指针事件 `stopPropagation`，不穿透 sheet。
 
 ### toast

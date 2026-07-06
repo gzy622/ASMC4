@@ -39,12 +39,12 @@
 | 字段 | 值 |
 |------|-----|
 | **最后更新** | 2026-07-06 |
-| **当前阶段** | 阶段 3 进行中 |
-| **阶段进度** | 阶段 1 ≈ 98% · 阶段 2 ≈ 50% · 阶段 3 ≈ 55% |
+| **当前阶段** | 三阶段收尾 |
+| **阶段进度** | 阶段 1 ≈ 98% · 阶段 2 ≈ 90% · 阶段 3 ≈ 90% |
 | **短期目标** | 见下方「短期目标（本批）」 |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | 双端（浏览器 + Android）手动验收 S1–S12 全部通过 |
+| **最近决策** | S16：`NAV_CHROME_SELECTOR` 单源，guards 与 press-feedback 共用 |
 
 ### 短期目标（本批）
 
@@ -75,7 +75,14 @@
 > - [x] **S12** P3：`waitForTransition` 通用化（3.9）
 
 > 再下一批（阶段 3 余量，体量大者放后）：
-> - [ ] **S13** P3：横/竖工厂抽 `bindPointerDragLifecycle`（3.8）
+> - [x] **S13** P3：横/竖工厂抽 `bindPointerDragLifecycle`（3.8）
+
+> 下一批短期目标（阶段 2/3 余量）：
+> - [x] **S14** P3：评估 score-sheet 内关补 guard（2.4）
+> - [x] **S15** P3：评估 `opening` / `closing` phase（3.10）→ **跳过**，现有 phase 够用
+
+> 下一批（可选余量）：
+> - [x] **S16** P3：选择器与 `press-feedback` 重叠整理（2.5）→ `NAV_CHROME_SELECTOR` 单源
 
 ---
 
@@ -86,8 +93,8 @@
 | 阶段 | 目标 | 进度 | 状态 |
 |------|------|------|------|
 | **1** 状态收拢 | `layer-motion-state` + `motion-registry`；motion class 由模块写入 | ≈ 98% | 进行中 |
-| **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | ≈ 50% | 进行中 |
-| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 55% | 进行中 |
+| **2** 手势入口整理 | `gesture-guards` 命名化；`panel-swipe` 四类动作可读；减少散落 `closest` | ≈ 90% | 基本完成 |
+| **3** 减少重复 | 横/竖工厂、generation、shadow 完成路径、显式 open 编排 | ≈ 90% | 基本完成 |
 
 ```text
 [=======阶段1=======]░░
@@ -119,8 +126,8 @@
 | 2.1 | `gesture-guards.js` `canStart*` / `blocks*` 集中 | — | ✅ 完成 | |
 | 2.2 | `panel-swipe.js` 四类动作分段可读 | — | ✅ 基本完成 | 核心逻辑仍在 `drag-gesture` 工厂 |
 | 2.3 | `CodeGraph.md`「手势」改为规则说明为主 | — | ✅ 基本完成 | 随实现变更需持续维护 |
-| 2.4 | score-sheet 内关补 guard（若需要） | P3 | ⬜ 评估 | 审查标为低优先级 |
-| 2.5 | 选择器与 `press-feedback` 重叠整理 | P3 | ⬜ 可选 | |
+| 2.4 | score-sheet 内关补 guard（若需要） | P3 | ✅ 完成 | **短期 S14**；`canStartScoreSheetInnerClose` |
+| 2.5 | 选择器与 `press-feedback` 重叠整理 | P3 | ✅ 完成 | **短期 S16**；`NAV_CHROME_SELECTOR` |
 
 ### 阶段 3 — 减少重复（行为稳定后再做）
 
@@ -133,9 +140,9 @@
 | 3.5 | 共享 `drawerClosedPx` | P2 | ✅ 完成 | **短期 S8**；`getDrawerClosedPx` |
 | 3.6 | `createHorizontalDragGesture` 返回 `{ abortRelease }` | P2 | ✅ 完成 | **短期 S9**；与垂直 API 对齐 |
 | 3.7 | Android `touchmove` 助手抽到 `pointer-drag-lifecycle` | P3 | ✅ 完成 | **短期 S11**；`bindAndroidTouchmoveGuard` |
-| 3.8 | 横/竖工厂合并或抽 `bindPointerDragLifecycle` | P3 | ⬜ 待做 | 体量大，最后做 |
+| 3.8 | 横/竖工厂合并或抽 `bindPointerDragLifecycle` | P3 | ✅ 完成 | **短期 S13**；pointer 四事件 + Android guard |
 | 3.9 | `waitForTransition` 通用化 | P3 | ✅ 完成 | **短期 S12**；`utils/dom.js` |
-| 3.10 | 完整 phase：`opening` / `closing`（文档建议状态机） | P3 | ⬜ 可选 | 非必须，现有 settling 已够用 |
+| 3.10 | 完整 phase：`opening` / `closing`（文档建议状态机） | P3 | ❌ 放弃 | **短期 S15**；`explicit-opening` + `settling-*` 已覆盖互斥与视觉 class |
 
 **图例**：✅ 完成 · 🔄 进行中 · ⬜ 待做 · ⏸ 暂停 · ❌ 放弃（须写原因）
 
@@ -245,6 +252,10 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-06 | S16：`NAV_CHROME_SELECTOR` 单源，`press-feedback` 复用 |
+| 2026-07-06 | S15：评估 3.10，决定不增 `opening`/`closing` phase |
+| 2026-07-06 | S14：`canStartScoreSheetInnerClose`（release/busy/confirm），`score-swipe` 内关接线 |
+| 2026-07-06 | S13：`bindPointerDragLifecycle` 收拢 `drag-gesture` / `horizontal-drag` pointer 绑定 |
 | 2026-07-06 | 验收：用户双端手动测试 S1–S12 相关场景全部通过 |
 | 2026-07-06 | S12：`waitForTransition` 通用化至 `utils/dom.js`，`drawer-fullscreen` + `shadow-reveal` 复用 |
 | 2026-07-06 | S11：`bindAndroidTouchmoveGuard` 收拢横/竖工厂 Android touchmove |

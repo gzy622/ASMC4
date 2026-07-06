@@ -143,3 +143,24 @@ export function bindAndroidTouchmoveGuard(bindEl, getActive, shouldPreventDefaul
     }
   }, { passive: false });
 }
+
+/** Shared pointerdown/move/up/cancel + optional Android touchmove guard for drag factories. */
+export function bindPointerDragLifecycle(bindEl, {
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+  androidTouchmove,
+}) {
+  bindEl.addEventListener("pointerdown", onPointerDown);
+  bindEl.addEventListener("pointermove", onPointerMove, { passive: false });
+  bindEl.addEventListener("pointerup", onPointerUp);
+  bindEl.addEventListener("pointercancel", onPointerCancel);
+  if (androidTouchmove) {
+    bindAndroidTouchmoveGuard(
+      bindEl,
+      androidTouchmove.getActive,
+      androidTouchmove.shouldPreventDefault,
+    );
+  }
+}

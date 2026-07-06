@@ -11,7 +11,7 @@ import { claimDirection, releaseDirection, setUiTransitionBusy } from "../runtim
 import { traceGesture } from "../utils/trace.js";
 import {
   beginDragMotion,
-  bindAndroidTouchmoveGuard,
+  bindPointerDragLifecycle,
   capturePointer,
   clearMotionDragStyles,
   createTransformBatcher,
@@ -259,16 +259,16 @@ export function createVerticalDragGesture(el, {
     resetDragState();
   }
 
-  el.addEventListener("pointerdown", handlePointerDown);
-  el.addEventListener("pointermove", handlePointerMove, { passive: false });
-  el.addEventListener("pointerup", handlePointerUp);
-  el.addEventListener("pointercancel", handlePointerCancel);
-
-  bindAndroidTouchmoveGuard(
-    el,
-    () => activePointerId !== null && startY !== null,
-    (event) => Math.abs(event.touches[0].clientY - startY) > DRAG_START_THRESHOLD,
-  );
+  bindPointerDragLifecycle(el, {
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerCancel,
+    androidTouchmove: {
+      getActive: () => activePointerId !== null && startY !== null,
+      shouldPreventDefault: (event) => Math.abs(event.touches[0].clientY - startY) > DRAG_START_THRESHOLD,
+    },
+  });
 
   return { abortRelease };
 }
@@ -495,19 +495,19 @@ export function createTopSheetOpenGesture(bindEl, {
     resetDragState();
   }
 
-  bindEl.addEventListener("pointerdown", handlePointerDown);
-  bindEl.addEventListener("pointermove", handlePointerMove, { passive: false });
-  bindEl.addEventListener("pointerup", handlePointerUp);
-  bindEl.addEventListener("pointercancel", handlePointerCancel);
-
-  bindAndroidTouchmoveGuard(
-    bindEl,
-    () => activePointerId !== null && startY !== null,
-    (event) => {
-      const dy = event.touches[0].clientY - startY;
-      return dragging || (dy > DRAG_START_THRESHOLD && canPull(event));
+  bindPointerDragLifecycle(bindEl, {
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerCancel,
+    androidTouchmove: {
+      getActive: () => activePointerId !== null && startY !== null,
+      shouldPreventDefault: (event) => {
+        const dy = event.touches[0].clientY - startY;
+        return dragging || (dy > DRAG_START_THRESHOLD && canPull(event));
+      },
     },
-  );
+  });
 
   return { abortRelease };
 }

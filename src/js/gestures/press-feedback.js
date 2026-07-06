@@ -1,10 +1,9 @@
 import { appShell, drawer } from "../dom-refs.js";
+import { NAV_CHROME_SELECTOR } from "./gesture-guards.js";
 
 const PRESSABLE = [
+  NAV_CHROME_SELECTOR,
   ".student-card",
-  ".nav-button",
-  ".icon-button",
-  ".title-wrap",
   ".drawer-action-btn",
   ".assignment-item-action",
   ".assignment-item",
