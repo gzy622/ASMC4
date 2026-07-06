@@ -1,4 +1,5 @@
-import { quickPanelMainView, quickPanelHistoryView, quickPanelBody } from "../dom-refs.js";
+import { quickPanel, quickPanelMainView, quickPanelHistoryView, quickPanelBody } from "../dom-refs.js";
+import { isQuickPanelPrefersHistoryView, setQuickPanelPrefersHistoryView } from "../runtime.js";
 
 const FADE_DURATION = 180;
 const HEIGHT_DURATION = 280;
@@ -109,10 +110,12 @@ function requestViewSwitch(toEl) {
 }
 
 export function switchToHistoryView() {
+  setQuickPanelPrefersHistoryView(true);
   return requestViewSwitch(quickPanelHistoryView);
 }
 
 export function switchToMainView() {
+  setQuickPanelPrefersHistoryView(false);
   return requestViewSwitch(quickPanelMainView);
 }
 
@@ -133,4 +136,30 @@ export function resetQuickPanelView() {
 
 export function isHistoryViewActive() {
   return !quickPanelHistoryView.hidden;
+}
+
+export function restoreQuickPanelViewFromPreference() {
+  clearQuickPanelBodySwitchingState();
+
+  if (isQuickPanelPrefersHistoryView()) {
+    lockHistoryViewHeight();
+    quickPanelHistoryView.hidden = false;
+    quickPanelHistoryView.classList.remove("is-view-fading");
+    quickPanelMainView.hidden = true;
+    quickPanelMainView.classList.remove("is-view-fading");
+    return;
+  }
+
+  clearHistoryViewHeight();
+  quickPanelHistoryView.hidden = true;
+  quickPanelHistoryView.classList.remove("is-view-fading");
+  quickPanelMainView.hidden = false;
+  quickPanelMainView.classList.remove("is-view-fading");
+}
+
+export function shouldShowQuickPanelHistoryContent() {
+  if (quickPanel?.classList.contains("is-open")) {
+    return isHistoryViewActive();
+  }
+  return isQuickPanelPrefersHistoryView();
 }

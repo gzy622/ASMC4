@@ -7,7 +7,7 @@ import {
 } from "../dom-refs.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { setUiTransitionBusy } from "../runtime.js";
-import { isHistoryViewActive } from "../ui/history.js";
+import { restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "../ui/history.js";
 import { FLOATING_LAYER_ELS } from "../ui/floating-layers.js";
 import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
 import { isLayerOpenForGestureBlock, isTargetReleaseAnimating } from "./motion-registry.js";
@@ -112,7 +112,8 @@ const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
   },
   canPull: canPullQuickPanel,
   onPrepare: () => {
-    refreshQuickPanelContent(isHistoryViewActive());
+    restoreQuickPanelViewFromPreference();
+    refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
     quickPanel.classList.add("is-dragging");
   },
   onOpen: finishTopSheetOpen,

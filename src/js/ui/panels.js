@@ -4,7 +4,7 @@ import { closeConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
-import { resetQuickPanelView } from "./history.js";
+import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 
 let abortQuickPanelOpenDrag = () => {};
@@ -73,7 +73,8 @@ export function openQuickPanel({ focusName = false } = {}) {
   closeScoreSheet();
   closeDrawer();
   closeFloatingPanels({ restoreFocus: false });
-  refreshQuickPanelContent(false);
+  restoreQuickPanelViewFromPreference();
+  refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
 
   quickPanel.classList.add("is-open");
   quickPanel.setAttribute("aria-hidden", "false");

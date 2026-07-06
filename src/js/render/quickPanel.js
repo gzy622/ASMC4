@@ -1,6 +1,6 @@
 import { getCurrentAssignment, getAssignmentStats, canUndo, canRedo } from "../state.js";
 import { quickRenameInput, quickSubjectSelect, quickCurrentSubject, quickCurrentStats, undoButton, redoButton, quickPanel, quickPanelCloseButton, quickPanelTitle } from "../dom-refs.js";
-import { isHistoryViewActive } from "../ui/history.js";
+import { shouldShowQuickPanelHistoryContent } from "../ui/history.js";
 import { renderHistoryList } from "./history.js";
 
 export function renderQuickPanelHeader(historyViewActive = false) {
@@ -65,5 +65,5 @@ export function refreshQuickPanelContent(historyViewActive = false) {
 export function refreshOpenQuickPanel() {
   renderHistoryButtons();
   if (!quickPanel?.classList.contains("is-open")) return;
-  refreshQuickPanelContent(isHistoryViewActive());
+  refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
 }

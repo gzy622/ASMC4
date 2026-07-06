@@ -104,9 +104,9 @@ DOM（`index.html` + `dom-refs.js`）：
 | 上滑关闭（面板内） | `#quickPanel` | `#quickPanel.is-open` 且不在 `#quickPanelHistoryView` 内 |
 | 上滑关闭（面板外） | `appShell`（`targetEl: quickPanel`） | `#quickPanel.is-open`，触点不在 `#quickPanel` 内 |
 
-下拉打开的 `onPrepare` 调 `refreshQuickPanelContent()`（`render/quickPanel.js`），按当前 view 刷新标题与内容。
+下拉打开的 `onPrepare` 先 `restoreQuickPanelViewFromPreference()`，再 `refreshQuickPanelContent(shouldShowQuickPanelHistoryContent())`（`ui/history.js` + `render/quickPanel.js`），按偏好或当前 view 刷新标题与内容。
 
-`closeFloatingPanels()`（`ui/panels.js`）须 `teardownQuickPanelDrag()`（清 `is-dragging` + abort 下拉预览）并 `resetQuickPanelView()`，避免残留 `is-dragging` 或历史 view 与点标题打开不一致。
+`closeFloatingPanels()`（`ui/panels.js`）须 `teardownQuickPanelDrag()`（清 `is-dragging` + abort 下拉预览）并 `resetQuickPanelView()` 做 DOM 清理；**不**清除 `runtime.js` 的 `quickPanelPrefersHistoryView`。重开（点标题 `openQuickPanel` 或下拉 `onPrepare`）由 `restoreQuickPanelViewFromPreference()` 无动画恢复操作记录子视图；点「返回」回主视图会 `setQuickPanelPrefersHistoryView(false)`。
 
 面板下方空白与学生列表同在 `.scroll-container` 内。**`appShell` 关闭的 `shouldStart` 在 `is-open` 时不得排除 `.scroll-container`**，否则只能面板内关闭；排除 `#quickPanel` 即可避免与面板内专用手势重复。
 

@@ -7,6 +7,7 @@ let noteInputValue = "";
 const longPressTimers = new Map();
 let longPressTriggered = false;
 let suppressNextCardClick = false;
+let quickPanelPrefersHistoryView = false;
 
 const uiTransitionBusyKeys = new Set();
 let pointerDirectionLock = null;
@@ -41,6 +42,8 @@ export function clearAllLongPressTimers() {
 }
 export function setLongPressTriggered(value) { longPressTriggered = value; }
 export function setSuppressNextCardClick(value) { suppressNextCardClick = value; }
+export function setQuickPanelPrefersHistoryView(value) { quickPanelPrefersHistoryView = value; }
+export function isQuickPanelPrefersHistoryView() { return quickPanelPrefersHistoryView; }
 
 export function setUiTransitionBusy(busy, key = "global") {
   const hadKey = uiTransitionBusyKeys.has(key);
