@@ -44,7 +44,7 @@
 | **短期目标** | 无待办（见下方「维护模式」） |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | S29：D2-C `no-anim` 仅 snap；显式 WAAPI 不再挂 class，D2 收官 |
+| **最近决策** | drawer 全屏伸展：`releaseLayerTransformLock` + WAAPI `commitStyles` 后 `cancel`；scoreSheet 闪现见「可复用结论」 |
 
 ### 短期目标（本批）
 
@@ -93,6 +93,25 @@
 - 改手势：先读 CodeGraph「手势」+ `手势和动画重构目标文档.md`；动 `panel-swipe` / 工厂前必读守卫表。
 - 双动画 repro：参考 `scripts/__repro_double_anim.html`，单独立项处理 D2。
 - 本 tracker 仅在新审查录入技术债或复现 D2 时更新「短期目标」。
+
+### 可复用结论（维护备忘）
+
+| 场景 | 结论 | 实现 |
+|------|------|------|
+| scoreSheet 下滑关后底部闪现（Android WebView） | 关闭后「不可见」靠 `visibility`，不靠 transform 精确落点 | `components.css`：`.score-sheet` 默认 `visibility:hidden`；`.is-open` 与 `.is-motion-dragging` 时 `visible` |
+| drawer 全屏伸展/缩回无动画 | WAAPI `fill:forwards` 占 transform，CSS `is-expanding` scale 不生效 | `gesture-motion-engine`：`commitStyles` 后 `animation.cancel()`；`releaseLayerTransformLock` + `.drawer.is-open` transition |
+
+**现象**：释放动画结束后，面板底部短暂弹回视口（严重时可见学生名），随即消失。
+
+**无效方向**（仅能缩小幅度，不能消除）：`snapMotionLayerClosed` 顺序、`fromGesture` 内 px/`%` 切换、WAAPI `commitStyles` / 去 `cancel()` 等纯 transform 时序调整。
+
+**根因**：WebView 合成层在 WAAPI 结束后可能多画一帧中间或旧的 `transform`；JS 无法保证与 compositor 同帧。
+
+**有效修复**：关闭态直接不可见。拖动与释放动画期间仍有 `is-motion-dragging` → 保持 `visible`；动画结束清掉 `is-motion-dragging` 后，即使 transform 短暂错位也不会被看到。
+
+**排查**：`npm run debug:record` → `traces/debug/` 最新目录（`npm run debug:record -- --latest`）；应用 trace 见 `scoreSheet.close` 的 release → close 序列。
+
+**复发时勿**：继续绕 transform 顺序 PATCH；先确认 `visibility` 规则未被覆盖或误删。
 
 ---
 
@@ -198,6 +217,7 @@
 
 - [x] quickPanel：列表顶下拉够/不够阈值；内滑关；壳层关；操作记录视图不误关
 - [x] drawer：边缘开；内/壳关；关后列表可点可滚；搜索筛选不触发横滑
+- [x] scoreSheet：下滑关后视口底无闪现（Android WebView）
 - [x] 浮层冲突：确认框阻断；A 打开中 B 不能开；A 关闭中 B 可开
 - [x] 异常：快速连滑无残留 transform；半路 cancel 界面正常
 
@@ -242,6 +262,7 @@
 | 工厂 | `drag-gesture.js`, `horizontal-drag.js` |
 | 业务绑定 | `panel-swipe.js`, `drawer-gestures.js`, `score-swipe.js`, `toast-swipe.js` |
 | UI 编排 | `ui/drawer.js`, `ui/panels.js`, `ui/shadow-reveal.js`, `ui/drawer-fullscreen.js` |
+| scoreSheet 样式 | `src/css/components.css`（`.score-sheet` `visibility`） |
 | 双动画 repro | `scripts/__repro_double_anim.html` |
 | 工程约定 | `AGENTS.md` |
 
@@ -262,6 +283,7 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-06 | scoreSheet 下滑关闪现：关闭态 `visibility:hidden` + 手势态 `is-motion-dragging` 保持可见；记入「可复用结论」 |
 | 2026-07-06 | S29：D2-C `withNoAnimLayer`；D2 技术债收官 |
 | 2026-07-06 | S28：D2-B `snapMotionLayerOpen` / `snapMotionLayerClosed` 统一瞬时开/关 |
 | 2026-07-06 | S27：D2-A 去掉滑动手势面板 CSS transform transition；fullscreen 收起 wait 对齐 |

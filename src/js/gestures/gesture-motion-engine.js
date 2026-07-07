@@ -75,7 +75,8 @@ export function animateMotionRelease(
   toPx,
   velocityPxPerMs = 0,
   secondaryTarget = null,
-  formatTransform = null
+  formatTransform = null,
+  durationScale = 1,
 ) {
   cancelMotionAnimation(el);
 
@@ -95,7 +96,7 @@ export function animateMotionRelease(
     };
   }
 
-  const duration = releaseDuration(distance, fromPx, toPx, velocityPxPerMs);
+  const duration = Math.round(releaseDuration(distance, fromPx, toPx, velocityPxPerMs) * durationScale);
   let cancelled = false;
 
   el.style.transition = "none";
@@ -143,6 +144,7 @@ export function animateMotionRelease(
         if (typeof animation.commitStyles === "function") {
           animation.commitStyles();
         }
+        animation.cancel(); // release fill:forwards so CSS transform can take over
       });
       el.style.transform = toTransform;
       if (secondaryTarget) {

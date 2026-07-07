@@ -114,7 +114,10 @@ export async function closeDrawerFullscreenPanel(panel) {
 
   await new Promise(resolve => requestAnimationFrame(resolve));
   contractDrawer();
-  await waitForAnimationFrame();
+  await waitForTransition(drawer, {
+    property: "transform",
+    timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
+  }).promise;
 
   setThemeColor("#f4f4f4");
 

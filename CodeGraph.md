@@ -92,7 +92,7 @@ DOM（`index.html` + `dom-refs.js`）：
 | `press-feedback.js` | 导航/按钮按压视觉反馈（复用 `NAV_CHROME_SELECTOR`） |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
 | `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
-| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`snapMotionLayerOpen` / `snapMotionLayerClosed`、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`releaseLayerTransformLock`、`snapMotionLayerOpen` / `snapMotionLayerClosed`、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
 | `utils/dom.js` | toast、`waitForTransition`（transitionend + timeout） |
 | `swipe-release.js` | `evaluateSwipeRelease` 统一横/竖滑释放阈值 |
 | `explicit-open-motion.js` | 点击打开/关闭 WAAPI 编排、按元素 generation（`WeakMap`）、`busyKey` |
@@ -217,7 +217,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 设置 / 名单编辑从侧栏进入的全屏流程，**有意**不复用 `openDrawer` / `shadow-reveal`：
 
-- 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`。
+- 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`；`expandDrawer` / `contractDrawer` 前须 `releaseLayerTransformLock(drawer)`（侧栏 WAAPI 滑入 `fill:forwards` 会盖住 CSS `scaleX`）；缩回靠 `.drawer.is-open` 的 `transform` transition。
 - 与侧栏点击滑入（WAAPI + `shadow-reveal`）交互不同；重构目标文档要求全屏展开与普通开关联分开管理。
 - 已共享 `waitForTransition`；`busyKey` 为 `drawer-fullscreen`；`beginTargetExplicitOpenAnimation` 登记互斥。
 
@@ -225,7 +225,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 点击打开走 `runExplicitOpenAnimation`（WAAPI）+ `shadow-reveal` `motionFinished`；关闭经 `closeScoreSheet` 或下滑手势。
 - 打开后短暂 `is-pointer-guarded` 防误触（仅挡 body 点击，不挡下滑关）；内关 / 壳关均经 `canStartScoreSheetInnerClose` / `canStartScoreSheetShellClose`（release 中、sheet busy、确认框）。
-- 关闭态 `.score-sheet` 用 `visibility: hidden` 防 Android WebView 释放动画结束后一帧重画；`is-open` 或 `is-motion-dragging` 时才 visible。
+- **关闭可见性**（`components.css`）：`.score-sheet` 默认 `visibility:hidden` + `transform:translateY(100%)`；`.is-open` 与 `.is-motion-dragging` 为 `visibility:visible`。拖动/释放动画期间靠 `is-motion-dragging` 显示；结束后清掉该类即不可见，避免 WebView 合成层多画一帧错误 `transform` 时底部闪现。详见 `docs/gesture-animation-refactor-tracker.md`「可复用结论」。
 - toast 指针事件 `stopPropagation`，不穿透 sheet。
 
 ### toast
@@ -240,7 +240,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 **drawer**：边缘开 / 内关 / 壳关；筛选可输入；关闭后列表可滚动点击；切作业先关 drawer。
 
-**scoreSheet**：点开、防误触、下滑关；打开后其它入口不抢手势；toast 不穿透。
+**scoreSheet**：点开、防误触、下滑关；打开后其它入口不抢手势；toast 不穿透；**下滑关后视口底无闪现**（Android）。
 
 **浮层冲突**：确认框阻断底下手势；打开动画中不可交叉打开；收起动画中可交叉；同元素释放中不能再滑自己。
 
@@ -265,7 +265,8 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 第 2 次复发：读 `~/.agents/skills/hunt/SKILL.md` 定根因。
 - 「设置不生效」：grep `hidden`/`display`/同类设置；`display:grid` 盖 `[hidden]` 时加 `display:none !important`。
-- scoreSheet 下滑关闭后底部闪现：不要继续调 transform 顺序；关闭态直接 `visibility:hidden`，手势态靠 `is-motion-dragging` 显示。
+- **scoreSheet 下滑关后底部闪现**：勿再绕 transform / `is-open` / WAAPI `cancel` 顺序 PATCH；关闭态用 `visibility:hidden`，手势期靠 `is-motion-dragging` 保持 `visible`。全文见 `docs/gesture-animation-refactor-tracker.md`「可复用结论」。
+- **设置全屏伸展/缩回消失**：侧栏 WAAPI 结束后 `fill:forwards` 占住 transform；`gesture-motion-engine` 须在 `commitStyles` 后 `cancel()`；全屏 `expand`/`contract` 前 `releaseLayerTransformLock`。
 
 ### dev.ps1 / 无线 adb
 

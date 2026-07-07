@@ -1,4 +1,5 @@
 import { clearLayerMotionDrag } from "./layer-motion-state.js";
+import { cancelMotionAnimation } from "./gesture-motion-engine.js";
 
 export function isPrimaryPointerButton(event) {
   return event.pointerType !== "mouse" || event.button === 0;
@@ -86,6 +87,15 @@ export function snapMotionLayerOpen(targetEl) {
 
 export function endExplicitMotion(targetEl) {
   clearExplicitMotionStyles(targetEl);
+}
+
+/** Drop WAAPI fill:forwards and inline transform so CSS can drive transform again. */
+export function releaseLayerTransformLock(targetEl) {
+  cancelMotionAnimation(targetEl);
+  if (typeof targetEl.getAnimations === "function") {
+    targetEl.getAnimations().forEach(animation => animation.cancel());
+  }
+  endExplicitMotion(targetEl);
 }
 
 export function capturePointer(bindEl, event) {

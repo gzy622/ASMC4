@@ -48,7 +48,7 @@ function teardownQuickPanelDrag() {
 
 export function openNewAssignmentPanel() {
   if (isCrossPanelOpenBlocked()) return;
-  closeDrawer({ withTransitionLock: false });
+  closeDrawer();
   closeFloatingPanels({ restoreFocus: false, animate: false });
 
   quickPanel.classList.remove("is-open");

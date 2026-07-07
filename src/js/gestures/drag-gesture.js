@@ -35,6 +35,7 @@ export function createVerticalDragGesture(el, {
   busyKey = "gesture",
   useNonlinearMotion = false,
   formatTransform = (delta) => `translateY(${delta}px)`,
+  durationScale = 1,
   traceLabel,
 }) {
   let startY = null;
@@ -222,7 +223,8 @@ export function createVerticalDragGesture(el, {
         targetDelta,
         velocity,
         secondaryTarget,
-        formatTransform
+        formatTransform,
+        durationScale,
       );
       await activeRelease.finished;
       if (generation !== releaseGeneration) return;

@@ -10,6 +10,7 @@ import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
 import { beginShadowRevealAfterOpen, cancelShadowReveal } from "../ui/shadow-reveal.js";
+import { SCORE_SHEET_MOTION_DURATION_SCALE } from "../gestures/constants.js";
 import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
 import {
   nextExplicitMotionGeneration,
@@ -76,6 +77,7 @@ export function openScoreSheet(student, guardPointer = false) {
     axis: "y",
     fromPx,
     generation,
+    durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
     onMotionStarted: (anim) => {
       beginShadowRevealAfterOpen(scoreSheet, { motionFinished: anim.finished });
     },
@@ -113,6 +115,7 @@ export function closeScoreSheet({ animate = true, fromGesture = false } = {}) {
       toPx: closedScoreSheetPx(),
       generation,
       busyKey: "sheet",
+      durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
       onComplete: () => {
         scoreSheet.classList.remove("is-open");
         scoreSheet.setAttribute("aria-hidden", "true");

@@ -32,9 +32,10 @@ export function runExplicitOpenAnimation({
   busyKey,
   onMotionStarted,
   onComplete,
+  durationScale = 1,
 }) {
   if (busyKey) setUiTransitionBusy(true, busyKey);
-  const anim = animateMotionRelease(el, axis, fromPx, toPx, 0);
+  const anim = animateMotionRelease(el, axis, fromPx, toPx, 0, null, null, durationScale);
   onMotionStarted?.(anim);
   anim.finished.then(() => {
     if (isExplicitMotionStale(el, generation)) return;
@@ -52,12 +53,13 @@ export function runExplicitCloseAnimation({
   generation,
   busyKey,
   onComplete,
+  durationScale = 1,
 }) {
   if (busyKey) setUiTransitionBusy(true, busyKey);
   beginTargetReleaseAnimation(el, "close");
   const translate = axis === "x" ? "translateX" : "translateY";
   el.style.transform = `${translate}(0px)`;
-  animateMotionRelease(el, axis, 0, toPx, 0).finished.then(() => {
+  animateMotionRelease(el, axis, 0, toPx, 0, null, null, durationScale).finished.then(() => {
     if (isExplicitMotionStale(el, generation)) return;
     endTargetReleaseAnimation(el);
     onComplete?.();

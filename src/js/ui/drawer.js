@@ -17,7 +17,12 @@ import {
   runExplicitOpenAnimation,
   runExplicitCloseAnimation,
 } from "../gestures/explicit-open-motion.js";
-import { snapMotionLayerClosed, snapMotionLayerOpen } from "../gestures/pointer-drag-lifecycle.js";
+import {
+  snapMotionLayerClosed,
+  snapMotionLayerOpen,
+  releaseLayerTransformLock,
+  withNoAnimLayer,
+} from "../gestures/pointer-drag-lifecycle.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -135,11 +140,13 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
 }
 
 export function expandDrawer() {
+  releaseLayerTransformLock(drawer);
   setDrawerExpandScale();
   drawer.classList.add("is-expanding");
 }
 
 export function contractDrawer() {
+  releaseLayerTransformLock(drawer);
   drawer.classList.remove("is-expanding");
 }
 
@@ -147,16 +154,24 @@ export function snapResetDrawer() {
   blurDrawerFocus();
   setSuppressNextCardClick(false);
   cancelShadowReveal(drawer);
-  drawer.classList.remove("is-expanding");
-  clearDrawerExpandScale();
-  snapMotionLayerClosed(drawer);
-  drawer.setAttribute("aria-hidden", "true");
+  releaseLayerTransformLock(drawer);
+  withNoAnimLayer(drawer, () => {
+    drawer.classList.remove("is-expanding");
+    drawer.classList.remove("is-open");
+    clearDrawerExpandScale();
+    drawer.style.willChange = "";
+    drawer.setAttribute("aria-hidden", "true");
+  });
 }
 
 export function snapPrepareDrawer() {
+  releaseLayerTransformLock(drawer);
   setDrawerExpandScale();
   cancelShadowReveal(drawer);
-  snapMotionLayerOpen(drawer);
-  drawer.classList.add("is-expanding");
-  drawer.setAttribute("aria-hidden", "false");
+  withNoAnimLayer(drawer, () => {
+    drawer.style.transform = "";
+    drawer.classList.add("is-open");
+    drawer.classList.add("is-expanding");
+    drawer.setAttribute("aria-hidden", "false");
+  });
 }
