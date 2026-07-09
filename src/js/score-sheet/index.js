@@ -210,9 +210,8 @@ function finalizePendingInstantScoreChange() {
   announce(message, { action: "undo", assignmentId: assignment.id });
 }
 
-export function confirmScore({ animateClose = false } = {}) {
-  const result = applyScore({ close: !animateClose });
-  if (result && animateClose) closeScoreSheet();
+export function confirmScore() {
+  applyScore({ close: true });
 }
 
 export function saveInstantScore({ message = "" } = {}) {

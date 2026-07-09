@@ -74,9 +74,9 @@ export function bindScoreEvents() {
         if (getState().instantScoringMode) {
           updateScoreDisplay();
           saveInstantScore();
-          closeScoreSheet();
+          closeScoreSheet({ animate: false });
         } else {
-          confirmScore({ animateClose: true });
+          confirmScore();
         }
         return;
       }
