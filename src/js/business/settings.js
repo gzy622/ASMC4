@@ -34,6 +34,16 @@ export function toggleShowBarStats() {
   announce(state.showBarStats !== false ? "已交人数已显示" : "已交人数已隐藏");
 }
 
+export function toggleInstantScoringMode() {
+  traceEvent("settings.instantScoringMode");
+  hapticSelection();
+  const state = getState();
+  state.instantScoringMode = !state.instantScoringMode;
+  saveAppState({ history: false });
+  scheduleRender();
+  announce(state.instantScoringMode ? "即时打分已开启" : "即时打分已关闭");
+}
+
 export function toggleScoreStep10Mode() {
   traceEvent("settings.scoreStep10Mode");
   hapticSelection();

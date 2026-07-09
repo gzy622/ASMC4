@@ -2,6 +2,7 @@ import {
   settingsBtn,
   settingsCloseButton,
   scoringModeSwitch,
+  instantScoringModeSwitch,
   scoreStep10ModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
@@ -9,6 +10,7 @@ import {
   showRealNameSwitch,
   quickShowRealNameSwitch,
   quickScoringModeSwitch,
+  quickInstantScoringModeSwitch,
   settingsExportBtn,
   settingsImportBtn,
   settingsRosterBtn,
@@ -21,6 +23,7 @@ import {
 import { getState } from "../state.js";
 import {
   toggleScoringMode,
+  toggleInstantScoringMode,
   toggleShowBarScoringToggle,
   toggleShowBarStats,
   toggleScoreStep10Mode,
@@ -46,6 +49,7 @@ export function bindSettingsEvents() {
   });
 
   bindSettingSwitch(scoringModeSwitch, toggleScoringMode);
+  bindSettingSwitch(instantScoringModeSwitch, toggleInstantScoringMode);
   bindSettingSwitch(showBarScoringToggleSwitch, toggleShowBarScoringToggle);
   bindSettingSwitch(showBarStatsSwitch, toggleShowBarStats);
   bindSettingSwitch(scoreStep10ModeSwitch, toggleScoreStep10Mode);
@@ -53,6 +57,7 @@ export function bindSettingsEvents() {
   bindSettingSwitch(showRealNameSwitch, toggleShowRealNames);
   bindSettingSwitch(quickShowRealNameSwitch, toggleShowRealNames);
   bindSettingSwitch(quickScoringModeSwitch, toggleScoringMode);
+  bindSettingSwitch(quickInstantScoringModeSwitch, toggleInstantScoringMode);
   bindSettingSwitch(traceEnabledSwitch, toggleTraceEnabled);
 
   settingsExportBtn.addEventListener("click", async () => {

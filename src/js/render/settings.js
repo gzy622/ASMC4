@@ -2,13 +2,19 @@ import {
   showRealNameSwitch,
   quickShowRealNameSwitch,
   quickScoringModeSwitch,
+  quickInstantScoringModeSwitch,
   scoringModeSwitch,
+  instantScoringModeSwitch,
   scoreStep10ModeSwitch,
   showBarScoringToggleSwitch,
   showBarStatsSwitch,
   hapticsEnabledSwitch,
   traceEnabledSwitch,
-  traceStatusText
+  traceStatusText,
+  scoreSheet,
+  scoreCancel,
+  scoreConfirm,
+  scoreReset
 } from "../dom-refs.js";
 import { isTraceEnabled, getTraceEntries } from "../utils/trace.js";
 
@@ -60,6 +66,19 @@ export function renderSettingsState(state) {
     barStatsLabels[0],
     barStatsLabels[1]
   );
+
+  const instantScoringLabels = [
+    "即时打分模式已开启，点击关闭",
+    "即时打分模式已关闭，点击开启"
+  ];
+  syncSwitch(instantScoringModeSwitch, state.instantScoringMode, instantScoringLabels[0], instantScoringLabels[1]);
+  syncSwitch(quickInstantScoringModeSwitch, state.instantScoringMode, instantScoringLabels[0], instantScoringLabels[1]);
+
+  const instantScoringMode = Boolean(state.instantScoringMode);
+  scoreSheet.classList.toggle("is-instant-scoring", instantScoringMode);
+  scoreCancel.hidden = instantScoringMode;
+  scoreConfirm.hidden = instantScoringMode;
+  scoreReset.hidden = !instantScoringMode;
 
   syncSwitch(
     scoreStep10ModeSwitch,
