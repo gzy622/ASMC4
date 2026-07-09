@@ -1516,6 +1516,10 @@
       gap: 8px;
     }
 
+    .score-sheet.is-instant-scoring .score-actions {
+      grid-template-columns: 1fr;
+    }
+
     .score-action-btn {
       height: 44px;
       border: 0;
@@ -1541,6 +1545,12 @@
     .score-action-primary {
       background: var(--accent);
       color: var(--card);
+    }
+
+    .score-action-reset {
+      width: 100%;
+      background: var(--surface-muted-2);
+      color: var(--text);
     }
 
     .score-note-wrap {

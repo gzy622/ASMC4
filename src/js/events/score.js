@@ -2,6 +2,7 @@ import {
   scoreBackspaceBtn,
   scoreCancel,
   scoreConfirm,
+  scoreReset,
   scoreNoteClear,
   scoreNoteInput,
   scoreNumpad,
@@ -19,6 +20,8 @@ import { toggleScoreStep10ModeFromSheet } from "../business/settings.js";
 import {
   closeScoreSheet,
   confirmScore,
+  resetInstantScore,
+  saveInstantScore,
   updateScoreDisplay
 } from "../score-sheet/index.js";
 import { traceEvent } from "../utils/trace.js";
@@ -32,6 +35,10 @@ export function bindScoreEvents() {
     traceEvent("score.confirm");
     confirmScore();
   });
+  scoreReset.addEventListener("click", () => {
+    traceEvent("score.reset");
+    resetInstantScore();
+  });
   scoreSheet.addEventListener("selectstart", event => {
     const target = event.target instanceof Element ? event.target : null;
     if (target === scoreNoteInput || target?.closest("#scoreNoteInput")) return;
@@ -41,6 +48,7 @@ export function bindScoreEvents() {
   scoreNoteInput.addEventListener("input", () => {
     setNoteInputValue(scoreNoteInput.value);
     scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
+    saveInstantScore();
   });
 
   scoreNoteClear.addEventListener("click", () => {
@@ -48,6 +56,7 @@ export function bindScoreEvents() {
     setNoteInputValue("");
     scoreNoteClear.classList.remove("is-visible");
     scoreNoteInput.focus();
+    saveInstantScore();
   });
 
   scoreNumpad.addEventListener("click", event => {
@@ -62,7 +71,13 @@ export function bindScoreEvents() {
     if (value !== undefined) {
       if (getState().scoreStep10Mode) {
         setScoreInputValue(value === "0" ? "100" : String(Number(value) * 10));
-        confirmScore();
+        if (getState().instantScoringMode) {
+          updateScoreDisplay();
+          saveInstantScore();
+          closeScoreSheet();
+        } else {
+          confirmScore();
+        }
         return;
       }
       const dotIndex = scoreInputValue.indexOf(".");
@@ -81,9 +96,11 @@ export function bindScoreEvents() {
       }
     } else if (action === "tens") {
       toggleScoreStep10ModeFromSheet();
+      return;
     }
 
     updateScoreDisplay();
+    saveInstantScore();
   });
 
   scoreBackspaceBtn.addEventListener("click", () => {
@@ -93,5 +110,6 @@ export function bindScoreEvents() {
       scoreInputValue.length > 1 ? scoreInputValue.slice(0, -1) : "0"
     );
     updateScoreDisplay();
+    saveInstantScore();
   });
 }
