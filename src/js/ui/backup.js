@@ -110,6 +110,7 @@ export function importBackup(file) {
               showRealNames: data.showRealNames !== false,
               scoringMode: Boolean(data.scoringMode),
               scoreStep10Mode: Boolean(data.scoreStep10Mode ?? data.scoreTensMode),
+              instantScoringMode: Boolean(data.instantScoringMode),
               showBarScoringToggle: data.showBarScoringToggle !== false,
               showBarStats: data.showBarStats !== false,
               hapticsEnabled: data.hapticsEnabled !== false,
@@ -128,6 +129,7 @@ export function importBackup(file) {
             state.showRealNames = nextState.showRealNames;
             state.scoringMode = nextState.scoringMode;
             state.scoreStep10Mode = nextState.scoreStep10Mode;
+            state.instantScoringMode = nextState.instantScoringMode;
             state.showBarScoringToggle = nextState.showBarScoringToggle;
             state.showBarStats = nextState.showBarStats;
             state.hapticsEnabled = nextState.hapticsEnabled;

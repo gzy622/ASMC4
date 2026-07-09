@@ -176,6 +176,12 @@
                 <span class="switch-knob"></span>
               </button>
             </div>
+            <div class="quick-setting-row">
+              <span class="quick-setting-label">即时打分模式</span>
+              <button class="switch" id="quickInstantScoringModeSwitch" type="button" aria-label="切换即时打分模式">
+                <span class="switch-knob"></span>
+              </button>
+            </div>
           </div>
 
           <div class="quick-history-row">
@@ -293,6 +299,15 @@
           </div>
           <div class="setting-row">
             <div class="setting-text">
+              <p class="setting-title">即时打分模式</p>
+              <p class="setting-desc">面板内改分和备注会实时保存。</p>
+            </div>
+            <button class="switch" id="instantScoringModeSwitch" type="button" aria-label="切换即时打分模式">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+          <div class="setting-row">
+            <div class="setting-text">
               <p class="setting-title">×10 模式</p>
               <p class="setting-desc">数字键一次等同十位。</p>
             </div>
@@ -392,6 +407,7 @@
         <div class="score-actions">
           <button class="dialog-button" id="scoreCancel" type="button">取消</button>
           <button class="score-action-btn score-action-primary" id="scoreConfirm" type="button">确认</button>
+          <button class="score-action-btn score-action-reset" id="scoreReset" type="button" hidden>重置</button>
         </div>
       </div>
     </section>
