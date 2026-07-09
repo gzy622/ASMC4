@@ -211,8 +211,7 @@ function finalizePendingInstantScoreChange() {
 }
 
 export function confirmScore() {
-  const result = applyScore({ close: false });
-  if (result) closeScoreSheet();
+  applyScore({ close: true });
 }
 
 export function saveInstantScore({ message = "" } = {}) {
