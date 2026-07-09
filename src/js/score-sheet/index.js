@@ -1,7 +1,7 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
 import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreCancel, scoreConfirm, scoreReset } from "../dom-refs.js";
-import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, noteInputValue } from "../runtime.js";
+import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, noteInputValue, pendingInstantScoreChange, pendingInstantScoreChangeMessage, setPendingInstantScoreChange } from "../runtime.js";
 import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
 import { scheduleRender } from "../render/index.js";
@@ -28,6 +28,7 @@ function closedScoreSheetPx() {
 }
 
 function resetScoreSheetState() {
+  setPendingInstantScoreChange(false);
   setCurrentScoringStudent(null);
   setScoreInputValue("0");
   setNoteInputValue("");
@@ -43,6 +44,7 @@ export function openScoreSheet(student, guardPointer = false) {
     serial: student.serial,
     status: student.status
   });
+  setPendingInstantScoreChange(false);
   setCurrentScoringStudent(student);
 
   const assignment = getCurrentAssignment();
@@ -91,6 +93,8 @@ export function closeScoreSheet({ animate = true, fromGesture = false } = {}) {
   clearScoreSheetPointerGuard();
   setSuppressNextCardClick(false);
   cancelShadowReveal(scoreSheet);
+
+  finalizePendingInstantScoreChange();
 
   if (!scoreSheet.classList.contains("is-open")) {
     resetScoreSheetState();
@@ -170,10 +174,7 @@ function applyScore({ close = false, history = true, haptic = true, toast = true
   if (haptic) hapticLight();
   currentScoringStudent.updatedAt = new Date().toISOString();
 
-  let message = "已保存备注";
-  if (!hasScore && !trimmedNote) message = "已清空分数";
-  else if (hasScore && !trimmedNote) message = "已保存分数";
-  else if (hasScore && trimmedNote) message = "已保存分数和备注";
+  const message = getScoreChangeMessage(hasScore, trimmedNote);
 
   const assignment = getCurrentAssignment();
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(currentScoringStudent.id));
@@ -183,15 +184,40 @@ function applyScore({ close = false, history = true, haptic = true, toast = true
   if (close) closeScoreSheet({ animate: false });
 
   if (toast) announce(message, history ? { action: "undo", assignmentId: assignment.id } : undefined);
+
+  return { message, assignmentId: assignment.id, displayName };
+}
+
+function getScoreChangeMessage(hasScore, trimmedNote) {
+  if (!hasScore && !trimmedNote) return "已清空分数";
+  if (hasScore && !trimmedNote) return "已保存分数";
+  if (hasScore && trimmedNote) return "已保存分数和备注";
+  return "已保存备注";
+}
+
+function finalizePendingInstantScoreChange() {
+  if (!pendingInstantScoreChange || !currentScoringStudent) return;
+
+  const assignment = getCurrentAssignment();
+  const studentIndex = assignment.students.findIndex(s => String(s.id) === String(currentScoringStudent.id));
+  const displayName = getDisplayName(currentScoringStudent, studentIndex >= 0 ? studentIndex : 0);
+  const message = pendingInstantScoreChangeMessage || "已保存分数";
+
+  currentScoringStudent.updatedAt = new Date().toISOString();
+  setPendingInstantScoreChange(false);
+  saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
+  scheduleRender();
+  announce(message, { action: "undo", assignmentId: assignment.id });
 }
 
 export function confirmScore() {
   applyScore({ close: true });
 }
 
-export function saveInstantScore() {
+export function saveInstantScore({ message = "" } = {}) {
   if (!getState().instantScoringMode) return;
-  applyScore({ history: false, haptic: false, toast: false });
+  const result = applyScore({ history: false, haptic: false, toast: false });
+  if (result) setPendingInstantScoreChange(true, message || result.message);
 }
 
 export function resetInstantScore() {
@@ -201,7 +227,7 @@ export function resetInstantScore() {
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
   updateScoreDisplay();
-  applyScore({ close: false });
+  saveInstantScore({ message: "已重置分数和备注" });
 }
 
 

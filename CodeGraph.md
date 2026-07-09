@@ -285,7 +285,7 @@ DOM（`index.html` + `dom-refs.js`）：
 - `showBarXxx`（默认 true，`!== false`）→ 设置页 switch → `render/*` 设 `hidden`；备份同步 `backup.js`。
 - **`[hidden]` 陷阱**：`.icon-button` / `.bar-stats` 须 `[hidden] { display: none !important; }`。
 - 顶栏打分 → `render/scoringMode.js`；已交人数 → `render/progress.js`（`#barStats`）。
-- `instantScoringMode` → 设置页 switch → 打分 sheet 隐藏取消/确认、显示重置；分数/备注变更走即时保存。
+- `instantScoringMode` → 设置页/当前作业 switch → 打分 sheet 隐藏取消/确认、显示重置；分数/备注变更时静默保存，面板关闭或 ×10 自动确认时再写历史并提示。
 
 ### Android 触觉
 

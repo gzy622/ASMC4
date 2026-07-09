@@ -74,6 +74,7 @@ export function bindScoreEvents() {
         if (getState().instantScoringMode) {
           updateScoreDisplay();
           saveInstantScore();
+          closeScoreSheet({ animate: false });
         } else {
           confirmScore();
         }
@@ -95,6 +96,7 @@ export function bindScoreEvents() {
       }
     } else if (action === "tens") {
       toggleScoreStep10ModeFromSheet();
+      return;
     }
 
     updateScoreDisplay();

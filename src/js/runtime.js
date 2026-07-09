@@ -7,6 +7,8 @@ let noteInputValue = "";
 const longPressTimers = new Map();
 let longPressTriggered = false;
 let suppressNextCardClick = false;
+let pendingInstantScoreChange = false;
+let pendingInstantScoreChangeMessage = "";
 let quickPanelPrefersHistoryView = false;
 
 const uiTransitionBusyKeys = new Set();
@@ -20,7 +22,9 @@ export {
   noteInputValue,
   longPressTimers,
   longPressTriggered,
-  suppressNextCardClick
+  suppressNextCardClick,
+  pendingInstantScoreChange,
+  pendingInstantScoreChangeMessage
 };
 
 export function setPendingConfirmAction(value) { pendingConfirmAction = value; }
@@ -42,6 +46,10 @@ export function clearAllLongPressTimers() {
 }
 export function setLongPressTriggered(value) { longPressTriggered = value; }
 export function setSuppressNextCardClick(value) { suppressNextCardClick = value; }
+export function setPendingInstantScoreChange(value, message = "") {
+  pendingInstantScoreChange = value;
+  pendingInstantScoreChangeMessage = value ? message : "";
+}
 export function setQuickPanelPrefersHistoryView(value) { quickPanelPrefersHistoryView = value; }
 export function isQuickPanelPrefersHistoryView() { return quickPanelPrefersHistoryView; }
 
