@@ -1,6 +1,6 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
-import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName } from "../dom-refs.js";
+import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreCancel, scoreConfirm, scoreReset } from "../dom-refs.js";
 import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, noteInputValue } from "../runtime.js";
 import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
@@ -60,6 +60,7 @@ export function openScoreSheet(student, guardPointer = false) {
   }
 
   syncScoreStep10Ui(getState().scoreStep10Mode);
+  syncInstantScoringUi();
 
   scoreNoteInput.value = noteInputValue;
   scoreNoteClear.classList.toggle("is-visible", noteInputValue.length > 0);
@@ -134,7 +135,15 @@ export function updateScoreDisplay() {
   scoreDisplayValue.textContent = scoreInputValue;
 }
 
-export function confirmScore() {
+export function syncInstantScoringUi() {
+  const isInstant = getState().instantScoringMode;
+  scoreSheet.classList.toggle("is-instant-scoring", isInstant);
+  scoreCancel.hidden = isInstant;
+  scoreConfirm.hidden = isInstant;
+  scoreReset.hidden = !isInstant;
+}
+
+function applyScore({ close = false, history = true, haptic = true, toast = true } = {}) {
   if (!currentScoringStudent) return;
 
   traceEvent("scoreSheet.confirm", {
@@ -158,7 +167,7 @@ export function confirmScore() {
   const trimmedNote = clampStudentNote(noteInputValue.trim());
   currentScoringStudent.note = trimmedNote || "";
 
-  hapticLight();
+  if (haptic) hapticLight();
   currentScoringStudent.updatedAt = new Date().toISOString();
 
   let message = "已保存备注";
@@ -169,12 +178,32 @@ export function confirmScore() {
   const assignment = getCurrentAssignment();
   const studentIndex = assignment.students.findIndex(s => String(s.id) === String(currentScoringStudent.id));
   const displayName = getDisplayName(currentScoringStudent, studentIndex >= 0 ? studentIndex : 0);
-  saveAppState({ label: `${displayName}：${message}`, assignmentId: assignment.id });
+  saveAppState({ history, label: `${displayName}：${message}`, assignmentId: assignment.id });
   scheduleRender();
-  closeScoreSheet({ animate: false });
+  if (close) closeScoreSheet({ animate: false });
 
-  announce(message, { action: "undo", assignmentId: assignment.id });
+  if (toast) announce(message, history ? { action: "undo", assignmentId: assignment.id } : undefined);
 }
+
+export function confirmScore() {
+  applyScore({ close: true });
+}
+
+export function saveInstantScore() {
+  if (!getState().instantScoringMode) return;
+  applyScore({ history: false, haptic: false, toast: false });
+}
+
+export function resetInstantScore() {
+  if (!currentScoringStudent) return;
+  setScoreInputValue("0");
+  setNoteInputValue("");
+  scoreNoteInput.value = "";
+  scoreNoteClear.classList.remove("is-visible");
+  updateScoreDisplay();
+  applyScore({ close: false });
+}
+
 
 function armScoreSheetPointerGuard() {
   clearScoreSheetPointerGuard();

@@ -42,6 +42,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
   showRealNames,
   scoringMode,
   scoreStep10Mode,
+  instantScoringMode,
   currentAssignmentId,
   assignments: [{ id, title, createdAt, subject, students: [{ id, serial, name, status, badge, badgeType, note, updatedAt }] }],
   roster: [{ id, serial, name, nonEnglish }]
@@ -280,10 +281,11 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### 顶栏 / 当前作业
 
-- `#quickPanel`：`quick-settings-card` 两行；行可点，`switch` 上 `stopPropagation`。
+- `#quickPanel`：`quick-settings-card` 三行；行可点，`switch` 上 `stopPropagation`。
 - `showBarXxx`（默认 true，`!== false`）→ 设置页 switch → `render/*` 设 `hidden`；备份同步 `backup.js`。
 - **`[hidden]` 陷阱**：`.icon-button` / `.bar-stats` 须 `[hidden] { display: none !important; }`。
 - 顶栏打分 → `render/scoringMode.js`；已交人数 → `render/progress.js`（`#barStats`）。
+- `instantScoringMode` → 设置页 switch → 打分 sheet 隐藏取消/确认、显示重置；分数/备注变更走即时保存。
 
 ### Android 触觉
 
