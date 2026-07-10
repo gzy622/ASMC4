@@ -1,4 +1,6 @@
 export const studentGrid = document.querySelector("#studentGrid");
+export const mainPage = document.querySelector("#mainPage");
+export const layerScrim = document.querySelector("#layerScrim");
 export const bootMask = document.querySelector("#bootMask");
 export const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 export const scrollContainer = document.querySelector(".scroll-container");

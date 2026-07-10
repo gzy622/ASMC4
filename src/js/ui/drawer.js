@@ -1,28 +1,15 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
+import { drawer, mainPage, layerScrim, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
-import { setSuppressNextCardClick, setUiTransitionBusy } from "../runtime.js";
-import { PANEL_TRANSITION_MS } from "../gestures/constants.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
+import { setSuppressNextCardClick } from "../runtime.js";
+import { isCrossPanelOpenBlocked } from "../gestures/motion-registry.js";
 import {
-  endTargetReleaseAnimation,
-  isCrossPanelOpenBlocked,
-} from "../gestures/motion-registry.js";
-import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
-import {
-  nextExplicitMotionGeneration,
-  prepareExplicitOpenTransform,
-  runExplicitOpenAnimation,
-  runExplicitCloseAnimation,
-} from "../gestures/explicit-open-motion.js";
-import {
-  snapMotionLayerClosed,
-  snapMotionLayerOpen,
   releaseLayerTransformLock,
   withNoAnimLayer,
 } from "../gestures/pointer-drag-lifecycle.js";
+import { createInteractiveLayerController } from "../gestures/interactive-layer-controller.js";
 
 function clearDocumentSelection() {
   const selection = window.getSelection?.();
@@ -57,86 +44,79 @@ function clearDrawerExpandScale() {
   drawer.style.removeProperty("--drawer-expand-scale");
 }
 
-export function getDrawerClosedPx() {
-  return -1.2 * drawer.offsetWidth;
+export function getDrawerRevealPx() {
+  return drawer.offsetWidth;
 }
 
-export function openDrawer({ withTransitionLock = true, deferShadow = true } = {}) {
+function prepareDrawerReveal() {
+  const width = getDrawerRevealPx();
+  appShell.style.setProperty("--drawer-reveal-width", `${width}px`);
+  appShell.classList.add("is-drawer-revealing");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function cancelDrawerRevealPreview() {
+  if (drawer.classList.contains("is-open")) return;
+  appShell.classList.remove("is-drawer-revealing");
+  appShell.style.removeProperty("--drawer-reveal-width");
+  drawer.setAttribute("aria-hidden", "true");
+}
+
+export const drawerController = createInteractiveLayerController({
+  stateEl: drawer,
+  motionEl: mainPage,
+  axis: "x",
+  getClosedPx: () => 0,
+  getOpenPx: getDrawerRevealPx,
+  scrimEl: layerScrim,
+  busyKey: "drawer",
+  traceLabel: "drawer.motion",
+  setOpenState(open) {
+    drawer.classList.toggle("is-open", open);
+    drawer.setAttribute("aria-hidden", open ? "false" : "true");
+    if (open) prepareDrawerReveal();
+    else {
+      appShell.classList.remove("is-drawer-revealing", "is-drawer-revealed");
+      appShell.style.removeProperty("--drawer-reveal-width");
+    }
+  },
+  onPrepareClosedDrag: prepareDrawerReveal,
+  onCancelClosedDrag: cancelDrawerRevealPreview,
+  onOpened() {
+    appShell.classList.remove("is-drawer-revealing");
+    appShell.classList.add("is-drawer-revealed");
+  },
+  onBeforeClose() {
+    appShell.classList.remove("is-drawer-revealed");
+    appShell.classList.add("is-drawer-revealing");
+  },
+  onDragStarted() {
+    appShell.classList.remove("is-drawer-revealed");
+    appShell.classList.add("is-drawer-revealing");
+  },
+  onClosed() {
+    resetDrawerFilters();
+    setThemeColor("#f4f4f4");
+  },
+});
+
+export function openDrawer({ withTransitionLock = true } = {}) {
   if (isCrossPanelOpenBlocked()) return;
   closeScoreSheet({ animate: false });
   clearDocumentSelection();
-  const shouldAnimate = withTransitionLock;
-  const fromPx = getDrawerClosedPx();
-  if (shouldAnimate) {
-    prepareExplicitOpenTransform(drawer, "x", fromPx);
-    drawer.classList.add("is-open");
-  } else {
-    snapMotionLayerOpen(drawer);
-  }
-  drawer.setAttribute("aria-hidden", "false");
   setThemeColor("#f4f4f4");
   requestAnimationFrame(() => {
     renderAssignmentList(getState());
   });
-  if (!shouldAnimate) return;
-  const generation = nextExplicitMotionGeneration(drawer);
-  runExplicitOpenAnimation({
-    el: drawer,
-    axis: "x",
-    fromPx,
-    generation,
-    busyKey: withTransitionLock ? "drawer" : undefined,
-    onMotionStarted: (anim) => {
-      if (deferShadow) {
-        beginShadowRevealAfterOpen(drawer, { motionFinished: anim.finished });
-      }
-    },
-  });
+  drawerController.open({ animate: withTransitionLock });
 }
 
 export function closeDrawer({ withTransitionLock = true } = {}) {
   blurDrawerFocus();
-  const hadDrawerLayer = drawer.classList.contains("is-open")
-    || drawer.classList.contains("is-expanding");
-  const shouldAnimate = withTransitionLock && hadDrawerLayer;
-  const toPx = getDrawerClosedPx();
   setSuppressNextCardClick(false);
-  cancelShadowReveal(drawer);
-
-  if (shouldAnimate) {
-    const generation = nextExplicitMotionGeneration(drawer);
-    runExplicitCloseAnimation({
-      el: drawer,
-      axis: "x",
-      toPx,
-      generation,
-      busyKey: "drawer",
-      onComplete: () => {
-        drawer.classList.remove("is-open");
-        drawer.classList.remove("is-expanding");
-        clearDrawerExpandScale();
-        drawer.setAttribute("aria-hidden", "true");
-        resetDrawerFilters();
-        setThemeColor("#f4f4f4");
-      },
-    });
-    return;
-  }
-
-  nextExplicitMotionGeneration(drawer);
-  cancelMotionAnimation(drawer);
-  endTargetReleaseAnimation(drawer);
-  setUiTransitionBusy(false, "drawer");
   drawer.classList.remove("is-expanding");
   clearDrawerExpandScale();
-  snapMotionLayerClosed(drawer);
-  drawer.setAttribute("aria-hidden", "true");
-  resetDrawerFilters();
-  setThemeColor("#f4f4f4");
-  if (withTransitionLock && hadDrawerLayer) {
-    setUiTransitionBusy(true, "drawer");
-    setTimeout(() => setUiTransitionBusy(false, "drawer"), PANEL_TRANSITION_MS);
-  }
+  return drawerController.close({ animate: withTransitionLock });
 }
 
 export function expandDrawer() {
@@ -153,25 +133,20 @@ export function contractDrawer() {
 export function snapResetDrawer() {
   blurDrawerFocus();
   setSuppressNextCardClick(false);
-  cancelShadowReveal(drawer);
   releaseLayerTransformLock(drawer);
+  drawerController.snapClosed();
   withNoAnimLayer(drawer, () => {
     drawer.classList.remove("is-expanding");
-    drawer.classList.remove("is-open");
     clearDrawerExpandScale();
     drawer.style.willChange = "";
-    drawer.setAttribute("aria-hidden", "true");
   });
 }
 
 export function snapPrepareDrawer() {
   releaseLayerTransformLock(drawer);
   setDrawerExpandScale();
-  cancelShadowReveal(drawer);
+  drawerController.snapOpen();
   withNoAnimLayer(drawer, () => {
-    drawer.style.transform = "";
-    drawer.classList.add("is-open");
     drawer.classList.add("is-expanding");
-    drawer.setAttribute("aria-hidden", "false");
   });
 }

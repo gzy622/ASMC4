@@ -20,7 +20,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 - `src/js/render/`: 渲染（含 8 个模块）
 - `src/js/ui/`: 面板与 UI 动作（含 `floating-layers.js` 浮层栈、`switch-bind.js` switch 绑定）
 - `src/js/score-sheet/`: 打分
-- `src/js/gestures/`: 手势（15 个模块）
+- `src/js/gestures/`: 手势（14 个模块）
 - `src/js/utils/`: 工具
 
 ## 事件域
@@ -82,7 +82,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ## 手势
 
-`src/js/gestures/` 为手势入口；改交互前先读本节规则，再读对应文件。**勿直接** `classList` 操作 `is-motion-dragging` / `is-dragging` / `is-shadow-pending`，经 `layer-motion-state.js` 登记。
+`src/js/gestures/` 为手势入口；改交互前先读本节规则，再读对应文件。**勿直接** `classList` 操作 `is-motion-dragging` / `is-dragging`，经 `layer-motion-state.js` 登记。
 
 ### 模块索引
 
@@ -93,16 +93,14 @@ DOM（`index.html` + `dom-refs.js`）：
 | `press-feedback.js` | 导航/按钮按压视觉反馈（复用 `NAV_CHROME_SELECTOR`） |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
 | `motion-registry.js` | 释放动画登记；薄 re-export 查询 API |
-| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、拖动/显式动画样式清理、`releaseLayerTransformLock`、`snapMotionLayerOpen` / `snapMotionLayerClosed`、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
+| `pointer-drag-lifecycle.js` | RAF transform、pointer capture、速度跟踪、动画样式清理、`bindPointerDragLifecycle`、Android `touchmove` 滚动拦截 |
 | `utils/dom.js` | toast、`waitForTransition`（transitionend + timeout） |
 | `swipe-release.js` | `evaluateSwipeRelease` 统一横/竖滑释放阈值 |
-| `explicit-open-motion.js` | 点击打开/关闭 WAAPI 编排、按元素 generation（`WeakMap`）、`busyKey` |
-| `drag-gesture.js` | 垂直拖动、`createTopSheetOpenGesture` |
-| `horizontal-drag.js` | 水平拖动；返回 `{ abortRelease }` |
-| `panel-swipe.js` | quickPanel 四类动作 + newAssignment 关闭 |
+| `interactive-layer-controller.js` | 四类滑动面板的唯一运动控制器；开合、暂停接管、反向拖动、generation、Android pointer 生命周期 |
+| `drag-gesture.js` | toast 保留的独立垂直拖动工厂 |
+| `panel-swipe.js` | quickPanel 四类动作 + newAssignment，经统一控制器绑定 |
 | `drawer-gestures.js` / `score-swipe.js` / `toast-swipe.js` | 各浮层手势绑定 |
 | `gesture-motion-engine.js` | WAAPI 释放动画、`animateMotionRelease`（**勿改**算法参数） |
-| `ui/shadow-reveal.js` | 点击打开阴影延后（`motionFinished` + timeout 兜底） |
 | `ui/floating-layers.js` | 关闭栈 `closeTopmostFloatingLayer()` |
 
 方向判定、阈值、quickPanel 下拉预览等仍留在各工厂；各实例可传 `traceLabel`，操作日志经 `traceGesture` 记录 phase。
@@ -127,17 +125,19 @@ DOM（`index.html` + `dom-refs.js`）：
 
 - 静止 `is-open`（且非收起释放中）
 - 打开释放（`settling-open`）
-- 点击/CSS 打开（`explicit-opening` + `is-shadow-pending`）
+- 点击打开（统一控制器登记为打开释放）
 - quickPanel 下拉预览（`is-dragging`）
 - drawer 未 `is-open` 时的边缘滑开预览（`dragging` 且非释放中）
 
 **不阻塞跨层打开**：收起释放（`settling-close`）。面板/侧栏收起动画中可立刻打开另一浮层。
 
-**同元素**：`isTargetReleaseAnimating(targetEl)` 期间不接受该元素新手势，不打断旧释放动画。
+**同元素**：drawer、quickPanel、newAssignmentPanel、scoreSheet 的动画可在非控件区域按下暂停；方向成立后从当前画面位置接管。未形成拖动、`pointercancel` 或应用切后台时继续原目标。toast 仍不接管自己的释放动画。
 
 **确认框**：`isConfirmPanelOpen()` 阻断 quickPanel / newAssignment / scoreSheet 壳层关闭；下拉打开另走 `blocksQuickPanelPull()`。
 
 **方向锁**：同一 pointer 横/竖只能一个方向（`runtime.js` `claimDirection`）。
+
+**按下等待**：quickPanel 的下拉预览只在竖向拖动成立后准备；单纯按下不能清除学生卡片长按计时，也不能提前让卡片失去 pointer。尚未取得方向的触点结束或取消时只清理监听状态，不得让关闭态控制器执行 settle 或接管共享遮罩。
 
 **关闭手势可见态**：以 `is-open` 为准；仅 `is-dragging`（下拉未 commit）不算已打开。
 
@@ -149,20 +149,24 @@ DOM（`index.html` + `dom-refs.js`）：
 |--------------|------|-----------|
 | `dragging` | 手指拖动 | `is-motion-dragging` |
 | `settling-open` / `settling-close` | 释放动画 | `is-motion-dragging` |
-| `explicit-opening` | 点击打开动画 | `is-shadow-pending` |
+| `explicit-opening` | drawer 全屏切换的独立打开编排 | 无视觉 class |
 | pullPreview | quickPanel 下拉预览 | `is-dragging`（仅 quickPanel） |
 
-重构目标文档中的 `opening` / `closing` 不单独建 phase：`explicit-opening` 承担点击打开，`settling-close` 承担手势释放关闭；程序关依赖 `is-open` 移除 + `cancelShadowReveal`。
+统一控制器内部保留 `opening` / `closing`，对 `layer-motion-state.js` 统一登记为 `settling-open` / `settling-close`；`explicit-opening` 只供 drawer 全屏切换的独立编排使用。
 
 其它视觉 class：`is-open`、`is-expanding`（drawer 全屏 scale）、`no-anim`（仅 `withNoAnimLayer` 瞬时 snap 与 fullscreen 子元素）、`is-pointer-guarded`（scoreSheet 防误触）。
 
-`is-motion-dragging` 仅供 CSS 临时关阴影降绘制；不用于关闭栈或占用判断。
+`is-motion-dragging` 表示拖动或释放运动；同时维持 scoreSheet 关闭途中的可见性，不用于关闭栈或占用判断。
 
-**阴影**：滑动手势面板（drawer / top-sheet / scoreSheet）均用 `::after` + `opacity` 渐入，`design-tokens.css` 中 `--shadow-drawer` / `--shadow-sheet` / `--shadow-sheet-bottom` 分别赋值。点击打开经 `shadow-reveal` 登记 `explicit-opening` + `is-shadow-pending`，`motionFinished` 完成后渐入（timeout 兜底）。滑动手势走 `is-motion-dragging`；边缘开 drawer 用 `openDrawer({ deferShadow: false })`。关闭或 snap 无动画须 `cancelShadowReveal(el)`。
+**共享遮罩**：drawer / quickPanel / newAssignmentPanel / scoreSheet 不绘制面板阴影，共用 `#mainPage` 内的 `#layerScrim`。统一控制器根据 transform 位置把打开进度换算为遮罩透明度；拖动时同帧更新，WAAPI 开合时与 transform 使用同一时长和缓动。遮罩不接收指针，完全关闭后隐藏；确认框仍使用独立 `#confirmScrim`。
 
-**generation 令牌**：显式 open/close 用 `explicit-open-motion.js` 按元素 `WeakMap`；手势释放用各工厂实例内闭包 `releaseGeneration`（per-binding，与显式路径无关，勿合并）。
+**drawer → 新建作业**：侧栏列表中的“新建作业”传入 `fromDrawer`，先等待 drawer 完整播放关闭动画并释放共享遮罩，再启动 newAssignmentPanel。重复请求共用同一个 Promise；若 drawer 关闭被手指接管而未到达 closed，本次打开请求结束，不能并行动画或强抢遮罩。该来源关闭新建面板后不把焦点转移到顶栏加号，避免紧接着横滑时 WebView 将旧输入续接到加号按钮。
 
-**释放动画**：`beginTargetReleaseAnimation(targetEl, direction)`，`direction` 为 `'open'` | `'close'`。滑动手势面板位移**仅**经 WAAPI（`gesture-motion-engine.js`）；CSS 不设 `transform` transition（`drawer.is-expanding` 全屏 scale 除外）。`horizontal-drag` 滑到 `0` → open；`createTopSheetOpenGesture` 的 `shouldOpen` → open；`createVerticalDragGesture` 的 `shouldClose` → close。
+**generation 令牌**：四类滑动面板由各自 `InteractiveLayerController` 持有唯一 generation；按钮、手势和动画接管共用。旧动画完成回调不得修改新状态。
+
+**释放动画**：四类滑动面板位移仅经统一控制器调用 WAAPI；CSS 不设 transform transition（drawer 全屏 scale 除外）。top-sheet / scoreSheet 的 open 位移为 `0`；drawer 的 closed 位移为 `0`，open 位移为侧栏宽度。
+
+**拖动后 click**：方向成立并完成拖动后，统一控制器按 pointerup 坐标登记一次 500ms click guard；只拦截同位置的延迟合成 click。连续拖动各自保留独立 guard，后一次拖动不能清除前一次；坐标不匹配的 click 也不能提前消耗其它 guard，避免 WebView 在动画结束后把旧 click 当成空白点击再次关闭面板。
 
 ### 手势守卫（`gesture-guards.js`）
 
@@ -209,22 +213,23 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### drawer
 
-- `.drawer:not(.is-open) { pointer-events: none }`：关闭后不挡列表下拉。
+- `.drawer` 固定在底层；普通开合只移动 `#mainPage`。closed 为 `translateX(0)`，open 为侧栏宽度；主页活动时显示左侧圆角与描边，静止 open 后显示阴影。
+- `.drawer:not(.is-open) { pointer-events: none }`：关闭后不挡主页；边缘预览时由 `.is-drawer-revealing` 临时启用。
 - 切换作业先关 drawer（`assignments.js`）。
 - `.drawer-filter` 内搜索/筛选不参与横滑（`canStartDrawerInnerClose` 放行）。
 - 作业项按压：`.assignment-item-action` 在 `press-feedback.js` 单独处理；父项 `:active` 排除 `.assignment-item-actions`。
 
 ### drawer 全屏页（`drawer-fullscreen.js`）
 
-设置 / 名单编辑从侧栏进入的全屏流程，**有意**不复用 `openDrawer` / `shadow-reveal`：
+设置 / 名单编辑从侧栏进入的全屏流程，**有意**不加入普通侧栏的触摸接管：
 
 - 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`；`expandDrawer` / `contractDrawer` 前须 `releaseLayerTransformLock(drawer)`（侧栏 WAAPI 滑入 `fill:forwards` 会盖住 CSS `scaleX`）；缩回靠 `.drawer.is-open` 的 `transform` transition。
-- 与侧栏点击滑入（WAAPI + `shadow-reveal`）交互不同；重构目标文档要求全屏展开与普通开关联分开管理。
+- 普通侧栏稳定 open 后才进入全屏流程；展开时 drawer 临时升到 `#mainPage` 上方，退出后恢复圆角主页右移状态。
 - 已共享 `waitForTransition`；`busyKey` 为 `drawer-fullscreen`；`beginTargetExplicitOpenAnimation` 登记互斥。
 
 ### scoreSheet
 
-- 点击打开走 `runExplicitOpenAnimation`（WAAPI）+ `shadow-reveal` `motionFinished`；关闭经 `closeScoreSheet` 或下滑手势。
+- 点击打开、按钮关闭和下滑手势均经 `scoreSheetController`；关闭真正完成后才保存即时打分并清理学生与输入状态，反向接管回 open 时不清理。
 - 打开后短暂 `is-pointer-guarded` 防误触（仅挡 body 点击，不挡下滑关）；内关 / 壳关均经 `canStartScoreSheetInnerClose` / `canStartScoreSheetShellClose`（release 中、sheet busy、确认框）。
 - **关闭可见性**（`components.css`）：`.score-sheet` 默认 `visibility:hidden` + `transform:translateY(100%)`；`.is-open` 与 `.is-motion-dragging` 为 `visibility:visible`。拖动/释放动画期间靠 `is-motion-dragging` 显示；结束后清掉该类即不可见，避免 WebView 合成层多画一帧错误 `transform` 时底部闪现。详见 `docs/gesture-animation-refactor-tracker.md`「可复用结论」。
 - toast 指针事件 `stopPropagation`，不穿透 sheet。
@@ -243,7 +248,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 **scoreSheet**：点开、防误触、下滑关；打开后其它入口不抢手势；toast 不穿透；**下滑关后视口底无闪现**（Android）。
 
-**浮层冲突**：确认框阻断底下手势；打开动画中不可交叉打开；收起动画中可交叉；同元素释放中不能再滑自己。
+**浮层冲突**：确认框阻断底下手势；打开动画中不可交叉打开；收起动画中打开另一浮层前先瞬间结束旧收起；四类滑动面板允许接管自己的未完成动画。
 
 **异常**：快速来回滑无残留 transform；`pointercancel` 后界面干净；Android 不闪关；返回键/Esc 关闭顺序不变。
 

@@ -4,13 +4,12 @@ import { quickPanel, drawer } from "../dom-refs.js";
 
 const MOTION_DRAGGING_CLASS = "is-motion-dragging";
 const PULL_PREVIEW_CLASS = "is-dragging";
-const SHADOW_PENDING_CLASS = "is-shadow-pending";
 
-/** @type {WeakMap<Element, { phase: LayerMotionPhase, pullPreview: boolean, shadowPending: boolean }>} */
+/** @type {WeakMap<Element, { phase: LayerMotionPhase, pullPreview: boolean }>} */
 const stateByEl = new WeakMap();
 
 function defaultState() {
-  return { phase: "idle", pullPreview: false, shadowPending: false };
+  return { phase: "idle", pullPreview: false };
 }
 
 function getState(el) {
@@ -21,7 +20,7 @@ function getState(el) {
 }
 
 function syncClasses(el) {
-  const { phase, pullPreview, shadowPending } = getState(el);
+  const { phase, pullPreview } = getState(el);
   const motionDragging = phase === "dragging"
     || phase === "settling-open"
     || phase === "settling-close";
@@ -29,7 +28,6 @@ function syncClasses(el) {
   if (el === quickPanel) {
     el.classList.toggle(PULL_PREVIEW_CLASS, pullPreview);
   }
-  el.classList.toggle(SHADOW_PENDING_CLASS, shadowPending);
 }
 
 function setPhase(el, phase) {
@@ -73,12 +71,6 @@ export function endLayerExplicitOpen(el) {
   if (getState(el).phase === "explicit-opening") {
     setPhase(el, "idle");
   }
-}
-
-export function setLayerShadowPending(el, active) {
-  const state = getState(el);
-  state.shadowPending = active;
-  syncClasses(el);
 }
 
 export function beginQuickPanelPullPreview() {

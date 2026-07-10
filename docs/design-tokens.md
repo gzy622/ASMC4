@@ -29,6 +29,7 @@
 | `--status-submitted-bg` | `#16302a` | 已交学生卡背景 |
 | `--status-none-bg` | `#ededf0` | 无登记学生卡背景 |
 | `--overlay-scrim` | `rgba(244, 244, 244, 0.34)` | 遮罩层 |
+| `--overlay-layer` | `rgb(31, 32, 36)` | 可滑动面板共享遮罩颜色 |
 | `--overlay-toast` | `rgba(28, 30, 34, 0.94)` | Toast 背景 |
 
 ## 组件辅助层
@@ -50,8 +51,6 @@
 
 | Token | 值 | 用途 |
 | --- | --- | --- |
-| `--shadow-drawer` | `6px 0 24px rgba(0, 0, 0, 0.08)` | 抽屉阴影 |
-| `--shadow-sheet` | `0 8px 30px rgba(0, 0, 0, 0.12)` | 上拉面板阴影 |
 | `--shadow-toast` | `0 10px 32px rgba(0, 0, 0, 0.22)` | Toast 阴影 |
 | `--shadow-knob` | `0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 8px rgba(0, 0, 0, 0.06)` | 开关圆点 |
 | `--phone-shadow` | `0 22px 70px rgba(0, 0, 0, 0.18)` | 桌面端手机壳阴影 |

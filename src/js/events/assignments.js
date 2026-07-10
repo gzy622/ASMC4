@@ -49,7 +49,7 @@ export function bindAssignmentEvents() {
     if (event.target.closest(".assignment-edit-subject")) return;
 
     if (event.target.closest(".assignment-item-add")) {
-      openNewAssignmentPanel();
+      openNewAssignmentPanel({ fromDrawer: true });
       return;
     }
 
@@ -80,7 +80,7 @@ export function bindAssignmentEvents() {
 
     if (event.target.closest(".assignment-item-add")) {
       event.preventDefault();
-      openNewAssignmentPanel();
+      openNewAssignmentPanel({ fromDrawer: true });
       return;
     }
 

@@ -1,72 +1,47 @@
 import { appShell, drawer } from "../dom-refs.js";
-import { closeDrawer, getDrawerClosedPx, openDrawer } from "../ui/drawer.js";
-import { clearAllLongPressTimers, setLongPressTriggered, setSuppressNextCardClick } from "../runtime.js";
+import { drawerController } from "../ui/drawer.js";
+import { clearAllLongPressTimers, setLongPressTriggered } from "../runtime.js";
 import {
-  canContinueDrawerEdgeOpen,
   canStartDrawerEdgeOpen,
   canStartDrawerInnerClose,
   canStartDrawerShellClose,
+  FORM_CONTROL_SELECTOR,
+  isTouchOn,
 } from "./gesture-guards.js";
-import { createHorizontalDragGesture } from "./horizontal-drag.js";
+import { bindInteractiveLayerGesture } from "./interactive-layer-controller.js";
 import { evaluateSwipeRelease } from "./swipe-release.js";
+import { FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 
-function shouldReleaseBySwipe(dx, velocity, direction) {
-  return evaluateSwipeRelease({
-    distance: dx * direction,
-    velocity,
-    direction,
-  });
+function decideDrawerTarget({ delta, currentPx, closedPx, velocity, startedFromClosed, wasHeld }) {
+  if (startedFromClosed) {
+    return evaluateSwipeRelease({ distance: Math.max(0, delta), velocity, direction: +1 }) ? "open" : "closed";
+  }
+  if (!wasHeld) {
+    return evaluateSwipeRelease({ distance: Math.max(0, -delta), velocity, direction: -1 }) ? "closed" : "open";
+  }
+  if (Math.abs(delta) >= MIN_FLING_DISTANCE && Math.abs(velocity) >= FLING_VELOCITY_THRESHOLD) {
+    return velocity > 0 ? "open" : "closed";
+  }
+  const openPx = drawerController.getOpenPx();
+  return Math.abs(currentPx - openPx) <= Math.abs(currentPx - closedPx) ? "open" : "closed";
 }
 
-// ── 边缘左滑打开 ──
+function canStartDrawerGesture(event, controller) {
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (controller.isAnimating) return true;
+  if (controller.phase === "closed") return canStartDrawerEdgeOpen(event);
+  if (drawer.contains(event.target)) return canStartDrawerInnerClose(event);
+  return canStartDrawerShellClose(event);
+}
 
-createHorizontalDragGesture(appShell, {
-  targetEl: drawer,
-  getClosedPx: getDrawerClosedPx,
-  getBasePx: getDrawerClosedPx,
-  useNonlinearMotion: true,
-  traceLabel: "drawer.edgeSwipe",
-  shouldStart: canStartDrawerEdgeOpen,
-  shouldContinueMove: canContinueDrawerEdgeOpen,
-  getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, +1) ? 0 : closedPx,
-  onTrackMove: (dx, dy) => {
-    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-      clearAllLongPressTimers();
-      setLongPressTriggered(false);
-    }
+bindInteractiveLayerGesture(appShell, drawerController, {
+  axis: "x",
+  canStartFromClosed: true,
+  shouldStart: canStartDrawerGesture,
+  onDragStart: () => {
+    clearAllLongPressTimers();
+    setLongPressTriggered(false);
   },
-  onRelease: (dx, wasDragging, velocity) => {
-    if (shouldReleaseBySwipe(dx, velocity, +1)) {
-      setSuppressNextCardClick(true);
-      openDrawer({ withTransitionLock: false, deferShadow: false });
-    }
-  },
-});
-
-// ── 侧栏内左滑关闭 ──
-
-createHorizontalDragGesture(drawer, {
-  targetEl: drawer,
-  getClosedPx: getDrawerClosedPx,
-  useNonlinearMotion: true,
-  traceLabel: "drawer.close",
-  shouldStart: canStartDrawerInnerClose,
-  getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
-  onRelease: (dx, wasDragging, velocity) => {
-    if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });
-  },
-});
-
-// ── 空白区左滑关闭 ──
-
-createHorizontalDragGesture(appShell, {
-  targetEl: drawer,
-  getClosedPx: getDrawerClosedPx,
-  useNonlinearMotion: true,
-  traceLabel: "drawer.shellClose",
-  shouldStart: canStartDrawerShellClose,
-  getReleaseTargetPx: ({ dx, velocity, closedPx }) => shouldReleaseBySwipe(dx, velocity, -1) ? closedPx : 0,
-  onRelease: (dx, wasDragging, velocity) => {
-    if (shouldReleaseBySwipe(dx, velocity, -1)) closeDrawer({ withTransitionLock: false });
-  },
+  decideTarget: decideDrawerTarget,
+  traceLabel: "drawer.gesture",
 });

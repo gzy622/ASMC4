@@ -19,7 +19,8 @@
 - 持久字段只在 `state.js`；临时 UI 态在 `runtime.js`（如打分输入，**不含** `scoreStep10Mode`）。
 - 偏好 switch：`events/settings.js` 绑定，用 `ui/switch-bind.js` 的 `bindSettingSwitch()`。
 - 浮层关闭栈：只用 `ui/floating-layers.js` 的 `closeTopmostFloatingLayer()`，勿复制顺序。
-- `ui/shadow-reveal.js`：点击打开 drawer / top-sheet 时加 `is-shadow-pending`，展开后再渐入阴影；滑动手势用 `is-motion-dragging`，边缘开 drawer 传 `deferShadow: false`；关闭须 `cancelShadowReveal(el)`。
+- `gestures/interactive-layer-controller.js`：drawer / quickPanel / newAssignmentPanel / scoreSheet 的唯一运动控制器；按钮开合、拖动、动画接管和 generation 均走此模块，勿再为四类面板新增独立 transform 动画。
+- `#layerScrim` 是四类可滑动面板共用的视觉遮罩；透明度必须由统一控制器按打开进度同步，勿给它另加 CSS transition 或点击处理。
 - 状态变更后优先 `scheduleRender()`；business 尽量不 import `render/` 子模块。
 
 ## 验证

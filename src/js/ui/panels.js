@@ -1,30 +1,22 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { addButton, newAssignmentPanel, newAssignmentTitleInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
+import { addButton, layerScrim, newAssignmentPanel, newAssignmentTitleInput, newAssignmentSubjectInput, quickPanel, quickRenameInput } from "../dom-refs.js";
 import { closeConfirm } from "./confirm.js";
-import { closeDrawer } from "./drawer.js";
+import { closeDrawer, drawerController } from "./drawer.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
 import { makeDefaultAssignmentTitle } from "../utils/id.js";
 import { resetQuickPanelView, restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "./history.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal } from "./shadow-reveal.js";
 import {
   isCrossPanelOpenBlocked,
 } from "../gestures/motion-registry.js";
-import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
-import {
-  nextExplicitMotionGeneration,
-  prepareExplicitOpenTransform,
-  runExplicitOpenAnimation,
-  runExplicitCloseAnimation,
-} from "../gestures/explicit-open-motion.js";
-import { snapMotionLayerClosed } from "../gestures/pointer-drag-lifecycle.js";
 import { endQuickPanelPullPreview } from "../gestures/layer-motion-state.js";
+import { createInteractiveLayerController } from "../gestures/interactive-layer-controller.js";
 
-let abortQuickPanelOpenDrag = () => {};
 let pendingNewAssignmentFocusFrame = 0;
+let focusQuickNameWhenOpened = false;
+let restoreAddFocusWhenClosed = false;
+let restoreNewAssignmentFocusToAdd = true;
+let newAssignmentOpenPromise = null;
 
-export function registerQuickPanelOpenDragAbort(fn) {
-  abortQuickPanelOpenDrag = fn;
-}
 
 function cancelPendingNewAssignmentFocus() {
   if (!pendingNewAssignmentFocusFrame) return;
@@ -41,29 +33,80 @@ function scheduleNewAssignmentFocus() {
   });
 }
 
-function teardownQuickPanelDrag() {
-  abortQuickPanelOpenDrag();
-  endQuickPanelPullPreview();
+function closedTopSheetDelta(panel) {
+  return -panel.offsetHeight;
 }
 
-export function openNewAssignmentPanel() {
-  if (isCrossPanelOpenBlocked()) return;
-  closeDrawer();
-  closeFloatingPanels({ restoreFocus: false, animate: false });
+function setTopSheetOpenState(panel, open) {
+  panel.classList.toggle("is-open", open);
+  panel.setAttribute("aria-hidden", open ? "false" : "true");
+}
 
-  quickPanel.classList.remove("is-open");
-  quickPanel.setAttribute("aria-hidden", "true");
+export const quickPanelController = createInteractiveLayerController({
+  stateEl: quickPanel,
+  axis: "y",
+  getClosedPx: () => closedTopSheetDelta(quickPanel),
+  scrimEl: layerScrim,
+  busyKey: "panel",
+  traceLabel: "quickPanel.motion",
+  setOpenState: open => setTopSheetOpenState(quickPanel, open),
+  onOpened() {
+    endQuickPanelPullPreview();
+    if (focusQuickNameWhenOpened) requestAnimationFrame(() => quickRenameInput?.focus());
+    focusQuickNameWhenOpened = false;
+  },
+  onBeforeClose: blurTopSheetFocus,
+  onClosed() {
+    endQuickPanelPullPreview();
+    focusQuickNameWhenOpened = false;
+    resetQuickPanelView();
+  },
+});
 
-  newAssignmentTitleInput.value = makeDefaultAssignmentTitle();
-  if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
-  beginTopSheetExplicitMotion(newAssignmentPanel);
-  newAssignmentPanel.classList.add("is-open");
-  newAssignmentPanel.setAttribute("aria-hidden", "false");
-  animateTopSheetOpen(newAssignmentPanel, {
-    shadowOnSettled: () => {
-      scheduleNewAssignmentFocus();
-    },
+export const newAssignmentPanelController = createInteractiveLayerController({
+  stateEl: newAssignmentPanel,
+  axis: "y",
+  getClosedPx: () => closedTopSheetDelta(newAssignmentPanel),
+  scrimEl: layerScrim,
+  busyKey: "panel",
+  traceLabel: "newAssignment.motion",
+  setOpenState: open => setTopSheetOpenState(newAssignmentPanel, open),
+  onOpened: scheduleNewAssignmentFocus,
+  onBeforeClose() {
+    cancelPendingNewAssignmentFocus();
+    blurTopSheetFocus();
+  },
+  onClosed() {
+    if (restoreAddFocusWhenClosed) requestAnimationFrame(() => addButton.focus());
+    restoreAddFocusWhenClosed = false;
+    restoreNewAssignmentFocusToAdd = true;
+  },
+});
+
+export function openNewAssignmentPanel({ fromDrawer = false } = {}) {
+  if (newAssignmentOpenPromise) return newAssignmentOpenPromise;
+  if (!fromDrawer && isCrossPanelOpenBlocked()) return Promise.resolve();
+
+  const open = async () => {
+    if (fromDrawer && drawerController.phase !== "closed") {
+      await closeDrawer();
+      if (drawerController.phase !== "closed") return;
+    } else {
+      await closeDrawer({ withTransitionLock: false });
+    }
+
+    closeFloatingPanels({ restoreFocus: false, animate: false });
+    newAssignmentTitleInput.value = makeDefaultAssignmentTitle();
+    if (newAssignmentSubjectInput) newAssignmentSubjectInput.value = "英语";
+    restoreNewAssignmentFocusToAdd = !fromDrawer;
+    await newAssignmentPanelController.open();
+  };
+
+  const request = open().finally(() => {
+    if (newAssignmentOpenPromise === request) newAssignmentOpenPromise = null;
   });
+  newAssignmentOpenPromise = request;
+  return request;
 }
 
 function blurTopSheetFocus() {
@@ -73,84 +116,20 @@ function blurTopSheetFocus() {
   }
 }
 
-function closedTopSheetDelta(panel) {
-  return -panel.offsetHeight;
-}
-
-function beginTopSheetExplicitMotion(panel) {
-  prepareExplicitOpenTransform(panel, "y", closedTopSheetDelta(panel));
-}
-
-function animateTopSheetOpen(panel, { onSettled, shadowOnSettled } = {}) {
-  const fromDelta = closedTopSheetDelta(panel);
-  const generation = nextExplicitMotionGeneration(panel);
-  runExplicitOpenAnimation({
-    el: panel,
-    axis: "y",
-    fromPx: fromDelta,
-    generation,
-    onMotionStarted: (anim) => {
-      beginShadowRevealAfterOpen(panel, {
-        onSettled: shadowOnSettled,
-        motionFinished: anim.finished,
-      });
-    },
-    onComplete: onSettled,
-  });
-}
-
-function animateTopSheetClose(panel, onClosed) {
-  const generation = nextExplicitMotionGeneration(panel);
-  runExplicitCloseAnimation({
-    el: panel,
-    axis: "y",
-    toPx: closedTopSheetDelta(panel),
-    generation,
-    onComplete: () => {
-      panel.classList.remove("is-open");
-      panel.setAttribute("aria-hidden", "true");
-      onClosed?.();
-    },
-  });
-}
-
-function instantCloseTopSheet(panel) {
-  nextExplicitMotionGeneration(panel);
-  cancelMotionAnimation(panel);
-  snapMotionLayerClosed(panel);
-  panel.setAttribute("aria-hidden", "true");
-}
-
 export function closeFloatingPanels({ restoreFocus = true, animate = true } = {}) {
   const wasNewAssignmentPanelOpen = newAssignmentPanel.classList.contains("is-open");
-  const shouldAnimateQuickPanel = animate && quickPanel.classList.contains("is-open");
-  const shouldAnimateNewAssignmentPanel = animate && newAssignmentPanel.classList.contains("is-open");
 
   cancelPendingNewAssignmentFocus();
   blurTopSheetFocus();
   closeScoreSheet({ animate: false });
-  teardownQuickPanelDrag();
-  resetQuickPanelView();
-  cancelShadowReveal(quickPanel);
-  cancelShadowReveal(newAssignmentPanel);
-
-  if (shouldAnimateQuickPanel) {
-    animateTopSheetClose(quickPanel);
-  } else if (quickPanel.classList.contains("is-open")) {
-    instantCloseTopSheet(quickPanel);
-  }
-
-  if (shouldAnimateNewAssignmentPanel) {
-    animateTopSheetClose(newAssignmentPanel);
-  } else if (newAssignmentPanel.classList.contains("is-open")) {
-    instantCloseTopSheet(newAssignmentPanel);
-  }
+  endQuickPanelPullPreview();
+  restoreAddFocusWhenClosed = restoreFocus
+    && wasNewAssignmentPanelOpen
+    && restoreNewAssignmentFocusToAdd;
+  quickPanelController.close({ animate });
+  newAssignmentPanelController.close({ animate });
 
   closeConfirm();
-
-  if (restoreFocus && wasNewAssignmentPanelOpen) {
-    requestAnimationFrame(() => addButton.focus());
-  }
 }
 
 export function openQuickPanel({ focusName = false } = {}) {
@@ -160,17 +139,10 @@ export function openQuickPanel({ focusName = false } = {}) {
   restoreQuickPanelViewFromPreference();
   refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
 
-  beginTopSheetExplicitMotion(quickPanel);
-  quickPanel.classList.add("is-open");
-  quickPanel.setAttribute("aria-hidden", "false");
-  animateTopSheetOpen(quickPanel);
-
-  if (focusName) {
-    requestAnimationFrame(() => quickRenameInput?.focus());
-  }
+  focusQuickNameWhenOpened = focusName;
+  quickPanelController.open();
 }
 
 export function commitQuickPanelOpen() {
-  quickPanel.classList.add("is-open");
-  quickPanel.setAttribute("aria-hidden", "false");
+  quickPanelController.snapOpen();
 }

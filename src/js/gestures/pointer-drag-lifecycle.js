@@ -5,7 +5,7 @@ export function isPrimaryPointerButton(event) {
   return event.pointerType !== "mouse" || event.button === 0;
 }
 
-export function createTransformBatcher(targetEl) {
+export function createTransformBatcher(targetEl, onApply) {
   let pendingTransform = null;
   let rafId = null;
 
@@ -17,6 +17,7 @@ export function createTransformBatcher(targetEl) {
         if (pendingTransform !== null) {
           targetEl.style.transform = pendingTransform;
           pendingTransform = null;
+          onApply?.();
         }
       });
     }
@@ -30,6 +31,7 @@ export function createTransformBatcher(targetEl) {
     if (pendingTransform !== null) {
       targetEl.style.transform = pendingTransform;
       pendingTransform = null;
+      onApply?.();
     }
   }
 
@@ -59,30 +61,6 @@ export function withNoAnimLayer(targetEl, mutate) {
   mutate();
   void targetEl.offsetHeight;
   targetEl.classList.remove("no-anim");
-}
-
-function snapMotionLayerStyles(targetEl, mutate) {
-  withNoAnimLayer(targetEl, () => {
-    mutate();
-    targetEl.style.willChange = "";
-  });
-}
-
-/** Instant close: drop is-open before clearing inline transform (avoid open-state flash). */
-export function snapMotionLayerClosed(targetEl) {
-  snapMotionLayerStyles(targetEl, () => {
-    targetEl.classList.remove("is-open");
-    targetEl.style.transform = "";
-  });
-  clearLayerMotionDrag(targetEl);
-}
-
-/** Instant open: strip inline transform, set is-open (no WAAPI). */
-export function snapMotionLayerOpen(targetEl) {
-  snapMotionLayerStyles(targetEl, () => {
-    targetEl.style.transform = "";
-    targetEl.classList.add("is-open");
-  });
 }
 
 export function endExplicitMotion(targetEl) {

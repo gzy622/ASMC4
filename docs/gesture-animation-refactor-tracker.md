@@ -24,10 +24,10 @@
 
 | # | 承诺 |
 |---|------|
-| F1 | **状态来源单一**：phase / 释放动画 / 阴影延后经 `layer-motion-state`（及 `motion-registry` 门面）登记，不散写 `classList` 操作 motion class |
+| F1 | **状态来源单一**：phase / 释放动画经 `layer-motion-state`（及 `motion-registry` 门面）登记，遮罩进度由统一控制器同步 |
 | F2 | **阅读路径清楚**：先看交互规则（CodeGraph + 重构目标文档），再看 `gesture-guards` 与具体绑定文件 |
-| F3 | **浮层互斥可预期**：打开阻塞打开、关闭不阻塞打开、同元素释放中不重复接管——与重构目标文档「冲突处理」一致 |
-| F4 | **动画结束后界面干净**：无残留 transform、无双动画、无遗留 `is-motion-dragging` / `is-shadow-pending` |
+| F3 | **浮层互斥可预期**：打开阻塞打开、关闭不阻塞打开；四类滑动面板可接管自己的动画，toast 仍不重复接管 |
+| F4 | **动画结束后界面干净**：无残留 transform、无双动画、无遗留 `is-motion-dragging` 或可见遮罩 |
 | F5 | **文档与实现一致**：死代码删除、模块表与真实 import 链对齐 |
 
 **明确不做（除非单独立项）**：重写 `release-animation` 算法参数、改 CSS 时长/缓动、改 Android `touchmove` 策略、改浮层关闭栈顺序、改 quickPanel 高度行为。
@@ -38,17 +38,19 @@
 
 | 字段 | 值 |
 |------|-----|
-| **最后更新** | 2026-07-06 |
-| **当前阶段** | 三阶段收官完成（维护模式） |
+| **最后更新** | 2026-07-10 |
+| **当前阶段** | 四类滑动面板统一控制完成（维护模式） |
 | **阶段进度** | 阶段 1 = 100% · 阶段 2 = 100% · 阶段 3 = 100% |
 | **短期目标** | 无待办（见下方「维护模式」） |
 | **进行中** | 无 |
 | **阻塞** | （无） |
-| **最近决策** | drawer 全屏伸展：`releaseLayerTransformLock` + WAAPI `commitStyles` 后 `cancel`；scoreSheet 闪现见「可复用结论」 |
+| **最近决策** | 四类面板共用 `InteractiveLayerController` 和 `#layerScrim`；遮罩透明度随打开进度同步，动画允许触摸暂停与反向接管 |
 
 ### 短期目标（本批）
 
 三阶段任务已全部完成。后续手势改动走常规 bugfix / 功能立项，不再从此表取短期项。
+
+> 2026-07-10 起，四类滑动面板已迁移到 `interactive-layer-controller.js`；下方 S1-S29 与技术债表保留为历史记录，其中 `explicit-open-motion.js`、`horizontal-drag.js`、`ui/shadow-reveal.js` 已由统一控制器取代并删除。
 
 - [x] **S25** P3：收官——CodeGraph 模块数对齐（9→15）、tracker 标记维护模式
 - [x] **S26** P3：D10——top-sheet `::after` 阴影，与 drawer/scoreSheet 统一；调阴影改 `design-tokens.css` 三个 token
@@ -224,7 +226,7 @@
 ### 针对 D2 / 显式打开改动时加测
 
 - [x] drawer / top-sheet **点击打开**：无闪开闪关、无双动画（可参考 `__repro_double_anim.html` 思路）
-- [x] 阴影：点击打开稍后渐入；拖动打开不叠 shadow-pending 污染
+- [x] 遮罩：点击、拖动、释放和动画接管时均与打开进度同步
 
 > **验收记录**：2026-07-06，用户双端（浏览器 + Android）手动测试通过。
 
@@ -254,14 +256,14 @@
 | 实现索引 | `CodeGraph.md`「手势」 |
 | 状态核心 | `src/js/gestures/layer-motion-state.js` |
 | 门面 | `src/js/gestures/motion-registry.js` |
-| 显式打开 | `src/js/gestures/explicit-open-motion.js` |
+| 四类面板控制 | `src/js/gestures/interactive-layer-controller.js` |
 | 守卫 | `src/js/gestures/gesture-guards.js` |
 | WAAPI 引擎 | `src/js/gestures/gesture-motion-engine.js` |
 | 拖动生命周期 | `src/js/gestures/pointer-drag-lifecycle.js` |
 | 释放阈值 | `src/js/gestures/swipe-release.js` |
-| 工厂 | `drag-gesture.js`, `horizontal-drag.js` |
+| 独立工厂 | `drag-gesture.js`（仅 toast） |
 | 业务绑定 | `panel-swipe.js`, `drawer-gestures.js`, `score-swipe.js`, `toast-swipe.js` |
-| UI 编排 | `ui/drawer.js`, `ui/panels.js`, `ui/shadow-reveal.js`, `ui/drawer-fullscreen.js` |
+| UI 编排 | `ui/drawer.js`, `ui/panels.js`, `ui/drawer-fullscreen.js` |
 | scoreSheet 样式 | `src/css/components.css`（`.score-sheet` `visibility`） |
 | 双动画 repro | `scripts/__repro_double_anim.html` |
 | 工程约定 | `AGENTS.md` |
@@ -283,6 +285,7 @@
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-10 | 四类面板删除运动阴影，改用 `#layerScrim` 随打开进度同步透明度 |
 | 2026-07-06 | scoreSheet 下滑关闪现：关闭态 `visibility:hidden` + 手势态 `is-motion-dragging` 保持可见；记入「可复用结论」 |
 | 2026-07-06 | S29：D2-C `withNoAnimLayer`；D2 技术债收官 |
 | 2026-07-06 | S28：D2-B `snapMotionLayerOpen` / `snapMotionLayerClosed` 统一瞬时开/关 |

@@ -189,42 +189,31 @@
       bottom: 0;
       width: min(78%, 310px);
       background: var(--bg);
-      border-right: 1px solid var(--line);
-      z-index: 40;
-      transform: translateX(-120%);
+      z-index: 10;
+      transform: translateX(0);
       transform-origin: left center;
       display: flex;
       flex-direction: column;
       touch-action: none;
     }
 
-    .drawer::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      box-shadow: var(--shadow-drawer);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 280ms var(--motion);
-    }
-
     .drawer.is-open {
-      transform: translateX(0);
+      pointer-events: auto;
       transition: transform 280ms var(--motion);
-      will-change: transform;
-    }
-
-    .drawer.is-open:not(.is-shadow-pending)::after {
-      opacity: 1;
     }
 
     .drawer:not(.is-open) {
       pointer-events: none;
     }
 
+    .phone.is-drawer-revealing .drawer {
+      pointer-events: auto;
+    }
+
     .phone:has(
       .drawer.is-open,
       .top-sheet.is-open,
+      .top-sheet.is-dragging,
       .score-sheet.is-open,
       .modal-panel.is-open,
       .fullscreen-panel.is-open
@@ -232,15 +221,15 @@
       pointer-events: none;
     }
 
-    .drawer.is-expanding {
-      transform: translateX(0) scaleX(var(--drawer-expand-scale, 1));
-      border-right-color: transparent;
-      transition: transform 280ms var(--motion);
-      will-change: transform;
+    .phone.is-drawer-revealing .student-card {
+      pointer-events: none;
     }
 
-    .drawer.is-expanding::after {
-      opacity: 0;
+    .drawer.is-expanding {
+      z-index: 50;
+      transform: translateX(0) scaleX(var(--drawer-expand-scale, 1));
+      transition: transform 280ms var(--motion);
+      will-change: transform;
     }
 
     .drawer-filter,
@@ -275,31 +264,10 @@
       box-shadow: none !important;
     }
 
-    html.perf-diagnostics-lite .drawer::after,
-    html.perf-diagnostics-lite .top-sheet::after,
-    html.perf-diagnostics-lite .score-sheet::after,
     html.perf-diagnostics-lite .confirm-scrim::after {
       opacity: 0 !important;
       box-shadow: none !important;
       transition: none !important;
-    }
-
-    /* Drag/release only: drop shadow work while transform is animating. */
-    .drawer.is-motion-dragging::after,
-    .drawer.is-open.is-motion-dragging::after,
-    .top-sheet.is-motion-dragging::after,
-    .top-sheet.is-open.is-motion-dragging::after,
-    .top-sheet.is-dragging.is-motion-dragging::after,
-    .score-sheet.is-motion-dragging::after,
-    .score-sheet.is-open.is-motion-dragging::after {
-      opacity: 0;
-      box-shadow: none;
-      transition: none;
-    }
-
-    .score-sheet.is-motion-dragging,
-    .score-sheet.is-open.is-motion-dragging {
-      box-shadow: none;
     }
 
     .drawer-filter {
@@ -644,16 +612,6 @@
       background: var(--bg);
     }
 
-    .top-sheet::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      box-shadow: var(--shadow-sheet);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 280ms var(--motion);
-    }
     #quickPanel {
       max-height: 100dvh;
       max-height: 100lvh;
@@ -718,11 +676,6 @@
       transform: translateY(0);
       will-change: transform;
     }
-    .top-sheet.is-open:not(.is-shadow-pending):not(.is-motion-dragging)::after,
-    .top-sheet.is-dragging:not(.is-shadow-pending):not(.is-motion-dragging)::after {
-      opacity: 1;
-    }
-
     .top-sheet.is-dragging {
       will-change: transform;
     }
@@ -1258,17 +1211,6 @@
       touch-action: none;
     }
 
-    .score-sheet::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      box-shadow: var(--shadow-sheet-bottom);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 280ms var(--motion);
-    }
-
     .score-sheet.is-open {
       transform: translateY(0);
       will-change: transform;
@@ -1281,10 +1223,6 @@
 
     .score-sheet.is-open.is-pointer-guarded .score-sheet-body {
       pointer-events: none;
-    }
-
-    .score-sheet.is-open:not(.is-shadow-pending)::after {
-      opacity: 1;
     }
 
     .score-sheet-handle {

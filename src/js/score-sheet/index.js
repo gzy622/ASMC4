@@ -1,6 +1,6 @@
 import { hapticLight } from "../utils/haptics.js";
 import { getCurrentAssignment, getState, saveAppState } from "../state.js";
-import { scoreSheet, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreCancel, scoreConfirm, scoreReset } from "../dom-refs.js";
+import { scoreSheet, layerScrim, scoreDisplayValue, scoreNoteInput, scoreNoteClear, scoreStudentSerial, scoreStudentName, scoreCancel, scoreConfirm, scoreReset } from "../dom-refs.js";
 import { currentScoringStudent, setCurrentScoringStudent, setScoreInputValue, setNoteInputValue, setSuppressNextCardClick, scoreInputValue, noteInputValue, pendingInstantScoreChange, pendingInstantScoreChangeMessage, setPendingInstantScoreChange } from "../runtime.js";
 import { syncScoreStep10Ui } from "./score-step10-ui.js";
 import { getDisplayName } from "../utils/display.js";
@@ -9,17 +9,8 @@ import { announce } from "../utils/dom.js";
 import { STATUS } from "../constants.js";
 import { clampStudentNote } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
-import { beginShadowRevealAfterOpen, cancelShadowReveal } from "../ui/shadow-reveal.js";
 import { SCORE_SHEET_MOTION_DURATION_SCALE } from "../gestures/constants.js";
-import { cancelMotionAnimation } from "../gestures/gesture-motion-engine.js";
-import {
-  nextExplicitMotionGeneration,
-  prepareExplicitOpenTransform,
-  runExplicitOpenAnimation,
-  runExplicitCloseAnimation,
-} from "../gestures/explicit-open-motion.js";
-import { snapMotionLayerClosed } from "../gestures/pointer-drag-lifecycle.js";
-import { clearLayerMotionDrag } from "../gestures/layer-motion-state.js";
+import { createInteractiveLayerController } from "../gestures/interactive-layer-controller.js";
 
 let releaseScoreSheetPointerGuard = null;
 
@@ -37,6 +28,24 @@ function resetScoreSheetState() {
   scoreNoteInput.value = "";
   scoreNoteClear.classList.remove("is-visible");
 }
+
+export const scoreSheetController = createInteractiveLayerController({
+  stateEl: scoreSheet,
+  axis: "y",
+  getClosedPx: closedScoreSheetPx,
+  scrimEl: layerScrim,
+  busyKey: "sheet",
+  traceLabel: "scoreSheet.motion",
+  durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
+  onBeforeClose() {
+    clearScoreSheetPointerGuard();
+    setSuppressNextCardClick(false);
+  },
+  onClosed() {
+    finalizePendingInstantScoreChange();
+    resetScoreSheetState();
+  },
+});
 
 export function openScoreSheet(student, guardPointer = false) {
   traceEvent("scoreSheet.open", {
@@ -70,69 +79,20 @@ export function openScoreSheet(student, guardPointer = false) {
   updateScoreDisplay();
 
   hapticLight();
-  const fromPx = closedScoreSheetPx();
-  prepareExplicitOpenTransform(scoreSheet, "y", fromPx);
-  scoreSheet.classList.add("is-open");
-  scoreSheet.setAttribute("aria-hidden", "false");
-  const generation = nextExplicitMotionGeneration(scoreSheet);
-  runExplicitOpenAnimation({
-    el: scoreSheet,
-    axis: "y",
-    fromPx,
-    generation,
-    durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
-    onMotionStarted: (anim) => {
-      beginShadowRevealAfterOpen(scoreSheet, { motionFinished: anim.finished });
-    },
-  });
+  scoreSheetController.open();
   if (guardPointer) armScoreSheetPointerGuard();
 }
 
-export function closeScoreSheet({ animate = true, fromGesture = false } = {}) {
+export function closeScoreSheet({ animate = true } = {}) {
   traceEvent("scoreSheet.close");
   clearScoreSheetPointerGuard();
   setSuppressNextCardClick(false);
-  cancelShadowReveal(scoreSheet);
 
-  finalizePendingInstantScoreChange();
-
-  if (!scoreSheet.classList.contains("is-open")) {
+  if (scoreSheetController.phase === "closed") {
     resetScoreSheetState();
     return;
   }
-
-  if (fromGesture) {
-    scoreSheet.classList.remove("is-open");
-    scoreSheet.setAttribute("aria-hidden", "true");
-    resetScoreSheetState();
-    scoreSheet.style.willChange = "";
-    clearLayerMotionDrag(scoreSheet);
-    return;
-  }
-
-  const generation = nextExplicitMotionGeneration(scoreSheet);
-  cancelMotionAnimation(scoreSheet);
-
-  if (animate) {
-    runExplicitCloseAnimation({
-      el: scoreSheet,
-      axis: "y",
-      toPx: closedScoreSheetPx(),
-      generation,
-      busyKey: "sheet",
-      durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
-      onComplete: () => {
-        scoreSheet.classList.remove("is-open");
-        scoreSheet.setAttribute("aria-hidden", "true");
-        resetScoreSheetState();
-      },
-    });
-    return;
-  }
-
-  resetScoreSheetState();
-  snapMotionLayerClosed(scoreSheet);
-  scoreSheet.setAttribute("aria-hidden", "true");
+  scoreSheetController.close({ animate });
 }
 
 export function updateScoreDisplay() {

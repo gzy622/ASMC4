@@ -8,9 +8,6 @@
       --line-subtle: rgba(31, 32, 36, 0.045);
       --shadow: 0 1px 0 rgba(0, 0, 0, 0.018);
       --shadow-panel: 0 22px 70px rgba(0, 0, 0, 0.16);
-      --shadow-drawer: 6px 0 24px rgba(0, 0, 0, 0.08);
-      --shadow-sheet: 0 8px 30px rgba(0, 0, 0, 0.12);
-      --shadow-sheet-bottom: 0 -8px 30px rgba(0, 0, 0, 0.12);
       --shadow-toast: 0 10px 32px rgba(0, 0, 0, 0.22);
       --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.12),
         0 1px 8px rgba(0, 0, 0, 0.06);
@@ -69,6 +66,7 @@
 
       --overlay-scrim: rgba(244, 244, 244, 0.34);
       --overlay-scrim-strong: rgba(31, 32, 36, 0.08);
+      --overlay-layer: rgb(31, 32, 36);
       --overlay-toast: rgba(28, 30, 34, 0.94);
       --overlay-toast-action: rgba(255, 255, 255, 0.14);
       --overlay-toast-action-pressed: rgba(255, 255, 255, 0.22);

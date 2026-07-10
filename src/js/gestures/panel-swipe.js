@@ -5,115 +5,81 @@ import {
   scrollContainer,
 } from "../dom-refs.js";
 import { refreshQuickPanelContent } from "../render/quickPanel.js";
-import { setUiTransitionBusy } from "../runtime.js";
 import { restoreQuickPanelViewFromPreference, shouldShowQuickPanelHistoryContent } from "../ui/history.js";
-import { closeFloatingPanels, commitQuickPanelOpen, registerQuickPanelOpenDragAbort } from "../ui/panels.js";
+import { newAssignmentPanelController, quickPanelController } from "../ui/panels.js";
+import { clearAllLongPressTimers, setLongPressTriggered } from "../runtime.js";
 import {
   beginQuickPanelPullPreview,
   endQuickPanelPullPreview,
 } from "./layer-motion-state.js";
 import {
+  FORM_CONTROL_SELECTOR,
   canQuickPanelPullAtScrollTop,
   canStartQuickPanelInnerClose,
   canStartQuickPanelPullOpen,
   canStartQuickPanelShellClose,
   canStartTopSheetInnerClose,
   canStartTopSheetShellClose,
-  isPanelVisuallyOpen,
+  isTouchOn,
 } from "./gesture-guards.js";
-import { createTopSheetOpenGesture, createVerticalDragGesture } from "./drag-gesture.js";
+import { bindInteractiveLayerGesture } from "./interactive-layer-controller.js";
+import { evaluateSwipeRelease } from "./swipe-release.js";
+import { FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 
-function cancelQuickPanelPullPreview() {
-  endQuickPanelPullPreview();
-}
-
-function commitQuickPanelPullOpen() {
-  commitQuickPanelOpen();
-  endQuickPanelPullPreview();
-}
-
-function prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease) {
-  abortQuickPanelOpenRelease();
-  if (!isPanelVisuallyOpen(quickPanel)) {
-    commitQuickPanelOpen();
+function decideVerticalTarget({ delta, currentPx, closedPx, velocity, startedFromClosed, wasHeld }) {
+  if (startedFromClosed) {
+    return evaluateSwipeRelease({ distance: Math.max(0, delta), velocity, direction: +1 }) ? "open" : "closed";
   }
-  endQuickPanelPullPreview();
-  setUiTransitionBusy(false, "panel");
+  if (!wasHeld) {
+    return evaluateSwipeRelease({ distance: Math.max(0, -delta), velocity, direction: -1 }) ? "closed" : "open";
+  }
+  if (Math.abs(delta) >= MIN_FLING_DISTANCE && Math.abs(velocity) >= FLING_VELOCITY_THRESHOLD) {
+    return velocity > 0 ? "open" : "closed";
+  }
+  return Math.abs(currentPx) <= Math.abs(currentPx - closedPx) ? "open" : "closed";
 }
 
-// ── quickPanel 1/2：下拉预览 + 释放打开 ──
+function canStartQuickGesture(event, controller) {
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (controller.isAnimating) return true;
+  if (controller.phase === "closed") {
+    return scrollContainer.contains(event.target)
+      && canStartQuickPanelPullOpen(event)
+      && canQuickPanelPullAtScrollTop(scrollContainer.scrollTop);
+  }
+  if (quickPanel.contains(event.target)) return canStartQuickPanelInnerClose(event);
+  return canStartQuickPanelShellClose(event);
+}
 
-const quickPanelOpenGesture = createTopSheetOpenGesture(scrollContainer, {
-  sheetEl: quickPanel,
-  canStart: canStartQuickPanelPullOpen,
-  canPull: () => canQuickPanelPullAtScrollTop(scrollContainer.scrollTop),
-  onPrepare: () => {
+bindInteractiveLayerGesture(appShell, quickPanelController, {
+  axis: "y",
+  canStartFromClosed: true,
+  shouldStart: canStartQuickGesture,
+  onPrepareClosed() {
     restoreQuickPanelViewFromPreference();
     refreshQuickPanelContent(shouldShowQuickPanelHistoryContent());
     beginQuickPanelPullPreview();
   },
-  onOpen: commitQuickPanelPullOpen,
-  onCancel: cancelQuickPanelPullPreview,
-  useNonlinearMotion: true,
-  busyKey: "panel",
-  traceLabel: "quickPanel.pullOpen",
+  onCancelClosed: endQuickPanelPullPreview,
+  onDragStart() {
+    clearAllLongPressTimers();
+    setLongPressTriggered(false);
+  },
+  decideTarget: decideVerticalTarget,
+  traceLabel: "quickPanel.gesture",
 });
 
-// ── quickPanel 3：面板内上滑关闭 ──
-
-function bindQuickPanelCloseGesture(abortQuickPanelOpenRelease) {
-  const closeOpts = {
-    closeDirection: -1,
-    targetEl: quickPanel,
-    onClose: () => closeFloatingPanels({ animate: false }),
-    onDragStart: () => prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease),
-    useNonlinearMotion: true,
-    busyKey: "panel",
-  };
-
-  createVerticalDragGesture(quickPanel, {
-    ...closeOpts,
-    shouldStart: canStartQuickPanelInnerClose,
-    traceLabel: "quickPanel.close",
-  });
-
-  // ── quickPanel 4：面板外上滑关闭 ──
-
-  createVerticalDragGesture(appShell, {
-    closeDirection: -1,
-    targetEl: quickPanel,
-    onDragStart: () => prepareQuickPanelCloseDrag(abortQuickPanelOpenRelease),
-    shouldStart: canStartQuickPanelShellClose,
-    onClose: () => closeFloatingPanels({ animate: false }),
-    busyKey: "panel",
-    traceLabel: "quickPanel.close.shell",
-  });
+function canStartNewAssignmentGesture(event, controller) {
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (controller.isAnimating) return true;
+  if (controller.phase !== "open") return false;
+  if (newAssignmentPanel.contains(event.target)) return canStartTopSheetInnerClose(newAssignmentPanel);
+  return canStartTopSheetShellClose(newAssignmentPanel, event);
 }
 
-function bindTopSheetCloseGesture(panel) {
-  createVerticalDragGesture(panel, {
-    closeDirection: -1,
-    onClose: () => closeFloatingPanels({ animate: false }),
-    shouldStart: () => canStartTopSheetInnerClose(panel),
-    useNonlinearMotion: true,
-    busyKey: "panel",
-    traceLabel: "newAssignment.close",
-  });
-
-  createVerticalDragGesture(appShell, {
-    closeDirection: -1,
-    targetEl: panel,
-    shouldStart: event => canStartTopSheetShellClose(panel, event),
-    onClose: () => closeFloatingPanels({ animate: false }),
-    useNonlinearMotion: true,
-    busyKey: "panel",
-    traceLabel: "newAssignment.close.shell",
-  });
-}
-
-bindQuickPanelCloseGesture(quickPanelOpenGesture.abortRelease);
-registerQuickPanelOpenDragAbort(() => {
-  quickPanelOpenGesture.abortRelease();
-  cancelQuickPanelPullPreview();
+bindInteractiveLayerGesture(appShell, newAssignmentPanelController, {
+  axis: "y",
+  shouldStart: canStartNewAssignmentGesture,
+  decideTarget: decideVerticalTarget,
+  traceLabel: "newAssignment.gesture",
 });
-bindTopSheetCloseGesture(newAssignmentPanel);
