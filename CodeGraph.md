@@ -131,7 +131,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 **不阻塞跨层打开**：收起释放（`settling-close`）。面板/侧栏收起动画中可立刻打开另一浮层。
 
-**同元素**：drawer、quickPanel、newAssignmentPanel、scoreSheet 的动画可在非控件区域按下暂停；方向成立后从当前画面位置接管。未形成拖动、`pointercancel` 或应用切后台时继续原目标。toast 仍不接管自己的释放动画。
+**同元素**：drawer 的动画可在非控件区域按下暂停；quickPanel、newAssignmentPanel、scoreSheet 还允许从面板内按钮、输入框和选择框按下暂停或开始拖动。方向成立后从当前画面位置接管；未形成拖动、`pointercancel` 或应用切后台时继续原目标。toast 仍不接管自己的释放动画。
 
 **确认框**：`isConfirmPanelOpen()` 阻断 quickPanel / newAssignment / scoreSheet 壳层关闭；下拉打开另走 `blocksQuickPanelPull()`。
 

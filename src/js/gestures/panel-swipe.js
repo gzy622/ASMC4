@@ -40,7 +40,7 @@ function decideVerticalTarget({ delta, currentPx, closedPx, velocity, startedFro
 }
 
 function canStartQuickGesture(event, controller) {
-  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR) && !quickPanel.contains(event.target)) return false;
   if (controller.isAnimating) return true;
   if (controller.phase === "closed") {
     return scrollContainer.contains(event.target)
@@ -70,7 +70,7 @@ bindInteractiveLayerGesture(appShell, quickPanelController, {
 });
 
 function canStartNewAssignmentGesture(event, controller) {
-  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR) && !newAssignmentPanel.contains(event.target)) return false;
   if (controller.isAnimating) return true;
   if (controller.phase !== "open") return false;
   if (newAssignmentPanel.contains(event.target)) return canStartTopSheetInnerClose(newAssignmentPanel);

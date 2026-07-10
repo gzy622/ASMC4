@@ -11,7 +11,7 @@ import { evaluateSwipeRelease } from "./swipe-release.js";
 import { FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
 
 function canStartScoreGesture(event, controller) {
-  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR) && !scoreSheet.contains(event.target)) return false;
   if (controller.isAnimating) return true;
   if (controller.phase !== "open") return false;
   if (scoreSheet.contains(event.target)) return canStartScoreSheetInnerClose(event, false);

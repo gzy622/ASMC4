@@ -1862,6 +1862,21 @@
       margin-top: 10px;
     }
 
+    #quickPanel button,
+    #quickPanel input,
+    #quickPanel select,
+    #quickPanel textarea,
+    #newAssignmentPanel button,
+    #newAssignmentPanel input,
+    #newAssignmentPanel select,
+    #newAssignmentPanel textarea,
+    #scoreSheet button,
+    #scoreSheet input,
+    #scoreSheet select,
+    #scoreSheet textarea {
+      touch-action: none;
+    }
+
     .settings-section {
       margin-bottom: 14px;
     }
