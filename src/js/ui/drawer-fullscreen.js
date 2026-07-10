@@ -118,6 +118,7 @@ export async function closeDrawerFullscreenPanel(panel) {
     property: "transform",
     timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
   }).promise;
+  drawer.classList.remove("is-contracting");
 
   setThemeColor("#f4f4f4");
 

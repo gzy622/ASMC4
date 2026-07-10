@@ -224,7 +224,7 @@ DOM（`index.html` + `dom-refs.js`）：
 设置 / 名单编辑从侧栏进入的全屏流程，**有意**不加入普通侧栏的触摸接管：
 
 - 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`；`expandDrawer` / `contractDrawer` 前须 `releaseLayerTransformLock(drawer)`（侧栏 WAAPI 滑入 `fill:forwards` 会盖住 CSS `scaleX`）；缩回靠 `.drawer.is-open` 的 `transform` transition。
-- 普通侧栏稳定 open 后才进入全屏流程；展开时 drawer 临时升到 `#mainPage` 上方，退出后恢复圆角主页右移状态。
+- 普通侧栏稳定 open 后才进入全屏流程；展开和缩回时 drawer 临时升到 `#mainPage` 上方，退出后恢复圆角主页右移状态。
 - 已共享 `waitForTransition`；`busyKey` 为 `drawer-fullscreen`；`beginTargetExplicitOpenAnimation` 登记互斥。
 
 ### scoreSheet

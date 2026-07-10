@@ -49,16 +49,25 @@
 
     .phone.is-drawer-revealed .main-page {
       transform: translateX(var(--drawer-reveal-width, min(78%, 310px)));
-      border: 1px solid var(--line);
       border-radius: 28px 0 0 28px;
       overflow: hidden;
     }
 
     .phone.is-drawer-revealing .main-page {
-      border: 1px solid var(--line);
       border-radius: 28px 0 0 28px;
       overflow: hidden;
       will-change: transform;
+    }
+
+    .phone.is-drawer-revealed .main-page::after,
+    .phone.is-drawer-revealing .main-page::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 21;
+      border: 1px solid var(--line);
+      border-radius: inherit;
+      pointer-events: none;
     }
 
     .layer-scrim {

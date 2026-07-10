@@ -232,6 +232,10 @@
       will-change: transform;
     }
 
+    .drawer.is-contracting {
+      z-index: 50;
+    }
+
     .drawer-filter,
     .drawer-list,
     .drawer-actions,

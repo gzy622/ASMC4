@@ -114,7 +114,7 @@ export function openDrawer({ withTransitionLock = true } = {}) {
 export function closeDrawer({ withTransitionLock = true } = {}) {
   blurDrawerFocus();
   setSuppressNextCardClick(false);
-  drawer.classList.remove("is-expanding");
+  drawer.classList.remove("is-expanding", "is-contracting");
   clearDrawerExpandScale();
   return drawerController.close({ animate: withTransitionLock });
 }
@@ -122,11 +122,13 @@ export function closeDrawer({ withTransitionLock = true } = {}) {
 export function expandDrawer() {
   releaseLayerTransformLock(drawer);
   setDrawerExpandScale();
+  drawer.classList.remove("is-contracting");
   drawer.classList.add("is-expanding");
 }
 
 export function contractDrawer() {
   releaseLayerTransformLock(drawer);
+  drawer.classList.add("is-contracting");
   drawer.classList.remove("is-expanding");
 }
 
@@ -136,7 +138,7 @@ export function snapResetDrawer() {
   releaseLayerTransformLock(drawer);
   drawerController.snapClosed();
   withNoAnimLayer(drawer, () => {
-    drawer.classList.remove("is-expanding");
+    drawer.classList.remove("is-expanding", "is-contracting");
     clearDrawerExpandScale();
     drawer.style.willChange = "";
   });
@@ -147,6 +149,7 @@ export function snapPrepareDrawer() {
   setDrawerExpandScale();
   drawerController.snapOpen();
   withNoAnimLayer(drawer, () => {
+    drawer.classList.remove("is-contracting");
     drawer.classList.add("is-expanding");
   });
 }
