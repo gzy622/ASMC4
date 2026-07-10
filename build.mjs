@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
 import { readFileSync, writeFileSync, mkdirSync, rmSync, watch } from "fs";
+import { open, stat, unlink } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -7,6 +8,35 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dist = join(__dirname, "dist");
 const src = join(__dirname, "src");
 const watchMode = process.argv.includes("--watch");
+const buildLockPath = join(__dirname, ".build.lock");
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function acquireBuildLock() {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    try {
+      const handle = await open(buildLockPath, "wx");
+      await handle.writeFile(String(process.pid));
+      return async () => {
+        await handle.close();
+        await unlink(buildLockPath).catch(error => {
+          if (error.code !== "ENOENT") throw error;
+        });
+      };
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      const lockStat = await stat(buildLockPath).catch(() => null);
+      if (lockStat && Date.now() - lockStat.mtimeMs > 30000) {
+        await unlink(buildLockPath).catch(() => {});
+        continue;
+      }
+      await sleep(50);
+    }
+  }
+  throw new Error("等待构建锁超时");
+}
 
 function formatBuildVersion(date = new Date()) {
   const y = date.getFullYear();
@@ -26,7 +56,7 @@ function formatBuildTimestamp(date = new Date()) {
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
-async function build() {
+async function buildUnlocked() {
   const buildVersion = formatBuildVersion();
   const buildTimestamp = formatBuildTimestamp();
   rmSync(dist, { recursive: true, force: true });
@@ -90,6 +120,15 @@ async function build() {
   writeFileSync(join(dist, "index.html"), html);
 
   console.log(`[build] ${new Date().toLocaleTimeString()}  dist/ 完成  ${buildVersion}`);
+}
+
+async function build() {
+  const releaseBuildLock = await acquireBuildLock();
+  try {
+    await buildUnlocked();
+  } finally {
+    await releaseBuildLock();
+  }
 }
 
 await build();

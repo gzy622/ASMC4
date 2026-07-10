@@ -42,6 +42,10 @@ checks = [
         '<script type="module" src="src/js/app.js"></script>' in build_script
         and '<script type="module" src="src/js/app.js"></script>' in index_html,
     ),
+    (
+        "built module entry exists",
+        (ROOT / "dist/js/app.js").is_file(),
+    ),
     ("module entry binds events", "bindEvents();" in read("src/js/app.js")),
     (
         "event domains are split",
@@ -94,6 +98,48 @@ checks = [
     (
         "long press consumes Android synthetic click",
         "setSuppressNextCardClick(true);" in read("src/js/score-sheet/longpress.js"),
+    ),
+    (
+        "quick panel waits for drag claim before preparing preview",
+        "onPrepareClosed?.()" not in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        ).split("function onPointerDown")[1].split("function onPointerMove")[0]
+        and "onPrepareClosed?.()" in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        ).split("function onPointerMove")[1].split("function onPointerUp")[0],
+    ),
+    (
+        "unclaimed panel pointer cannot settle shared scrim",
+        "if (dragging && startedFromClosed)" in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        ).split("function resumeOrCancel")[1].split("function onPointerDown")[0],
+    ),
+    (
+        "rapid drags keep independent delayed-click guards",
+        "const pendingDragClickCleanups = new Set();" in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        )
+        and "pendingDragClickCleanup?.();" not in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        )
+        and "if (distance > 36) return;" in read(
+            "src/js/gestures/interactive-layer-controller.js"
+        ),
+    ),
+    (
+        "drawer new-assignment handoff is sequential",
+        'openNewAssignmentPanel({ fromDrawer: true });' in read(
+            "src/js/events/assignments.js"
+        )
+        and "await closeDrawer();" in read("src/js/ui/panels.js")
+        and 'drawerController.phase !== "closed"' in read("src/js/ui/panels.js"),
+    ),
+    (
+        "drawer new-assignment close does not focus top add button",
+        "restoreNewAssignmentFocusToAdd = !fromDrawer;" in read(
+            "src/js/ui/panels.js"
+        )
+        and "&& restoreNewAssignmentFocusToAdd;" in read("src/js/ui/panels.js"),
     ),
     (
         "quick panel history buttons ignore click event object",

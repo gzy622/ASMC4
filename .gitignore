@@ -21,6 +21,7 @@ scripts/dev-device.local.json
 
 # Build output
 dist/
+.build.lock
 traces/
 
 # Node.js dependencies
