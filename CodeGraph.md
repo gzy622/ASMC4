@@ -158,13 +158,15 @@ DOM（`index.html` + `dom-refs.js`）：
 
 `is-motion-dragging` 表示拖动或释放运动；同时维持 scoreSheet 关闭途中的可见性，不用于关闭栈或占用判断。
 
-**共享遮罩**：drawer / quickPanel / newAssignmentPanel / scoreSheet 不绘制面板阴影，共用 `#mainPage` 内的 `#layerScrim`。统一控制器根据 transform 位置把打开进度换算为遮罩透明度；拖动时同帧更新，WAAPI 开合时与 transform 使用同一时长和缓动。遮罩不接收指针，完全关闭后隐藏；确认框仍使用独立 `#confirmScrim`。
+**共享遮罩**：quickPanel / newAssignmentPanel / scoreSheet 不绘制面板阴影，共用 `#mainPage` 内的 `#layerScrim`。统一控制器根据 transform 位置把打开进度换算为遮罩透明度；拖动时同帧更新，WAAPI 开合时与 transform 使用同一时长和缓动。drawer 采用底层抽屉与主页左侧投影，不创建透明度为零的遮罩动画。遮罩不接收指针，完全关闭后隐藏；确认框仍使用独立 `#confirmScrim`。
 
-**drawer → 新建作业**：侧栏列表中的“新建作业”传入 `fromDrawer`，先等待 drawer 完整播放关闭动画并释放共享遮罩，再启动 newAssignmentPanel。重复请求共用同一个 Promise；若 drawer 关闭被手指接管而未到达 closed，本次打开请求结束，不能并行动画或强抢遮罩。该来源关闭新建面板后不把焦点转移到顶栏加号，避免紧接着横滑时 WebView 将旧输入续接到加号按钮。
+**drawer → 新建作业**：侧栏列表中的“新建作业”传入 `fromDrawer`，先等待 drawer 完整播放关闭动画，再启动 newAssignmentPanel。重复请求共用同一个 Promise；若 drawer 关闭被手指接管而未到达 closed，本次打开请求结束，不能并行动画。该来源关闭新建面板后不把焦点转移到顶栏加号，避免紧接着横滑时 WebView 将旧输入续接到加号按钮。
 
 **generation 令牌**：四类滑动面板由各自 `InteractiveLayerController` 持有唯一 generation；按钮、手势和动画接管共用。旧动画完成回调不得修改新状态。
 
 **释放动画**：四类滑动面板位移仅经统一控制器调用 WAAPI；CSS 不设 transform transition（drawer 全屏 scale 除外）。top-sheet / scoreSheet 的 open 位移为 `0`；drawer 的 closed 位移为 `0`，open 位移为侧栏宽度。
+
+**打开端反馈**：四类滑动面板的容器位移严格限制在 open / closed 之间。完全打开后继续朝展开方向拖动时，顶部与底部面板仅轻压把手，drawer 仅增强主页左侧阴影；释放、取消或动画接管后清除反馈，不得移动容器露出空位。
 
 **拖动后 click**：方向成立并完成拖动后，统一控制器按 pointerup 坐标登记一次 500ms click guard；只拦截同位置的延迟合成 click。连续拖动各自保留独立 guard，后一次拖动不能清除前一次；坐标不匹配的 click 也不能提前消耗其它 guard，避免 WebView 在动画结束后把旧 click 当成空白点击再次关闭面板。
 
@@ -213,7 +215,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### drawer
 
-- `.drawer` 固定在底层；普通开合只移动 `#mainPage`。closed 为 `translateX(0)`，open 为侧栏宽度；主页活动时显示左侧圆角与描边，静止 open 后显示阴影。
+- `.drawer` 固定在底层；关闭时可从整个主界面允许手势的位置右滑打开，普通开合只移动 `#mainPage`。closed 为 `translateX(0)`，open 为侧栏宽度；宽度由 `ResizeObserver` 缓存，拖动热路径不读布局。`pointerdown` 先用 `is-drawer-preparing` 准备主页合成层，主页活动时显示左侧圆角与描边，静止 open 后显示阴影。
 - `.drawer:not(.is-open) { pointer-events: none }`：关闭后不挡主页；边缘预览时由 `.is-drawer-revealing` 临时启用。
 - 切换作业先关 drawer（`assignments.js`）。
 - `.drawer-filter` 内搜索/筛选不参与横滑（`canStartDrawerInnerClose` 放行）。
@@ -223,7 +225,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 设置 / 名单编辑从侧栏进入的全屏流程，**有意**不加入普通侧栏的触摸接管：
 
-- 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`；`expandDrawer` / `contractDrawer` 前须 `releaseLayerTransformLock(drawer)`（侧栏 WAAPI 滑入 `fill:forwards` 会盖住 CSS `scaleX`）；缩回靠 `.drawer.is-open` 的 `transform` transition。
+- 多段 CSS 编排：drawer `is-open` → `is-expanding` scale → 全屏 panel `opacity` → `snapResetDrawer` / `snapPrepareDrawer`；`expandDrawer` / `contractDrawer` 前须 `releaseLayerTransformLock(drawer)`（侧栏 WAAPI 滑入 `fill:forwards` 会盖住 CSS `scaleX`）；缩回靠 `.drawer.is-open` 的 `transform` transition。缩回期间 `is-drawer-shadow-hidden` 隐藏主页阴影，完成后用 `phone::before` 做 140ms 窄区透明度淡入，再与主页阴影同帧交接。
 - 普通侧栏稳定 open 后才进入全屏流程；展开和缩回时 drawer 临时升到 `#mainPage` 上方，退出后恢复圆角主页右移状态。
 - 已共享 `waitForTransition`；`busyKey` 为 `drawer-fullscreen`；`beginTargetExplicitOpenAnimation` 登记互斥。
 

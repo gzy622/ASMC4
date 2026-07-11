@@ -1,5 +1,9 @@
 import { appShell, drawer } from "../dom-refs.js";
-import { drawerController } from "../ui/drawer.js";
+import {
+  clearDrawerGesturePreparation,
+  drawerController,
+  prepareDrawerGesture,
+} from "../ui/drawer.js";
 import { clearAllLongPressTimers, setLongPressTriggered } from "../runtime.js";
 import {
   canStartDrawerEdgeOpen,
@@ -27,7 +31,7 @@ function decideDrawerTarget({ delta, currentPx, closedPx, velocity, startedFromC
 }
 
 function canStartDrawerGesture(event, controller) {
-  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR)) return false;
+  if (isTouchOn(event.target, FORM_CONTROL_SELECTOR) && !drawer.contains(event.target)) return false;
   if (controller.isAnimating) return true;
   if (controller.phase === "closed") return canStartDrawerEdgeOpen(event);
   if (drawer.contains(event.target)) return canStartDrawerInnerClose(event);
@@ -38,6 +42,10 @@ bindInteractiveLayerGesture(appShell, drawerController, {
   axis: "x",
   canStartFromClosed: true,
   shouldStart: canStartDrawerGesture,
+  onPointerPrepare: ({ startedFromClosed }) => {
+    if (startedFromClosed) prepareDrawerGesture();
+  },
+  onPointerCleanup: clearDrawerGesturePreparation,
   onDragStart: () => {
     clearAllLongPressTimers();
     setLongPressTriggered(false);

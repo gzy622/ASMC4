@@ -47,16 +47,49 @@
       transform: translateX(0);
     }
 
+    .phone.is-drawer-preparing .main-page {
+      border-radius: 28px 0 0 28px;
+      box-shadow: -10px 0 28px rgba(0, 0, 0, var(--drawer-shadow-alpha, 0.12));
+      overflow: hidden;
+      will-change: transform;
+    }
+
     .phone.is-drawer-revealed .main-page {
       transform: translateX(var(--drawer-reveal-width, min(78%, 310px)));
       border-radius: 28px 0 0 28px;
+      box-shadow: -10px 0 28px rgba(0, 0, 0, var(--drawer-shadow-alpha, 0.12));
       overflow: hidden;
     }
 
     .phone.is-drawer-revealing .main-page {
       border-radius: 28px 0 0 28px;
+      box-shadow: -10px 0 28px rgba(0, 0, 0, var(--drawer-shadow-alpha, 0.12));
       overflow: hidden;
       will-change: transform;
+    }
+
+    .phone.is-drawer-shadow-hidden .main-page {
+      box-shadow: none;
+    }
+
+    .phone.is-drawer-shadow-hidden::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--drawer-reveal-width, min(78%, 310px));
+      z-index: 60;
+      width: 28px;
+      border-radius: 28px 0 0 28px;
+      box-shadow: -10px 0 28px rgba(0, 0, 0, 0.12);
+      opacity: 0;
+      pointer-events: none;
+      will-change: opacity;
+    }
+
+    .phone.is-drawer-shadow-fading::before {
+      opacity: 1;
+      transition: opacity 140ms var(--motion);
     }
 
     .phone.is-drawer-revealed .main-page::after,

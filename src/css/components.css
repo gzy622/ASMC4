@@ -651,6 +651,7 @@
     }
     .top-sheet .top-sheet-handle-zone .top-sheet-handle {
       margin: 0;
+      transform: translateY(var(--open-pressure-offset, 0)) scaleX(var(--open-pressure-scale, 1));
     }
     #newAssignmentPanel .top-sheet-handle-zone {
       padding: 12px 0 10px;
@@ -1235,6 +1236,7 @@
       border-radius: 2px;
       background: var(--surface-muted-5);
       margin: 10px auto 0;
+      transform: translateY(var(--open-pressure-offset, 0)) scaleX(var(--open-pressure-scale, 1));
     }
 
     .score-sheet-body {

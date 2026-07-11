@@ -42,6 +42,16 @@ function setTopSheetOpenState(panel, open) {
   panel.setAttribute("aria-hidden", open ? "false" : "true");
 }
 
+function setTopSheetOpenPressure(panel, pressure) {
+  if (pressure <= 0) {
+    panel.style.removeProperty("--open-pressure-offset");
+    panel.style.removeProperty("--open-pressure-scale");
+    return;
+  }
+  panel.style.setProperty("--open-pressure-offset", `${pressure * 3}px`);
+  panel.style.setProperty("--open-pressure-scale", String(1 - pressure * 0.12));
+}
+
 export const quickPanelController = createInteractiveLayerController({
   stateEl: quickPanel,
   axis: "y",
@@ -50,6 +60,7 @@ export const quickPanelController = createInteractiveLayerController({
   busyKey: "panel",
   traceLabel: "quickPanel.motion",
   setOpenState: open => setTopSheetOpenState(quickPanel, open),
+  onOpenPressure: pressure => setTopSheetOpenPressure(quickPanel, pressure),
   onOpened() {
     endQuickPanelPullPreview();
     if (focusQuickNameWhenOpened) requestAnimationFrame(() => quickRenameInput?.focus());
@@ -71,6 +82,7 @@ export const newAssignmentPanelController = createInteractiveLayerController({
   busyKey: "panel",
   traceLabel: "newAssignment.motion",
   setOpenState: open => setTopSheetOpenState(newAssignmentPanel, open),
+  onOpenPressure: pressure => setTopSheetOpenPressure(newAssignmentPanel, pressure),
   onOpened: scheduleNewAssignmentFocus,
   onBeforeClose() {
     cancelPendingNewAssignmentFocus();

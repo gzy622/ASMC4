@@ -18,6 +18,16 @@ function closedScoreSheetPx() {
   return scoreSheet.offsetHeight;
 }
 
+function setScoreSheetOpenPressure(pressure) {
+  if (pressure <= 0) {
+    scoreSheet.style.removeProperty("--open-pressure-offset");
+    scoreSheet.style.removeProperty("--open-pressure-scale");
+    return;
+  }
+  scoreSheet.style.setProperty("--open-pressure-offset", `${pressure * -3}px`);
+  scoreSheet.style.setProperty("--open-pressure-scale", String(1 - pressure * 0.12));
+}
+
 function resetScoreSheetState() {
   setPendingInstantScoreChange(false);
   setCurrentScoringStudent(null);
@@ -37,6 +47,7 @@ export const scoreSheetController = createInteractiveLayerController({
   busyKey: "sheet",
   traceLabel: "scoreSheet.motion",
   durationScale: SCORE_SHEET_MOTION_DURATION_SCALE,
+  onOpenPressure: setScoreSheetOpenPressure,
   onBeforeClose() {
     clearScoreSheetPointerGuard();
     setSuppressNextCardClick(false);

@@ -1,5 +1,5 @@
 import { DRAG_START_THRESHOLD, DRAG_SLOPE, FLING_VELOCITY_THRESHOLD, MIN_FLING_DISTANCE } from "./constants.js";
-import { animateMotionRelease, mapInteractiveDelta } from "./gesture-motion-engine.js";
+import { animateMotionRelease } from "./gesture-motion-engine.js";
 import {
   beginLayerDrag,
   beginLayerReleaseAnimation,
@@ -22,6 +22,7 @@ const pendingDragClickCleanups = new Set();
 let activeScrimController = null;
 
 const DEFAULT_SCRIM_MAX_OPACITY = 0.18;
+const OPEN_PRESSURE_DISTANCE_PX = 48;
 
 function armDragClickGuard(pointerUpEvent) {
   const startedAt = performance.now();
@@ -95,6 +96,7 @@ export function createInteractiveLayerController({
   onBeforeClose,
   onClosed,
   onDragStarted,
+  onOpenPressure,
 }) {
   let api = null;
   let phase = stateEl.classList.contains("is-open") ? "open" : "closed";
@@ -102,8 +104,16 @@ export function createInteractiveLayerController({
   let generation = 0;
   let activeAnimation = null;
   let dragPreparedFromClosed = false;
+  let awaitingFirstDragTransform = false;
+  let openPressure = 0;
   let dragPx = phase === "open" ? getOpenPx() : getClosedPx();
-  const batcher = createTransformBatcher(motionEl, () => syncScrim(dragPx));
+  const batcher = createTransformBatcher(motionEl, () => {
+    syncScrim(dragPx);
+    if (awaitingFirstDragTransform) {
+      awaitingFirstDragTransform = false;
+      trace("first-transform");
+    }
+  });
 
   function scrimOpacityAt(px) {
     const closedPx = getClosedPx();
@@ -151,6 +161,13 @@ export function createInteractiveLayerController({
     if (busyKey) setUiTransitionBusy(active, busyKey);
   }
 
+  function setOpenPressure(nextPressure) {
+    const normalized = Math.max(0, Math.min(1, nextPressure));
+    if (normalized === openPressure) return;
+    openPressure = normalized;
+    onOpenPressure?.(normalized);
+  }
+
   function cancelAnimation({ freeze = false } = {}) {
     if (!activeAnimation) return dragPx;
     if (freeze) {
@@ -168,6 +185,8 @@ export function createInteractiveLayerController({
   }
 
   function clearStableStyles() {
+    setOpenPressure(0);
+    awaitingFirstDragTransform = false;
     batcher.flush();
     motionEl.style.transition = "none";
     motionEl.style.transform = "";
@@ -281,6 +300,7 @@ export function createInteractiveLayerController({
   function holdAtCurrentFrame() {
     if (!activeAnimation) return null;
     const resumeTarget = target;
+    setOpenPressure(0);
     cancelAnimation({ freeze: true });
     phase = "holding";
     beginLayerDrag(stateEl);
@@ -290,6 +310,7 @@ export function createInteractiveLayerController({
   }
 
   function prepareDrag({ fromClosed = false } = {}) {
+    setOpenPressure(0);
     if (activeAnimation) cancelAnimation({ freeze: true });
     if (fromClosed) {
       dragPx = getClosedPx();
@@ -307,6 +328,7 @@ export function createInteractiveLayerController({
     motionEl.style.transition = "none";
     motionEl.style.willChange = "transform";
     motionEl.style.transform = axisTranslate(axis, dragPx);
+    awaitingFirstDragTransform = true;
     syncScrim(dragPx);
     trace("claim");
     return dragPx;
@@ -318,12 +340,16 @@ export function createInteractiveLayerController({
     const min = Math.min(closedPx, openPx);
     const max = Math.max(closedPx, openPx);
     dragPx = Math.max(min, Math.min(max, rawPx));
-    batcher.schedule(axisTranslate(axis, mapInteractiveDelta(rawPx, min, max)));
+    const openDirection = Math.sign(openPx - closedPx) || 1;
+    const openOverflow = Math.max(0, (rawPx - openPx) * openDirection);
+    setOpenPressure(openOverflow / OPEN_PRESSURE_DISTANCE_PX);
+    batcher.schedule(axisTranslate(axis, dragPx));
     return dragPx;
   }
 
   function settle(nextTarget, velocity = 0) {
     batcher.flush();
+    setOpenPressure(0);
     dragPx = readTranslate(motionEl, axis);
     if (nextTarget === "open" && dragPreparedFromClosed) {
       setOpenState(true);
@@ -384,6 +410,8 @@ export function bindInteractiveLayerGesture(bindEl, controller, {
   canStartFromClosed = false,
   onPrepareClosed,
   onCancelClosed,
+  onPointerPrepare,
+  onPointerCleanup,
   onDragStart,
   onProgress,
   decideTarget,
@@ -403,6 +431,7 @@ export function bindInteractiveLayerGesture(bindEl, controller, {
   function crossPoint(event) { return axis === "x" ? event.clientY : event.clientX; }
 
   function reset({ release = true } = {}) {
+    const resetState = { dragging, held, startedFromClosed };
     if (release) releasePointer(bindEl, pointerId);
     releaseDirection(pointerId);
     pointerId = null;
@@ -411,6 +440,7 @@ export function bindInteractiveLayerGesture(bindEl, controller, {
     resumeTarget = null;
     startedFromClosed = false;
     velocity.clear();
+    onPointerCleanup?.(resetState);
   }
 
   function resumeOrCancel() {
@@ -438,6 +468,7 @@ export function bindInteractiveLayerGesture(bindEl, controller, {
     startedFromClosed = !hold && stableClosed;
     basePx = hold?.px ?? (stableClosed ? controller.getClosedPx() : controller.getOpenPx());
     velocity.reset(basePx);
+    onPointerPrepare?.({ startedFromClosed, held });
     if (traceLabel) traceGesture(traceLabel, hold ? "hold" : "pointerdown");
   }
 

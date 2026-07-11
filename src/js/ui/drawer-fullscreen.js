@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer } from "../dom-refs.js";
+import { appShell, drawer } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor, waitForTransition } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -15,7 +15,10 @@ import {
 const DRAWER_OPEN_DURATION = 320;
 const EXPAND_DURATION = 280;
 const CONTENT_FADE = 180;
+const SHADOW_FADE = 140;
 const TRANSITION_TIMEOUT_PAD = 80;
+const DRAWER_SHADOW_HIDDEN_CLASS = "is-drawer-shadow-hidden";
+const DRAWER_SHADOW_FADING_CLASS = "is-drawer-shadow-fading";
 
 function waitForAnimationFrame() {
   return new Promise(resolve => requestAnimationFrame(resolve));
@@ -98,29 +101,43 @@ export async function swapDrawerFullscreenPanel(fromPanel, toPanel, renderFn) {
 export async function closeDrawerFullscreenPanel(panel) {
   if (isUiTransitionBusy("drawer-fullscreen")) return;
   setUiTransitionBusy(true, "drawer-fullscreen");
+  appShell.classList.add(DRAWER_SHADOW_HIDDEN_CLASS);
 
-  panel.classList.add("is-closing");
-  panel.classList.remove("is-open");
-  panel.setAttribute("aria-hidden", "true");
-  await waitForTransition(panel, {
-    property: "opacity",
-    timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
-  }).promise;
-  panel.classList.remove("is-closing");
+  try {
+    panel.classList.add("is-closing");
+    panel.classList.remove("is-open");
+    panel.setAttribute("aria-hidden", "true");
+    await waitForTransition(panel, {
+      property: "opacity",
+      timeoutMs: CONTENT_FADE + TRANSITION_TIMEOUT_PAD,
+    }).promise;
+    panel.classList.remove("is-closing");
 
-  snapPrepareDrawer();
+    snapPrepareDrawer();
 
-  renderAssignmentList(getState());
+    renderAssignmentList(getState());
 
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  contractDrawer();
-  await waitForTransition(drawer, {
-    property: "transform",
-    timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
-  }).promise;
-  drawer.classList.remove("is-contracting");
+    await waitForAnimationFrame();
+    contractDrawer();
+    await waitForTransition(drawer, {
+      property: "transform",
+      timeoutMs: EXPAND_DURATION + TRANSITION_TIMEOUT_PAD,
+    }).promise;
+    drawer.classList.remove("is-contracting");
 
-  setThemeColor("#f4f4f4");
+    appShell.classList.add(DRAWER_SHADOW_FADING_CLASS);
+    await waitForTransition(appShell, {
+      property: "opacity",
+      timeoutMs: SHADOW_FADE + TRANSITION_TIMEOUT_PAD,
+    }).promise;
 
-  setUiTransitionBusy(false, "drawer-fullscreen");
+    // 同一批样式更新完成临时阴影与主页阴影的交接，避免叠加变深。
+    appShell.classList.remove(DRAWER_SHADOW_FADING_CLASS, DRAWER_SHADOW_HIDDEN_CLASS);
+    setThemeColor("#f4f4f4");
+  } finally {
+    panel.classList.remove("is-closing");
+    drawer.classList.remove("is-contracting");
+    appShell.classList.remove(DRAWER_SHADOW_FADING_CLASS, DRAWER_SHADOW_HIDDEN_CLASS);
+    setUiTransitionBusy(false, "drawer-fullscreen");
+  }
 }

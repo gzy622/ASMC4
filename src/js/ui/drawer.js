@@ -1,5 +1,5 @@
 import { closeScoreSheet } from "../score-sheet/index.js";
-import { drawer, mainPage, layerScrim, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
+import { drawer, mainPage, appShell, drawerSearchInput, drawerSubjectFilter } from "../dom-refs.js";
 import { getState } from "../state.js";
 import { setThemeColor } from "../utils/dom.js";
 import { renderAssignmentList } from "../render/assignmentList.js";
@@ -44,8 +44,26 @@ function clearDrawerExpandScale() {
   drawer.style.removeProperty("--drawer-expand-scale");
 }
 
+let drawerRevealPx = drawer.offsetWidth;
+
+if (typeof ResizeObserver === "function") {
+  const drawerSizeObserver = new ResizeObserver(entries => {
+    const width = entries[0]?.contentRect.width;
+    if (Number.isFinite(width) && width > 0) drawerRevealPx = width;
+  });
+  drawerSizeObserver.observe(drawer);
+}
+
 export function getDrawerRevealPx() {
-  return drawer.offsetWidth;
+  return drawerRevealPx;
+}
+
+export function prepareDrawerGesture() {
+  appShell.classList.add("is-drawer-preparing");
+}
+
+export function clearDrawerGesturePreparation() {
+  appShell.classList.remove("is-drawer-preparing");
 }
 
 function prepareDrawerReveal() {
@@ -62,28 +80,36 @@ function cancelDrawerRevealPreview() {
   drawer.setAttribute("aria-hidden", "true");
 }
 
+function setDrawerOpenPressure(pressure) {
+  if (pressure <= 0) {
+    appShell.style.removeProperty("--drawer-shadow-alpha");
+    return;
+  }
+  appShell.style.setProperty("--drawer-shadow-alpha", String(0.12 + pressure * 0.06));
+}
+
 export const drawerController = createInteractiveLayerController({
   stateEl: drawer,
   motionEl: mainPage,
   axis: "x",
   getClosedPx: () => 0,
   getOpenPx: getDrawerRevealPx,
-  scrimEl: layerScrim,
   busyKey: "drawer",
   traceLabel: "drawer.motion",
+  onOpenPressure: setDrawerOpenPressure,
   setOpenState(open) {
     drawer.classList.toggle("is-open", open);
     drawer.setAttribute("aria-hidden", open ? "false" : "true");
     if (open) prepareDrawerReveal();
     else {
-      appShell.classList.remove("is-drawer-revealing", "is-drawer-revealed");
+      appShell.classList.remove("is-drawer-preparing", "is-drawer-revealing", "is-drawer-revealed");
       appShell.style.removeProperty("--drawer-reveal-width");
     }
   },
   onPrepareClosedDrag: prepareDrawerReveal,
   onCancelClosedDrag: cancelDrawerRevealPreview,
   onOpened() {
-    appShell.classList.remove("is-drawer-revealing");
+    appShell.classList.remove("is-drawer-preparing", "is-drawer-revealing");
     appShell.classList.add("is-drawer-revealed");
   },
   onBeforeClose() {
@@ -95,6 +121,7 @@ export const drawerController = createInteractiveLayerController({
     appShell.classList.add("is-drawer-revealing");
   },
   onClosed() {
+    clearDrawerGesturePreparation();
     resetDrawerFilters();
     setThemeColor("#f4f4f4");
   },
