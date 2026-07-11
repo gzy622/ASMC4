@@ -75,7 +75,6 @@ async function buildUnlocked() {
     entryNames: "[name]",
     sourcemap: false,
     define: {
-      __BUILD_VERSION__: JSON.stringify(buildVersion),
       __BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
     },
   });
