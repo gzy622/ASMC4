@@ -43,6 +43,25 @@ checks = [
         and '<script type="module" src="src/js/app.js"></script>' in index_html,
     ),
     (
+        "android trace ports are bounded",
+        "args.port > 65535" in read("scripts/android-trace.mjs")
+        and "args.port > 65535" in read("scripts/android-debug-record.mjs"),
+    ),
+    (
+        "adb output errors override zero exit codes",
+        "$text -match 'failed|cannot|unable|error:'" in read("scripts/lib/adb.ps1"),
+    ),
+    (
+        "PowerShell build helpers have single owners",
+        "lib\\common.ps1" in read("scripts/lib.ps1")
+        and "lib\\adb.ps1" in read("scripts/lib.ps1")
+        and "lib\\android-build.ps1" in read("scripts/lib.ps1")
+        and "node build.mjs" not in read("scripts/dev.ps1")
+        and "node build.mjs" not in read("scripts/build-apk.ps1")
+        and "npx cap sync android" not in read("scripts/dev.ps1")
+        and "npx cap sync android" not in read("scripts/build-apk.ps1"),
+    ),
+    (
         "built module entry exists",
         (ROOT / "dist/js/app.js").is_file(),
     ),
@@ -96,6 +115,12 @@ checks = [
         "closeConfirm();" in read("src/js/ui/backup.js"),
     ),
     (
+        "backup import uses state replacement path",
+        "replaceAppStateFromBackup(data)" in read("src/js/ui/backup.js")
+        and "export function replaceAppStateFromBackup" in read("src/js/state.js")
+        and "state.assignments =" not in read("src/js/ui/backup.js"),
+    ),
+    (
         "long press consumes Android synthetic click",
         "setSuppressNextCardClick(true);" in read("src/js/score-sheet/longpress.js"),
     ),
@@ -107,6 +132,12 @@ checks = [
         and "onPrepareClosed?.()" in read(
             "src/js/gestures/interactive-layer-controller.js"
         ).split("function onPointerMove")[1].split("function onPointerUp")[0],
+    ),
+    (
+        "legacy top sheet gesture removed",
+        "createTopSheetOpenGesture" not in read(
+            "src/js/gestures/drag-gesture.js"
+        ),
     ),
     (
         "unclaimed panel pointer cannot settle shared scrim",

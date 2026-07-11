@@ -50,6 +50,7 @@ index.html -> src/js/app.js -> bindEvents() + render()
 ```
 
 旧备份中的 `scoreTensMode` 读取时会迁移到 `scoreStep10Mode`。
+本地读取与备份导入共用 `state.js` 内的整体规范化流程；导入只在持久化成功后替换当前状态并重置操作历史。
 学生/花名册 `id` 经 `utils/normalize.js` 一律为字符串（旧 Number 静默迁移为同值字符串，不重编号）。
 
 ### 运行时（`runtime.js`，不持久化）
@@ -88,7 +89,7 @@ DOM（`index.html` + `dom-refs.js`）：
 
 | 文件 | 职责 |
 |------|------|
-| `constants.js` | 手势阈值、`PANEL_TRANSITION_MS` 等共享常量 |
+| `constants.js` | 手势阈值与共享时长系数 |
 | `gesture-guards.js` | 手势开始判断、触点排除、浮层互斥查询 |
 | `press-feedback.js` | 导航/按钮按压视觉反馈（复用 `NAV_CHROME_SELECTOR`） |
 | `layer-motion-state.js` | 运动态单一来源（phase → 视觉 class） |
@@ -278,6 +279,10 @@ DOM（`index.html` + `dom-refs.js`）：
 
 ### dev.ps1 / 无线 adb
 
+完整构建流程、函数归属和修改检查见 `docs/build-scripts.md`。
+
+- `scripts/lib.ps1` 只负责按顺序加载 `lib/common.ps1`、`lib/adb.ps1`、`lib/android-build.ps1`；入口脚本不复制 Web 构建、Capacitor 同步、Gradle 或安装流程。
+- `common.ps1` 管路径与本机配置，`adb.ps1` 管设备与无线连接，`android-build.ps1` 管构建、同步、安装、启动与 APK 产物定位。
 - 会话内热键：**1** 重建 dist、**2** 安装 Android、**0** 退出（原 B/R/Q）。
 - **Invoke-Adb** 用 `Invoke-Adb -Command @('devices')`；禁止 `Invoke-Adb devices`。
 - 多设备：优先 `adbWireless` IP；`Get-AdbReadyDevices` 过滤假序列号。
