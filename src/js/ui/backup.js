@@ -1,15 +1,13 @@
-import { saveAppState, getState, resetAssignmentHistories } from "../state.js";
+import { getState, replaceAppStateFromBackup } from "../state.js";
 import { scheduleRender } from "../render/index.js";
 import { closeConfirm, openConfirm } from "./confirm.js";
 import { closeDrawer } from "./drawer.js";
 import { closeSettings } from "./settings.js";
-import { normalizeAssignment, normalizeRosterFromBackup } from "../utils/normalize.js";
 import { announce } from "../utils/dom.js";
 import { importBackupInput, settingsPanel } from "../dom-refs.js";
 import { isNativePlatform } from "../utils/native.js";
 import { suspendBackGuard, resumeBackGuard } from "../utils/back-guard.js";
 import { MAX_BACKUP_FILE_BYTES } from "../constants.js";
-import { getAppStateLimitError } from "../utils/data-limits.js";
 
 function timestampName() {
   const now = new Date();
@@ -93,52 +91,11 @@ export function importBackup(file) {
         danger: true,
         onConfirm: function() {
           try {
-            const assignments = data.assignments
-              .filter(function(item) { return item && Array.isArray(item.students); })
-              .map(normalizeAssignment);
-
-            if (assignments.length === 0) {
-              announce("备份文件中没有有效的作业数据", { showToast: true });
+            const result = replaceAppStateFromBackup(data);
+            if (!result.ok) {
+              announce(result.error, { showToast: true });
               return;
             }
-
-            const currentAssignment = assignments.find(function(item) {
-              return String(item.id) === String(data.currentAssignmentId);
-            }) || assignments[0];
-
-            const nextState = {
-              showRealNames: data.showRealNames !== false,
-              scoringMode: Boolean(data.scoringMode),
-              scoreStep10Mode: Boolean(data.scoreStep10Mode ?? data.scoreTensMode),
-              instantScoringMode: Boolean(data.instantScoringMode),
-              showBarScoringToggle: data.showBarScoringToggle !== false,
-              showBarStats: data.showBarStats !== false,
-              hapticsEnabled: data.hapticsEnabled !== false,
-              currentAssignmentId: currentAssignment.id,
-              assignments,
-              roster: normalizeRosterFromBackup(data, assignments[0].students)
-            };
-
-            const limitError = getAppStateLimitError(nextState);
-            if (limitError) {
-              announce(limitError, { showToast: true });
-              return;
-            }
-
-            const state = getState();
-            state.showRealNames = nextState.showRealNames;
-            state.scoringMode = nextState.scoringMode;
-            state.scoreStep10Mode = nextState.scoreStep10Mode;
-            state.instantScoringMode = nextState.instantScoringMode;
-            state.showBarScoringToggle = nextState.showBarScoringToggle;
-            state.showBarStats = nextState.showBarStats;
-            state.hapticsEnabled = nextState.hapticsEnabled;
-            state.currentAssignmentId = nextState.currentAssignmentId;
-            state.assignments = nextState.assignments;
-            state.roster = nextState.roster;
-
-            resetAssignmentHistories();
-            saveAppState({ history: false });
             scheduleRender();
             if (settingsPanel.classList.contains("is-open")) {
               void closeSettings();

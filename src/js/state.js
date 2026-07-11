@@ -87,6 +87,23 @@ export function resetAssignmentHistories() {
   pruneOrphanAssignmentHistories();
 }
 
+export function replaceAppStateFromBackup(data) {
+  const normalized = normalizeAppStateData(data);
+  if (!normalized.state) {
+    return { ok: false, error: normalized.error };
+  }
+
+  const previousState = appState;
+  appState = normalized.state;
+  if (!saveAppState({ history: false })) {
+    appState = previousState;
+    return { ok: false, error: "备份无法保存，请检查本地存储空间。" };
+  }
+
+  resetAssignmentHistories();
+  return { ok: true };
+}
+
 initializeAssignmentHistories();
 
 export { defaultStudents };
@@ -329,6 +346,59 @@ export function getAssignmentStats(assignment) {
   };
 }
 
+function createDefaultAppState() {
+  return {
+    showRealNames: true,
+    scoringMode: false,
+    scoreStep10Mode: false,
+    instantScoringMode: false,
+    showBarScoringToggle: true,
+    showBarStats: true,
+    hapticsEnabled: true,
+    currentAssignmentId: defaultAssignment.id,
+    assignments: [clone(defaultAssignment)],
+    roster: defaultStudents.map(student => ({
+      id: student.id,
+      serial: student.serial,
+      name: student.name,
+      nonEnglish: false
+    }))
+  };
+}
+
+function normalizeAppStateData(data) {
+  if (!data || !Array.isArray(data.assignments)) {
+    return { state: null, error: "备份文件格式无效：缺少 assignments 数组" };
+  }
+
+  const assignments = data.assignments
+    .filter(item => item && Array.isArray(item.students))
+    .map(normalizeAssignment);
+
+  if (assignments.length === 0) {
+    return { state: null, error: "备份文件中没有有效的作业数据" };
+  }
+
+  const currentAssignment = assignments.find(item => String(item.id) === String(data.currentAssignmentId))
+    || assignments[0];
+  const state = {
+    showRealNames: data.showRealNames !== false,
+    scoringMode: Boolean(data.scoringMode),
+    scoreStep10Mode: Boolean(data.scoreStep10Mode ?? data.scoreTensMode),
+    instantScoringMode: Boolean(data.instantScoringMode),
+    showBarScoringToggle: data.showBarScoringToggle !== false,
+    showBarStats: data.showBarStats !== false,
+    hapticsEnabled: data.hapticsEnabled !== false,
+    currentAssignmentId: currentAssignment.id,
+    assignments,
+    roster: normalizeRosterFromBackup(data, assignments[0].students)
+  };
+  const limitError = getAppStateLimitError(state);
+  return limitError
+    ? { state: null, error: limitError }
+    : { state, error: "" };
+}
+
 function loadAppState() {
   const LEGACY_KEYS = ["homework_ui_assignments_v4"];
 
@@ -345,25 +415,7 @@ function loadAppState() {
     }
   } catch (_) {}
 
-  const rosterFromDefault = () => defaultStudents.map(s => ({
-    id: s.id,
-    serial: s.serial,
-    name: s.name,
-    nonEnglish: false
-  }));
-
-  const fallback = {
-    showRealNames: true,
-    scoringMode: false,
-    scoreStep10Mode: false,
-    instantScoringMode: false,
-    showBarScoringToggle: true,
-    showBarStats: true,
-    hapticsEnabled: true,
-    currentAssignmentId: defaultAssignment.id,
-    assignments: [clone(defaultAssignment)],
-    roster: rosterFromDefault()
-  };
+  const fallback = createDefaultAppState();
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -371,43 +423,12 @@ function loadAppState() {
 
     const parsed = JSON.parse(stored);
 
-    if (!parsed || !Array.isArray(parsed.assignments)) {
+    const normalized = normalizeAppStateData(parsed);
+    if (!normalized.state) {
+      console.warn(`读取存储失败：${normalized.error}`);
       return fallback;
     }
-
-    const assignments = parsed.assignments
-      .filter(item => item && Array.isArray(item.students))
-      .map(normalizeAssignment);
-
-    if (assignments.length === 0) {
-      return fallback;
-    }
-
-    const currentAssignment = assignments.find(item => String(item.id) === String(parsed.currentAssignmentId))
-      || assignments[0];
-
-    const roster = normalizeRosterFromBackup(parsed, assignments[0].students);
-
-    const nextState = {
-      showRealNames: parsed.showRealNames !== false,
-      scoringMode: Boolean(parsed.scoringMode),
-      scoreStep10Mode: Boolean(parsed.scoreStep10Mode ?? parsed.scoreTensMode),
-      instantScoringMode: Boolean(parsed.instantScoringMode),
-      showBarScoringToggle: parsed.showBarScoringToggle !== false,
-      showBarStats: parsed.showBarStats !== false,
-      hapticsEnabled: parsed.hapticsEnabled !== false,
-      currentAssignmentId: currentAssignment.id,
-      assignments,
-      roster
-    };
-
-    const limitError = getAppStateLimitError(nextState);
-    if (limitError) {
-      console.warn("读取存储失败，数据超出限制");
-      return fallback;
-    }
-
-    return nextState;
+    return normalized.state;
   } catch (error) {
     console.warn("读取存储失败，使用默认数据", error);
     return fallback;
