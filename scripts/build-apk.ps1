@@ -25,10 +25,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-try { chcp 65001 | Out-Null } catch {}
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-
 . (Join-Path $PSScriptRoot 'lib.ps1')
+Initialize-Asmc4Console
 $ProjectRoot = $script:ProjectRoot
 Set-Location -LiteralPath $ProjectRoot
 
@@ -65,16 +63,6 @@ function Resolve-ApkSettings {
     }
 }
 
-function Get-BuiltApkPath {
-    param([string]$ApkVariant)
-
-    $base = Join-Path $ProjectRoot 'android/app/build/outputs/apk'
-    if ($ApkVariant -eq 'release') {
-        return Join-Path $base 'release/app-release.apk'
-    }
-    return Join-Path $base 'debug/app-debug.apk'
-}
-
 function Invoke-BuildApkOnce {
     $settings = Resolve-ApkSettings
     $outDir = $settings.OutputDir
@@ -91,32 +79,7 @@ function Invoke-BuildApkOnce {
     Write-Host "  输出   $outDir"
     Write-Host ''
 
-    Write-Host '  [Build] 构建网页 dist...'
-    node build.mjs
-    if ($LASTEXITCODE -ne 0) { throw '网页构建失败' }
-
-    Write-Host '  [Cap]   同步到 android/...'
-    $oldEap = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    try {
-        npx cap sync android
-        if ($LASTEXITCODE -ne 0) { throw 'cap sync 失败' }
-    } finally {
-        $ErrorActionPreference = $oldEap
-    }
-
-    $gradleTask = if ($variant -eq 'release') { 'assembleRelease' } else { 'assembleDebug' }
-    Write-Host "  [Gradle] $gradleTask（首次可能需数分钟）..."
-    $result = Invoke-Gradle $gradleTask
-    if ($result.ExitCode -ne 0) {
-        $tail = ($result.Output | Select-Object -Last 10) -join "`n"
-        throw "Gradle $gradleTask 失败:`n$tail"
-    }
-
-    $apkSrc = Get-BuiltApkPath -ApkVariant $variant
-    if (-not (Test-Path -LiteralPath $apkSrc)) {
-        throw "未找到 APK: $apkSrc"
-    }
+    $apkSrc = Invoke-AndroidApkBuild -Variant $variant
 
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $apkName = "ASMC4-$stamp-$variant.apk"

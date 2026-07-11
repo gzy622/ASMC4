@@ -36,11 +36,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-try { chcp 65001 | Out-Null } catch {}
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-$OutputEncoding = [Console]::OutputEncoding
-
 . (Join-Path $PSScriptRoot 'lib.ps1')
+Initialize-Asmc4Console
 $ProjectRoot = $script:ProjectRoot
 Set-Location -LiteralPath $ProjectRoot
 
@@ -132,12 +129,6 @@ function Get-LanIP {
         }
     }
     return $null
-}
-
-function Invoke-InitialBuild {
-    Write-Host '  [Build] 正在构建...'
-    node build.mjs
-    if ($LASTEXITCODE -ne 0) { throw '构建失败' }
 }
 
 function Start-WatchProcess {
@@ -391,7 +382,7 @@ function Ensure-AndroidDeviceId {
 function Invoke-DevRebuild {
     param($Session)
 
-    Invoke-InitialBuild
+    Invoke-WebBuild
     if ($Session.WebEnabled) {
         Write-Host '  [Web]  dist/ 已重建 — 请刷新浏览器。' -ForegroundColor Green
     } elseif ($Session.AndroidEnabled) {
@@ -403,7 +394,7 @@ function Invoke-DevAndroidPush {
     param($Session)
 
     $device = Ensure-AndroidDeviceId -Session $Session
-    Invoke-InitialBuild
+    Invoke-WebBuild
     Deploy-AndroidToDevice -DeviceId $device
     Write-Host '  [Android] 已更新到设备。' -ForegroundColor Green
 }
@@ -490,7 +481,7 @@ function Start-DevSession {
         }
     }
 
-    Invoke-InitialBuild
+    Invoke-WebBuild
     $session.Watch = Start-WatchProcess
 
     if ($WebEnabled) {
@@ -532,82 +523,6 @@ function Start-DevSession {
     }
 }
 
-function Install-AndroidDebug {
-    param([string]$DeviceId)
-
-    $resolved = Resolve-AdbDevices
-    if ($resolved) { $DeviceId = $resolved }
-    if (-not $DeviceId) { throw '无 adb 设备，无法 installDebug。' }
-
-    $env:ANDROID_SERIAL = $DeviceId
-    try {
-        Invoke-Adb -DeviceId $DeviceId -Command @('wait-for-device') | Out-Null
-
-        Write-Host "  [Android] gradlew installDebug -> $DeviceId ..."
-        $result = Invoke-Gradle installDebug
-
-        if (-not (Test-GradleOk $result)) {
-            $text = $result.Output -join "`n"
-            if ($text -match 'INSTALL_FAILED_UPDATE_INCOMPATIBLE|signatures do not match') {
-                Write-Host '  [Android] 签名不匹配，正在卸载旧包...'
-                Invoke-Adb -DeviceId $DeviceId -Command @('uninstall', $script:AndroidAppId) | Out-Null
-                $result = Invoke-Gradle installDebug
-            }
-        }
-
-        if (-not (Test-GradleOk $result)) {
-            Write-Host '  [Android] 安装重试...'
-            Start-Sleep -Seconds 2
-            $DeviceId = Resolve-AdbDevices
-            if (-not $DeviceId) { throw '重试时无 adb 设备。' }
-            $env:ANDROID_SERIAL = $DeviceId
-            Invoke-Adb -DeviceId $DeviceId -Command @('wait-for-device') | Out-Null
-            $result = Invoke-Gradle installDebug
-        }
-
-        if (-not (Test-GradleOk $result)) {
-            $tail = Get-GradleFailureTail -Result $result
-            throw "installDebug 失败:`n$tail"
-        }
-
-        Write-Host '  [Android] installDebug 完成'
-    } finally {
-        Remove-Item Env:ANDROID_SERIAL -ErrorAction SilentlyContinue
-    }
-}
-
-function Start-AndroidApp {
-    param([string]$DeviceId)
-
-    Write-Host '  [Android] 正在启动应用...'
-    $result = Invoke-Adb -DeviceId $DeviceId -Command @(
-        'shell', 'am', 'start', '-n', "$($script:AndroidAppId)/.MainActivity"
-    )
-    if ($result.ExitCode -ne 0) {
-        throw '无法在设备上启动应用'
-    }
-}
-
-function Sync-CapAndroid {
-    Write-Host '  [Cap]  正在同步 dist/ 到 android/...'
-    $oldEap = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    try {
-        npx cap sync android
-        if ($LASTEXITCODE -ne 0) { throw 'cap sync 失败' }
-    } finally {
-        $ErrorActionPreference = $oldEap
-    }
-}
-
-function Deploy-AndroidToDevice {
-    param([string]$DeviceId)
-
-    Sync-CapAndroid
-    Install-AndroidDebug -DeviceId $DeviceId
-    Start-AndroidApp -DeviceId $DeviceId
-}
-
 function Start-AndroidDev {
     Start-DevSession -WebEnabled $false -AndroidEnabled $true
 }
@@ -646,3 +561,4 @@ if ($Surface -eq 'web') {
 } else {
     throw "未知模式: $Surface"
 }
+

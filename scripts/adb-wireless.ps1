@@ -22,11 +22,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-try { chcp 65001 | Out-Null } catch {}
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-$OutputEncoding = [Console]::OutputEncoding
-
 . (Join-Path $PSScriptRoot 'lib.ps1')
+Initialize-Asmc4Console
 
 if (-not (Test-AdbAvailable)) { exit 1 }
 
