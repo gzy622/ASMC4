@@ -35,10 +35,6 @@ function setPhase(el, phase) {
   syncClasses(el);
 }
 
-export function getLayerMotionPhase(el) {
-  return getState(el).phase;
-}
-
 export function beginLayerDrag(el) {
   setPhase(el, "dragging");
 }

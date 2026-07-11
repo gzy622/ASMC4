@@ -154,7 +154,3 @@ export function openQuickPanel({ focusName = false } = {}) {
   focusQuickNameWhenOpened = focusName;
   quickPanelController.open();
 }
-
-export function commitQuickPanelOpen() {
-  quickPanelController.snapOpen();
-}

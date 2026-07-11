@@ -2,7 +2,6 @@ import { getCurrentAssignment } from "../state.js";
 import { drawer } from "../dom-refs.js";
 import { STATUS, LONG_PRESS_MS } from "../constants.js";
 import {
-  longPressTimers,
   longPressTriggered,
   setLongPressTimer,
   clearLongPressTimer,

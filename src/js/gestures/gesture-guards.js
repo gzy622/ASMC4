@@ -139,10 +139,6 @@ export function canStartDrawerShellClose(event) {
   return !isTouchOn(event.target, FLOATING_UI_EXCLUDE_SELECTOR);
 }
 
-export function canContinueDrawerEdgeOpen() {
-  return !isPanelVisuallyOpen(drawer) && !isPanelVisuallyOpen(scoreSheet);
-}
-
 // ── scoreSheet ──
 
 export function canStartScoreSheetInnerClose(event, isSheetBusy) {

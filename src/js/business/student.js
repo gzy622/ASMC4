@@ -1,4 +1,4 @@
-import { saveAppState, getState, getCurrentAssignment } from "../state.js";
+import { saveAppState, getCurrentAssignment } from "../state.js";
 import { STATUS } from "../constants.js";
 import { isStudentForceNone, getDisplayName } from "../utils/display.js";
 import { scheduleRender } from "../render/index.js";

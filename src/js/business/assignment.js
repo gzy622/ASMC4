@@ -8,7 +8,6 @@ import { clone } from "../utils/clone.js";
 import { createFreshStudentsFrom } from "../utils/normalize.js";
 import { isStudentForceNone } from "../utils/display.js";
 import { openConfirm, closeConfirm } from "../ui/confirm.js";
-import { closeDrawer } from "../ui/drawer.js";
 import { closeFloatingPanels } from "../ui/panels.js";
 import { clampAssignmentTitle, clampSubject } from "../utils/data-limits.js";
 import { traceEvent } from "../utils/trace.js";
