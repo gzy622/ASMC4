@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  生成本机 Agent 配置（OpenCode / Reasonix / .cursorrules stub）。
+  生成本机 Agent 配置（Reasonix / .cursorrules stub）。
   Cursor 规则与技能在 .cursor/（已纳入 Git），无需由此脚本生成。
 #>
 param(
@@ -24,22 +24,6 @@ if (Test-Path $cursorDir) {
   Write-Host "  [ok] Cursor: AGENTS.md + .cursor/ (in repo)"
 } else {
   Write-Warning "  [warn] missing .cursor/ — pull latest"
-}
-
-# OpenCode
-$ocJson = Join-Path $Root 'opencode.json'
-$ocPlug = Join-Path $Root '.opencode\plugins'
-if ($Force -or -not (Test-Path $ocJson)) {
-  Copy-Item (Join-Path $Tpl 'opencode.json') $ocJson -Force
-  Write-Host "  [ok] OpenCode: opencode.json"
-} else {
-  Write-Host "  [skip] opencode.json exists (use -Force)"
-}
-New-Item -ItemType Directory -Force -Path $ocPlug | Out-Null
-$mjs = Join-Path $Tpl 'opencode\plugins\ponytail.mjs'
-if (Test-Path $mjs) {
-  Copy-Item $mjs (Join-Path $ocPlug 'ponytail.mjs') -Force
-  Write-Host "  [ok] OpenCode: .opencode/plugins/ponytail.mjs"
 }
 
 # Reasonix

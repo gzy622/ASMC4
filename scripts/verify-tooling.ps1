@@ -9,9 +9,9 @@ function Warn($msg) { Write-Host "  [WARN] $msg" -ForegroundColor Yellow }
 
 Write-Host "`nASMC4 tooling verify (multi-agent / Windows)`n"
 
-# Templates (OpenCode / Reasonix)
-$tplOc = Join-Path $Root 'agent-templates\opencode.json'
-if (Test-Path $tplOc) { Pass 'agent-templates present (OpenCode/Reasonix)' } else { Fail 'missing agent-templates/' }
+# Templates
+$reasonixTemplate = Join-Path $Root 'agent-templates\reasonix.toml.example'
+if (Test-Path $reasonixTemplate) { Pass 'agent-templates present (Reasonix)' } else { Fail 'missing Reasonix template' }
 
 # RTK
 if (Get-Command rtk -ErrorAction SilentlyContinue) {
@@ -33,11 +33,6 @@ if (Get-Command headroom -ErrorAction SilentlyContinue) {
 $toolingRule = Join-Path $Root '.cursor\rules\tooling-stack.mdc'
 if (Test-Path $toolingRule) { Pass 'local .cursor/rules/tooling-stack.mdc' }
 else { Warn 'optional: tooling-stack.mdc via setup-agent-local.ps1' }
-
-# OpenCode local
-if ((Test-Path (Join-Path $Root 'opencode.json')) -and (Test-Path (Join-Path $Root '.opencode\plugins\ponytail.mjs'))) {
-  Pass 'OpenCode local config'
-} else { Warn 'OpenCode: run setup-agent-local.ps1' }
 
 # Reasonix local
 if (Test-Path (Join-Path $Root 'reasonix.toml')) { Pass 'reasonix.toml (local)' } else { Warn 'Reasonix: run setup-agent-local.ps1' }
