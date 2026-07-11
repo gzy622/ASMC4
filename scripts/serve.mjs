@@ -37,9 +37,20 @@ function getLANIP() {
 }
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(root, req.url === '/' ? 'index.html' : decodeURIComponent(req.url));
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    res.writeHead(400);
+    res.end('Bad Request');
+    return;
+  }
 
-  if (!filePath.startsWith(root)) {
+  const relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^[/\\]+/, '');
+  const filePath = path.resolve(root, relativePath);
+  const relativeToRoot = path.relative(root, filePath);
+
+  if (relativeToRoot === '..' || relativeToRoot.startsWith(`..${path.sep}`) || path.isAbsolute(relativeToRoot)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;

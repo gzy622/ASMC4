@@ -57,8 +57,8 @@ function parseArgs(argv) {
   if (!Number.isFinite(args.seconds) || args.seconds <= 0) {
     throw new Error("--seconds 必须是正数");
   }
-  if (!Number.isInteger(args.port) || args.port <= 0) {
-    throw new Error("--port 必须是正整数");
+  if (!Number.isInteger(args.port) || args.port <= 0 || args.port > 65535) {
+    throw new Error("--port 必须是 1–65535 之间的整数");
   }
   return args;
 }
