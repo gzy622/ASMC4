@@ -85,7 +85,7 @@ function setDrawerOpenPressure(pressure) {
     appShell.style.removeProperty("--drawer-shadow-alpha");
     return;
   }
-  appShell.style.setProperty("--drawer-shadow-alpha", String(0.12 + pressure * 0.06));
+  appShell.style.setProperty("--drawer-shadow-alpha", String(0.08 + pressure * 0.04));
 }
 
 export const drawerController = createInteractiveLayerController({

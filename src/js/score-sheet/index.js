@@ -14,8 +14,18 @@ import { createInteractiveLayerController } from "../gestures/interactive-layer-
 
 let releaseScoreSheetPointerGuard = null;
 
+let cachedScoreSheetHeight = scoreSheet.offsetHeight;
+
+if (typeof ResizeObserver === "function") {
+  const scoreSheetObserver = new ResizeObserver(entries => {
+    const h = scoreSheet.offsetHeight;
+    if (Number.isFinite(h) && h > 0) cachedScoreSheetHeight = h;
+  });
+  scoreSheetObserver.observe(scoreSheet);
+}
+
 function closedScoreSheetPx() {
-  return scoreSheet.offsetHeight;
+  return cachedScoreSheetHeight;
 }
 
 function setScoreSheetOpenPressure(pressure) {

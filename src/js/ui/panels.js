@@ -33,8 +33,21 @@ function scheduleNewAssignmentFocus() {
   });
 }
 
-function closedTopSheetDelta(panel) {
-  return -panel.offsetHeight;
+let cachedQuickPanelHeight = -quickPanel.offsetHeight;
+let cachedNewAssignmentPanelHeight = -newAssignmentPanel.offsetHeight;
+
+if (typeof ResizeObserver === "function") {
+  const topSheetObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const h = entry.target.offsetHeight;
+      if (Number.isFinite(h) && h > 0) {
+        if (entry.target === quickPanel) cachedQuickPanelHeight = -h;
+        else if (entry.target === newAssignmentPanel) cachedNewAssignmentPanelHeight = -h;
+      }
+    }
+  });
+  topSheetObserver.observe(quickPanel);
+  topSheetObserver.observe(newAssignmentPanel);
 }
 
 function setTopSheetOpenState(panel, open) {
@@ -55,7 +68,7 @@ function setTopSheetOpenPressure(panel, pressure) {
 export const quickPanelController = createInteractiveLayerController({
   stateEl: quickPanel,
   axis: "y",
-  getClosedPx: () => closedTopSheetDelta(quickPanel),
+  getClosedPx: () => cachedQuickPanelHeight,
   scrimEl: layerScrim,
   busyKey: "panel",
   traceLabel: "quickPanel.motion",
@@ -77,7 +90,7 @@ export const quickPanelController = createInteractiveLayerController({
 export const newAssignmentPanelController = createInteractiveLayerController({
   stateEl: newAssignmentPanel,
   axis: "y",
-  getClosedPx: () => closedTopSheetDelta(newAssignmentPanel),
+  getClosedPx: () => cachedNewAssignmentPanelHeight,
   scrimEl: layerScrim,
   busyKey: "panel",
   traceLabel: "newAssignment.motion",
